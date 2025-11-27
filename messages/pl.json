@@ -1,0 +1,468 @@
+{
+    "Settings": {
+        "title": "Ustawienia",
+        "description": "Zarządzaj swoim kontem i preferencjami aplikacji",
+        "language": "Język",
+        "theme": "Motyw"
+    },
+    "Common": {
+        "save": "Zapisz",
+        "cancel": "Anuluj"
+    },
+    "Dashboard": {
+        "welcome": "Witaj ponownie, {name}",
+        "subtitle": "Zarządzaj rekwizytami, Spektaklimi i listami kontrolnymi.",
+        "propsInventory": "Magazyn Rekwizytów",
+        "propsInventoryDesc": "Przeglądaj, dodawaj i organizuj swoją kolekcję rekwizytów.",
+        "productions": "Spektakli",
+        "productionsDesc": "Zarządzaj spektaklami, przydzielaj rekwizyty i śledź historię.",
+        "checklists": "Listy Kontrolne",
+        "checklistsDesc": "Śledzenie na żywo aktywnych przedstawień i prób.",
+        "recentActivity": "Ostatnia Aktywność",
+        "noActivity": "Brak ostatniej aktywności."
+    },
+    "Navigation": {
+        "items": "Rekwizyty",
+        "productions": "Spektakle",
+        "checklists": "Live View",
+        "reviewDrafts": "Przegląd Szkiców",
+        "aiStats": "Statystyki AI",
+        "settings": "Ustawienia",
+        "signOut": "Wyloguj się",
+        "lists": "Listy",
+        "more": "Więcej"
+    },
+    "Items": {
+        "title": "Magazyn Rekwizytów",
+        "subtitle": "Zarządzaj swoją kolekcją teatralną",
+        "addProps": "Dodaj Rekwizyty",
+        "export": "Eksportuj"
+    },
+    "Performances": {
+        "title": "Spektakle",
+        "subtitle": "Spektakle, próby i archiwa",
+        "addProduction": "Dodaj Przedstawienie",
+        "exportAllSchedule": "Eksportuj Cały Harmonogram"
+    },
+    "NewItem": {
+        "backToInventory": "Powrót do Magazynu",
+        "title": "Dodaj Nowy Rekwizyt",
+        "subtitle": "Wypełnij szczegóły ręcznie, aby uzyskać precyzyjną kontrolę."
+    },
+    "NewPerformance": {
+        "title": "Dodaj Nowe Przedstawienie",
+        "subtitle": "Utwórz nowe przedstawienie, aby rozpocząć przypisywanie rekwizytów i list kontrolnych."
+    },
+    "Review": {
+        "backToInventory": "Powrót do Magazynu",
+        "title": "Przegląd Szkiców",
+        "subtitle": "Przejrzyj i zatwierdź przedmioty dodane w trybie szybkim.",
+        "pending": "{count} oczekujących przedmiotów"
+    },
+    "FastAdd": {
+        "backToInventory": "Powrót do Magazynu",
+        "title": "Tryb Szybkiego Dodawania",
+        "subtitle": "Rób zdjęcia rekwizytów, aby szybko dodać je do magazynu. AI pomoże je zidentyfikować."
+    },
+    "AIStats": {
+        "title": "Statystyki Użycia AI",
+        "subtitle": "Monitoruj zużycie tokenów i koszty operacji Gemini AI.",
+        "totalTokens": "Całkowita Liczba Tokenów",
+        "inOut": "Wej: {input} | Wyj: {output}",
+        "estimatedCost": "Szacowany Koszt",
+        "pricingNote": "Na podstawie cennika Gemini 2.0 Flash",
+        "fastAdds": "Szybkie Dodania",
+        "itemsProcessed": "Przetworzone przedmioty",
+        "smartSearches": "Inteligentne Wyszukiwania",
+        "queriesAnalyzed": "Przeanalizowane zapytania",
+        "generations": "Generacje",
+        "descriptionsGenerated": "Wygenerowane opisy",
+        "recentOperations": "Ostatnie Operacje",
+        "table": {
+            "time": "Czas",
+            "operation": "Operacja",
+            "model": "Model",
+            "inputTokens": "Tokeny Wejściowe",
+            "outputTokens": "Tokeny Wyjściowe",
+            "total": "Razem"
+        },
+        "operations": {
+            "fastAdd": "Szybkie Dodanie",
+            "smartSearch": "Inteligentne Wyszukiwanie",
+            "generateDesc": "Generowanie Opisu"
+        },
+        "noLogs": "Nie znaleziono jeszcze żadnych logów. Wykonaj operacje AI, aby zobaczyć dane."
+    },
+    "ProductionDetails": {
+        "backToProductions": "Powrót do Spektakli",
+        "scenes": "Sceny",
+        "acts": "Akty",
+        "manageScenes": "Zarządzaj Scenami",
+        "editDetails": "Edytuj Szczegóły",
+        "liveView": "Podgląd Na Żywo",
+        "propsList": "Lista Rekwizytów (Scenariusz)",
+        "manageProps": "Zarządzaj Rekwizytami",
+        "table": {
+            "scene": "Scena",
+            "item": "Rekwizyt",
+            "instructions": "Instrukcje"
+        },
+        "act": "Akt {actNum}",
+        "noProps": "Nie przypisano jeszcze żadnych rekwizytów do tego Spektaklu."
+    },
+    "ManageScenes": {
+        "backToProduction": "Powrót do Spektakli",
+        "title": "Zarządzaj Scenami: {title}",
+        "subtitle": "Zdefiniuj strukturę sztuki (Akty i Sceny)."
+    },
+    "ManageProps": {
+        "backToProduction": "Powrót do Spektakli",
+        "title": "Zarządzaj Rekwizytami: {title}",
+        "subtitle": "Przypisz rekwizyty do scen, aby utworzyć główny scenariusz dla tego Spektaklu."
+    },
+    "ScheduleShow": {
+        "steps": {
+            "date": "Data",
+            "time": "Godzina",
+            "review": "Przegląd"
+        },
+        "titles": {
+            "selectDate": "Wybierz Datę",
+            "selectTime": "Wybierz Godzinę",
+            "reviewSchedule": "Przegląd Harmonogramu"
+        },
+        "subtitles": {
+            "selectDate": "Kiedy odbędzie się przedstawienie?",
+            "selectTime": "O której godzinie rozpoczyna się przedstawienie?",
+            "reviewSchedule": "Masz {count} przedstawień gotowych do zaplanowania."
+        },
+        "selectCast": "Wybierz Obsadę",
+        "cast": {
+            "first": "1.",
+            "second": "2.",
+            "other": "Inna",
+            "firstLabel": "1. Obsada",
+            "secondLabel": "2. Obsada",
+            "otherLabel": "Inna Obsada"
+        },
+        "noShows": "Nie dodano jeszcze żadnych przedstawień.",
+        "addAnother": "Dodaj Kolejną Datę",
+        "cancel": "Anuluj",
+        "back": "Wstecz",
+        "nextStep": "Następny Krok",
+        "scheduleShows": "Zaplanuj {count} Przedstawień",
+        "confirm": "Zatwierdź i Zaplanuj",
+        "unknownError": "Wystąpił nieznany błąd",
+        "edit": "Edytuj",
+        "remove": "Usuń"
+    },
+    "EditPerformance": {
+        "backToProduction": "Powrót do Spektakli",
+        "title": "Edytuj Przedstawienie",
+        "subtitle": "Zaktualizuj szczegóły dla \"{title}\""
+    },
+    "LivePerformance": {
+        "noUpcomingShows": "Nie znaleziono nadchodzących przedstawień",
+        "scheduleShow": "Zaplanuj przedstawienie, aby zobaczyć listę kontrolną na żywo.",
+        "noActiveShows": "Brak aktywnych przedstawień",
+        "allFinished": "Wszystkie zaplanowane na dzisiaj Spektakli już się zakończyły.",
+        "scenes": "Sceny",
+        "scene": "Scena {number}",
+        "noItemsInScene": "Brak przedmiotów w tej scenie.",
+        "note": "Notatka: {note}",
+        "ready": "Gotowy",
+        "stage": "Scena",
+        "startShow": "Rozpocznij",
+        "stopShow": "Zakończ",
+        "nextScene": "Następna Scena",
+        "finishShow": "Zakończ Spektakl",
+        "stageAll": "Wszystko na Scenę",
+        "prev": "Poprzednia",
+        "act": "Akt {number}",
+        "finishAct": "Zakończ Akt",
+        "cancelLiveViewTitle": "Anulować Live View?",
+        "cancelLiveViewWarning": "Czy na pewno chcesz anulować? Cały postęp i status gotowości zostaną utracone.",
+        "confirmCancel": "Tak, Anuluj",
+        "goBack": "Nie, Wróć",
+        "startLiveViewTitle": "Rozpocząć Podgląd?",
+        "startLiveViewDesc": "Wejście w tryb Live View pozwoli na śledzenie postępu spektaklu w czasie rzeczywistym.",
+        "startLiveViewAction": "Rozpocznij Live View",
+        "showFinished": "Spektakl Zakończony",
+        "duration": "Czas Trwania",
+        "itemsStaged": "Przedmioty na Scenie",
+        "returnToDashboard": "Powrót do Ekranu Głównego",
+        "cancel": "Anuluj",
+        "cancelLiveView": "Anuluj Live View"
+    },
+    "ChecklistPage": {
+        "backToPerformance": "Powrót do Spektakli",
+        "scene": "Scena {number}",
+        "start": "Początek",
+        "end": "Koniec",
+        "prev": "Poprzednia",
+        "nextScene": "Następna Scena ({number})"
+    },
+    "Checklists": {
+        "title": "Aktywne Live View",
+        "subtitle": "Monitoruj postęp trwających przedstawień w czasie rzeczywistym.",
+        "live": "NA ŻYWO",
+        "upcoming": "NADCHODZĄCE",
+        "noActiveShows": "Brak aktywnych przedstawień",
+        "noActiveShowsDesc": "Zaplanowane przedstawienia pojawią się tutaj, gdy będą gotowe do rozpoczęcia.",
+        "manageLiveView": "Zarządzaj Live View",
+        "manageLiveViewDesc": "Kontroluj aktywną sesję. Możesz zrestartować spektakl lub całkowicie go zatrzymać dla wszystkich użytkowników.",
+        "restartShow": "Zrestartuj Spektakl",
+        "restartShowDesc": "Zresetuj cały postęp i rozpocznij od Sceny 1.",
+        "stopShow": "Zatrzymaj Spektakl",
+        "stopShowDesc": "Natychmiast zatrzymaj spektakl dla wszystkich.",
+        "unknownProduction": "Nieznany Spektakl",
+        "sceneFallback": "Scena {number}",
+        "openLiveView": "Otwórz Podgląd Na Żywo"
+    },
+    "EditPerformanceForm": {
+        "showTitle": "Tytuł Spektaklu",
+        "premiereDate": "Data Premiery",
+        "status": "Status",
+        "statuses": {
+            "upcoming": "Nadchodzący",
+            "active": "Aktywny",
+            "archived": "Zarchiwizowany"
+        },
+        "notes": "Notatki",
+        "showPoster": "Plakat Spektaklu",
+        "noPoster": "Brak Plakatu",
+        "uploadPoster": "Prześlij plakat. Automatycznie wygenerujemy miniaturę i wyodrębnimy kolor motywu.",
+        "dragDrop": "Lub przeciągnij i upuść zdjęcie tutaj.",
+        "selectThemeColor": "Wybierz Kolor Motywu",
+        "currentThemeColor": "Obecny Kolor Motywu",
+        "deleteProduction": "Usuń Spektakl",
+        "deleteConfirmation": "Czy na pewno chcesz usunąć ten spektakl? Tej operacji nie można cofnąć i spowoduje ona usunięcie wszystkich powiązanych danych.",
+        "cancel": "Anuluj",
+        "saveChanges": "Zapisz Zmiany",
+        "unknownError": "Wystąpił nieznany błąd"
+    },
+    "LiveChecklist": {
+        "note": "Notatka: {note}",
+        "ready": "Gotowy",
+        "stage": "Scena",
+        "noItems": "Brak przedmiotów na tej liście kontrolnej."
+    },
+    "Login": {
+        "title": "Rekwizytorium",
+        "subtitleSignIn": "Zaloguj się, aby uzyskać dostęp do archiwum rekwizytów",
+        "subtitleSignUp": "Utwórz konto, aby rozpocząć",
+        "email": "Adres email",
+        "password": "Hasło",
+        "signUp": "Zarejestruj się",
+        "signIn": "Zaloguj się",
+        "fillTestCredentials": "Wypełnij Dane Testowe",
+        "alreadyHaveAccount": "Masz już konto? Zaloguj się",
+        "dontHaveAccount": "Nie masz konta? Zarejestruj się",
+        "checkEmail": "Sprawdź swoją skrzynkę email, aby potwierdzić konto."
+    },
+    "ItemsList": {
+        "searchPlaceholderSmart": "Opisz czego potrzebujesz (np. 'stara walizka')...",
+        "searchPlaceholderClassic": "Szukaj po nazwie lub notatkach...",
+        "allStatuses": "Wszystkie Statusy",
+        "statuses": {
+            "active": "Aktywny",
+            "upcoming": "Nadchodzący",
+            "archived": "Zarchiwizowany",
+            "unassigned": "Nieprzypisany",
+            "in_maintenance": "W Konserwacji"
+        },
+        "allCategories": "Wszystkie Kategorie",
+        "allLocations": "Wszystkie Lokalizacje",
+        "newestFirst": "Najnowsze",
+        "oldestFirst": "Najstarsze",
+        "searchIn": "Szukaj w",
+        "aiAnalysis": "Analiza AI",
+        "bestMatch": "Najlepsze Dopasowanie",
+        "closeMatch": "Bliskie Dopasowanie",
+        "alternative": "Alternatywa",
+        "noNotes": "Brak notatek",
+        "noItemsFound": "Nie znaleziono przedmiotów pasujących do filtrów."
+    },
+    "AddPropsButton": {
+        "addItem": "Dodaj Przedmiot",
+        "fastAdd": "Szybkie Dodawanie (AI)",
+        "fastAddDesc": "Skanuj i automatycznie taguj",
+        "manualAdd": "Ręczne Dodawanie",
+        "manualAddDesc": "Wypełnij szczegóły ręcznie"
+    },
+    "ExportButton": {
+        "export": "Eksportuj",
+        "toExcel": "Do Excela",
+        "toPdf": "Do PDF (Lista Kontrolna)",
+        "pdfTitle": "Lista Kontrolna Magazynu Rekwizytów",
+        "generatedOn": "Wygenerowano",
+        "columns": {
+            "name": "Nazwa Przedmiotu",
+            "notes": "Notatki",
+            "status": "Status",
+            "check": "Sprawdź"
+        },
+        "page": "Strona"
+    },
+    "PerformancesList": {
+        "tbd": "TBD",
+        "searchPlaceholder": "Szukaj spektakli...",
+        "allStatus": "Wszystkie Statusy",
+        "statuses": {
+            "active": "Aktywny",
+            "upcoming": "Nadchodzący",
+            "archived": "Zarchiwizowany"
+        },
+        "noPerformancesFound": "Nie znaleziono spektakli pasujących do kryteriów."
+    },
+    "ManageScenesForm": {
+        "addNewScene": "Dodaj Nową Scenę",
+        "actNumber": "Akt #",
+        "sceneNumber": "Scena #",
+        "sceneNameOptional": "Nazwa Sceny (Opcjonalne)",
+        "sceneNamePlaceholder": "np. Spotkanie",
+        "addScene": "Dodaj Scenę",
+        "act": "Akt",
+        "scene": "Scena",
+        "sceneName": "Nazwa Sceny",
+        "noScenes": "Nie zdefiniowano jeszcze scen. Zacznij od dodania Sceny 1 Aktu 1.",
+        "deleteConfirm": "Jesteś pewien? To usunie definicję sceny.",
+        "addError": "Nie udało się dodać sceny",
+        "deleteError": "Nie udało się usunąć sceny",
+        "updateError": "Nie udało się zaktualizować sceny"
+    },
+    "ManagePropsForm": {
+        "addPropToScene": "Dodaj Rekwizyt do Sceny",
+        "scene": "Scena",
+        "selectScene": "Wybierz scenę...",
+        "actScene": "Akt {act}, Scena {scene}",
+        "customScene": "Niestandardowa / Niewymieniona Scena",
+        "noScenesDefined": "Nie zdefiniowano scen.",
+        "manageScenes": "Zarządzaj Scenami",
+        "orUseCustom": "lub użyj niestandardowej poniżej.",
+        "sceneNumPlaceholder": "Scena #",
+        "nameOptPlaceholder": "Nazwa (opc)",
+        "item": "Przedmiot",
+        "searchPropPlaceholder": "Szukaj rekwizytu...",
+        "addAssignment": "Dodaj Przypisanie",
+        "setupInstructions": "Instrukcje Ustawienia / Notatki",
+        "instructionsPlaceholder": "np. Połóż na stole, po lewej stronie sceny.",
+        "assignedPropsScript": "Przypisane Rekwizyty (Scenariusz)",
+        "columns": {
+            "scene": "Scena",
+            "item": "Przedmiot",
+            "instructions": "Instrukcje",
+            "actions": "Akcje"
+        },
+        "unknownItem": "Nieznany Przedmiot",
+        "noPropsAssigned": "Nie przypisano jeszcze rekwizytów. Użyj formularza powyżej, aby dodać przedmioty do scen.",
+        "deleteConfirm": "Czy na pewno chcesz usunąć ten rekwizyt ze spektaklu?",
+        "addError": "Nie udało się dodać rekwizytu",
+        "deleteError": "Nie udało się usunąć rekwizytu",
+        "selectPropsButton": "Wybierz Rekwizyty"
+    },
+    "ItemSelectionDialog": {
+        "selectProps": "Wybierz Rekwizyty",
+        "selectPropsSubtitle": "Wybierz jeden lub więcej rekwizytów do dodania do sceny.",
+        "searchPlaceholder": "Szukaj po nazwie lub notatkach...",
+        "noResults": "Nie znaleziono rekwizytów.",
+        "selectedCount": "Wybrano: {count}",
+        "cancel": "Anuluj",
+        "addSelected": "Dodaj Wybrane ({count})"
+    },
+    "CreatePerformanceForm": {
+        "showTitle": "Tytuł Spektaklu",
+        "titlePlaceholder": "np. Hamlet - Zima 2024",
+        "showPoster": "Plakat Spektaklu",
+        "noPoster": "Brak Plakatu",
+        "uploadPoster": "Prześlij plakat. Automatycznie wygenerujemy miniaturę i wyodrębnimy kolor motywu.",
+        "dragDrop": "Lub przeciągnij i upuść zdjęcie tutaj.",
+        "selectThemeColor": "Wybierz Kolor Motywu",
+        "premiereDate": "Data Premiery",
+        "datePlaceholder": "Wybierz datę",
+        "notes": "Notatki",
+        "notesPlaceholder": "Reżyser, inspicjent lub inne szczegóły...",
+        "cancel": "Anuluj",
+        "saveShow": "Zapisz Spektakl",
+        "unknownError": "Wystąpił nieznany błąd"
+    },
+    "ScheduledShowsList": {
+        "title": "Zaplanowane Spektakle",
+        "exportAll": "Eksportuj Wszystkie",
+        "schedule": "Zaplanuj",
+        "show": "Spektakl",
+        "rehearsal": "Próba",
+        "cast": {
+            "first": "1. Obsada",
+            "second": "2. Obsada",
+            "other": "Inna Obsada"
+        },
+        "live": "NA ŻYWO",
+        "scenes": "{count} Scen",
+        "viewDetails": "Szczegóły →",
+        "noShows": "Brak zaplanowanych spektakli.",
+        "showPast": "Pokaż Wcześniejsze ({count})",
+        "hidePast": "Ukryj Wcześniejsze"
+    },
+    "ScheduledShowDetailsModal": {
+        "show": "Spektakl",
+        "cast": {
+            "first": "1. Obsada",
+            "second": "2. Obsada",
+            "other": "Inna Obsada"
+        },
+        "sceneBreakdown": "Lista Scen",
+        "scene": "Scena {number}",
+        "edit": "Edytuj"
+    },
+    "ReviewList": {
+        "allCaughtUp": "Wszystko sprawdzone!",
+        "noDraftItems": "Brak szkiców do przeglądu.",
+        "addMoreItems": "Dodaj Więcej Przedmiotów",
+        "noImage": "Brak Zdjęcia",
+        "itemName": "Nazwa Przedmiotu",
+        "selectLocation": "Wybierz Lokalizację...",
+        "selectGroup": "Wybierz Grupę...",
+        "notes": "Notatki...",
+        "save": "Zapisz",
+        "cancel": "Anuluj",
+        "draft": "Szkic",
+        "location": "Lokalizacja",
+        "group": "Grupa",
+        "confirm": "Zatwierdź",
+        "edit": "Edytuj",
+        "deleteConfirmation": "Czy na pewno chcesz usunąć ten szkic?",
+        "updateError": "Nie udało się zaktualizować przedmiotu",
+        "confirmError": "Nie udało się zatwierdzić przedmiotu",
+        "deleteError": "Nie udało się usunąć przedmiotu"
+    },
+    "ItemDetailsDialog": {
+        "editItem": "Edytuj Przedmiot",
+        "location": "Lokalizacja",
+        "category": "Kategoria",
+        "added": "Dodano",
+        "unknown": "Nieznane",
+        "unknownLocation": "Nieznana Lokalizacja",
+        "uncategorized": "Bez Kategorii",
+        "notes": "Notatki",
+        "unassigned": "NIEPRZYPISANY"
+    },
+    "SettingsForm": {
+        "account": "Konto",
+        "emailAddress": "Adres Email",
+        "managedViaSupabase": "Zarządzane przez Supabase Auth",
+        "appearance": "Wygląd",
+        "darkMode": "Tryb Ciemny",
+        "alwaysOn": "Zawsze włączony dla Rekwizytorium",
+        "timeFormat": "Format 24-godzinny",
+        "timeFormatDescription": "Użyj formatu 24-godzinnego (np. 18:00)",
+        "notifications": "Powiadomienia",
+        "emailNotifications": "Powiadomienia Email",
+        "emailNotificationsDescription": "Otrzymuj aktualizacje o nadchodzących spektaklach",
+        "notificationsComingSoon": "Ustawienia powiadomień wkrótce.",
+        "security": "Bezpieczeństwo i Sesja",
+        "signOut": "Wyloguj",
+        "signOutDescription": "Zakończ bieżącą sesję",
+        "signingOut": "Wylogowywanie..."
+    }
+}

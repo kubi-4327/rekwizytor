@@ -1,0 +1,468 @@
+{
+    "Settings": {
+        "title": "Settings",
+        "description": "Manage your account and application preferences",
+        "language": "Language",
+        "theme": "Theme"
+    },
+    "Common": {
+        "save": "Save",
+        "cancel": "Cancel"
+    },
+    "Dashboard": {
+        "welcome": "Welcome back, {name}",
+        "subtitle": "Manage your theater props, performances, and checklists.",
+        "propsInventory": "Props Inventory",
+        "propsInventoryDesc": "Browse, add, and organize your theater props collection.",
+        "productions": "Productions",
+        "productionsDesc": "Manage shows, assign props, and track history.",
+        "checklists": "Checklists",
+        "checklistsDesc": "Live tracking for active shows and rehearsals.",
+        "recentActivity": "Recent Activity",
+        "noActivity": "No recent activity found."
+    },
+    "Navigation": {
+        "items": "Items",
+        "productions": "Productions",
+        "checklists": "Live View",
+        "reviewDrafts": "Review Drafts",
+        "aiStats": "AI Stats",
+        "settings": "Settings",
+        "signOut": "Sign out",
+        "lists": "Lists",
+        "more": "More"
+    },
+    "Items": {
+        "title": "Props Inventory",
+        "subtitle": "Manage your theater collection",
+        "addProps": "Add Props",
+        "export": "Export"
+    },
+    "Performances": {
+        "title": "Productions",
+        "subtitle": "Shows, rehearsals, and archives",
+        "addProduction": "Add Production",
+        "exportAllSchedule": "Export All Schedule"
+    },
+    "NewItem": {
+        "backToInventory": "Back to Inventory",
+        "title": "Add New Item",
+        "subtitle": "Fill in details manually for precise control."
+    },
+    "NewPerformance": {
+        "title": "Add New Show",
+        "subtitle": "Create a new performance to start assigning props and checklists."
+    },
+    "Review": {
+        "backToInventory": "Back to Inventory",
+        "title": "Review Draft Items",
+        "subtitle": "Review and confirm items added via Fast Mode.",
+        "pending": "{count} items pending"
+    },
+    "FastAdd": {
+        "backToInventory": "Back to Inventory",
+        "title": "Fast Add Mode",
+        "subtitle": "Take photos of props to quickly add them to your inventory. AI will help identify them."
+    },
+    "AIStats": {
+        "title": "AI Usage Statistics",
+        "subtitle": "Monitor token usage and costs for Gemini AI operations.",
+        "totalTokens": "Total Tokens",
+        "inOut": "In: {input} | Out: {output}",
+        "estimatedCost": "Estimated Cost",
+        "pricingNote": "Based on Gemini 2.0 Flash pricing",
+        "fastAdds": "Fast Adds",
+        "itemsProcessed": "Items processed",
+        "smartSearches": "Smart Searches",
+        "queriesAnalyzed": "Queries analyzed",
+        "generations": "Generations",
+        "descriptionsGenerated": "Descriptions generated",
+        "recentOperations": "Recent Operations",
+        "table": {
+            "time": "Time",
+            "operation": "Operation",
+            "model": "Model",
+            "inputTokens": "Input Tokens",
+            "outputTokens": "Output Tokens",
+            "total": "Total"
+        },
+        "operations": {
+            "fastAdd": "Fast Add",
+            "smartSearch": "Smart Search",
+            "generateDesc": "Generate Desc"
+        },
+        "noLogs": "No logs found yet. Perform some AI operations to see data here."
+    },
+    "ProductionDetails": {
+        "backToProductions": "Back to Productions",
+        "scenes": "Scenes",
+        "acts": "Acts",
+        "manageScenes": "Manage Scenes",
+        "editDetails": "Edit Details",
+        "liveView": "Live View",
+        "propsList": "Props List (Script)",
+        "manageProps": "Manage Props",
+        "table": {
+            "scene": "Scene",
+            "item": "Item",
+            "instructions": "Instructions"
+        },
+        "act": "Act {actNum}",
+        "noProps": "No props assigned to this production yet."
+    },
+    "ManageScenes": {
+        "backToProduction": "Back to Production",
+        "title": "Manage Scenes: {title}",
+        "subtitle": "Define the structure of the play (Acts and Scenes)."
+    },
+    "ManageProps": {
+        "backToProduction": "Back to Production",
+        "title": "Manage Props: {title}",
+        "subtitle": "Assign props to scenes to create the master script for this production."
+    },
+    "ScheduleShow": {
+        "steps": {
+            "date": "Date",
+            "time": "Time",
+            "review": "Review"
+        },
+        "titles": {
+            "selectDate": "Select Date",
+            "selectTime": "Select Time",
+            "reviewSchedule": "Review Schedule"
+        },
+        "subtitles": {
+            "selectDate": "When will the performance take place?",
+            "selectTime": "What time does the show start?",
+            "reviewSchedule": "You have {count} show(s) ready to schedule."
+        },
+        "selectCast": "Select Cast",
+        "cast": {
+            "first": "1st",
+            "second": "2nd",
+            "other": "Other",
+            "firstLabel": "1st Cast",
+            "secondLabel": "2nd Cast",
+            "otherLabel": "Other Cast"
+        },
+        "noShows": "No shows added yet.",
+        "addAnother": "Add Another Date",
+        "cancel": "Cancel",
+        "back": "Back",
+        "nextStep": "Next Step",
+        "scheduleShows": "Schedule {count} Shows",
+        "confirm": "Confirm & Schedule",
+        "unknownError": "An unknown error occurred",
+        "edit": "Edit",
+        "remove": "Remove"
+    },
+    "EditPerformance": {
+        "backToProduction": "Back to Production",
+        "title": "Edit Production",
+        "subtitle": "Update details for \"{title}\""
+    },
+    "LivePerformance": {
+        "noUpcomingShows": "No upcoming shows found",
+        "scheduleShow": "Schedule a show to see the live checklist.",
+        "noActiveShows": "No active shows",
+        "allFinished": "All scheduled shows for today have finished.",
+        "scenes": "Scenes",
+        "scene": "Scene {number}",
+        "noItemsInScene": "No items in this scene.",
+        "note": "Note: {note}",
+        "ready": "Ready",
+        "stage": "Stage",
+        "startShow": "Start Show",
+        "stopShow": "Stop Show",
+        "nextScene": "Next Scene",
+        "finishShow": "Finish Show",
+        "stageAll": "Stage All",
+        "prev": "Previous",
+        "act": "Act {number}",
+        "finishAct": "Finish Act",
+        "cancelLiveViewTitle": "Cancel Live View?",
+        "cancelLiveViewWarning": "Are you sure you want to cancel? All progress and readiness status will be lost.",
+        "confirmCancel": "Yes, Cancel Show",
+        "goBack": "No, Go Back",
+        "startLiveViewTitle": "Start Live View?",
+        "startLiveViewDesc": "Entering Live View will allow you to track the performance progress in real-time.",
+        "startLiveViewAction": "Start Live View",
+        "showFinished": "Show Finished",
+        "duration": "Duration",
+        "itemsStaged": "Items Staged",
+        "returnToDashboard": "Return to Dashboard",
+        "cancel": "Cancel",
+        "cancelLiveView": "Cancel Live View"
+    },
+    "ChecklistPage": {
+        "backToPerformance": "Back to Performance",
+        "scene": "Scene {number}",
+        "start": "Start",
+        "end": "End",
+        "prev": "Prev",
+        "nextScene": "Next Scene ({number})"
+    },
+    "Checklists": {
+        "title": "Active Live View",
+        "subtitle": "Monitor real-time progress of ongoing shows.",
+        "live": "LIVE",
+        "upcoming": "UPCOMING",
+        "noActiveShows": "No active shows",
+        "noActiveShowsDesc": "Scheduled performances will appear here when they are ready to start.",
+        "manageLiveView": "Manage Live View",
+        "manageLiveViewDesc": "Control the active session. You can restart the show or stop it completely for all users.",
+        "restartShow": "Restart Show",
+        "restartShowDesc": "Reset all progress and start from Scene 1.",
+        "stopShow": "Stop Show",
+        "stopShowDesc": "Immediately stop the show for everyone.",
+        "unknownProduction": "Unknown Production",
+        "sceneFallback": "Scene {number}",
+        "openLiveView": "Open Live View"
+    },
+    "EditPerformanceForm": {
+        "showTitle": "Show Title",
+        "premiereDate": "Premiere Date",
+        "status": "Status",
+        "statuses": {
+            "upcoming": "Upcoming",
+            "active": "Active",
+            "archived": "Archived"
+        },
+        "notes": "Notes",
+        "showPoster": "Show Poster",
+        "noPoster": "No Poster",
+        "uploadPoster": "Upload a poster image. We'll automatically generate a thumbnail and extract the theme color.",
+        "dragDrop": "Or drag and drop an image here.",
+        "selectThemeColor": "Select Theme Color",
+        "currentThemeColor": "Current Theme Color",
+        "deleteProduction": "Delete Production",
+        "deleteConfirmation": "Are you sure you want to delete this production? This action cannot be undone and will remove all associated data.",
+        "cancel": "Cancel",
+        "saveChanges": "Save Changes",
+        "unknownError": "An unknown error occurred"
+    },
+    "LiveChecklist": {
+        "note": "Note: {note}",
+        "ready": "Ready",
+        "stage": "Stage",
+        "noItems": "No items in this checklist."
+    },
+    "Login": {
+        "title": "Rekwizytorium",
+        "subtitleSignIn": "Sign in to access the prop archive",
+        "subtitleSignUp": "Create an account to get started",
+        "email": "Email address",
+        "password": "Password",
+        "signUp": "Sign up",
+        "signIn": "Sign in",
+        "fillTestCredentials": "Fill Test Credentials",
+        "alreadyHaveAccount": "Already have an account? Sign in",
+        "dontHaveAccount": "Don't have an account? Sign up",
+        "checkEmail": "Check your email for the confirmation link."
+    },
+    "ItemsList": {
+        "searchPlaceholderSmart": "Describe what you need (e.g. 'vintage suitcase')...",
+        "searchPlaceholderClassic": "Search by name or notes...",
+        "allStatuses": "All Statuses",
+        "statuses": {
+            "active": "Active",
+            "upcoming": "Upcoming",
+            "archived": "Archived",
+            "unassigned": "Unassigned",
+            "in_maintenance": "In Maintenance"
+        },
+        "allCategories": "All Categories",
+        "allLocations": "All Locations",
+        "newestFirst": "Newest First",
+        "oldestFirst": "Oldest First",
+        "searchIn": "Search in",
+        "aiAnalysis": "AI Analysis",
+        "bestMatch": "Best Match",
+        "closeMatch": "Close Match",
+        "alternative": "Alternative",
+        "noNotes": "No notes",
+        "noItemsFound": "No items found matching your filters."
+    },
+    "AddPropsButton": {
+        "addItem": "Add Item",
+        "fastAdd": "Fast Add (AI)",
+        "fastAddDesc": "Scan & auto-tag items",
+        "manualAdd": "Manual Add",
+        "manualAddDesc": "Fill details manually"
+    },
+    "ExportButton": {
+        "export": "Export",
+        "toExcel": "To Excel",
+        "toPdf": "To PDF (Checklist)",
+        "pdfTitle": "Props Inventory Checklist",
+        "generatedOn": "Generated on",
+        "columns": {
+            "name": "Item Name",
+            "notes": "Notes",
+            "status": "Status",
+            "check": "Check"
+        },
+        "page": "Page"
+    },
+    "PerformancesList": {
+        "tbd": "TBD",
+        "searchPlaceholder": "Search productions...",
+        "allStatus": "All Status",
+        "statuses": {
+            "active": "Active",
+            "upcoming": "Upcoming",
+            "archived": "Archived"
+        },
+        "noPerformancesFound": "No productions found matching your criteria."
+    },
+    "ManageScenesForm": {
+        "addNewScene": "Add New Scene",
+        "actNumber": "Act #",
+        "sceneNumber": "Scene #",
+        "sceneNameOptional": "Scene Name (Optional)",
+        "sceneNamePlaceholder": "e.g. The Meeting",
+        "addScene": "Add Scene",
+        "act": "Act",
+        "scene": "Scene",
+        "sceneName": "Scene Name",
+        "noScenes": "No scenes defined yet. Start by adding Scene 1 of Act 1.",
+        "deleteConfirm": "Are you sure? This will delete the scene definition.",
+        "addError": "Failed to add scene",
+        "deleteError": "Failed to delete scene",
+        "updateError": "Failed to update scene"
+    },
+    "ManagePropsForm": {
+        "addPropToScene": "Add Prop to Scene",
+        "scene": "Scene",
+        "selectScene": "Select a scene...",
+        "actScene": "Act {act}, Scene {scene}",
+        "customScene": "Custom / Unlisted Scene",
+        "noScenesDefined": "No scenes defined.",
+        "manageScenes": "Manage Scenes",
+        "orUseCustom": "or use custom below.",
+        "sceneNumPlaceholder": "Scene #",
+        "nameOptPlaceholder": "Name (opt)",
+        "item": "Item",
+        "searchPropPlaceholder": "Search for a prop...",
+        "addAssignment": "Add Assignment",
+        "setupInstructions": "Setup Instructions / Notes",
+        "instructionsPlaceholder": "e.g. Place on the table, stage left.",
+        "assignedPropsScript": "Assigned Props (Script)",
+        "columns": {
+            "scene": "Scene",
+            "item": "Item",
+            "instructions": "Instructions",
+            "actions": "Actions"
+        },
+        "unknownItem": "Unknown Item",
+        "noPropsAssigned": "No props assigned yet. Use the form above to add items to scenes.",
+        "deleteConfirm": "Are you sure you want to remove this prop from the production?",
+        "addError": "Failed to add prop",
+        "deleteError": "Failed to remove prop",
+        "selectPropsButton": "Select Props"
+    },
+    "ItemSelectionDialog": {
+        "selectProps": "Select Props",
+        "selectPropsSubtitle": "Select one or more props to add to the scene.",
+        "searchPlaceholder": "Search by name or notes...",
+        "noResults": "No props found.",
+        "selectedCount": "{count} selected",
+        "cancel": "Cancel",
+        "addSelected": "Add Selected ({count})"
+    },
+    "CreatePerformanceForm": {
+        "showTitle": "Show Title",
+        "titlePlaceholder": "e.g. Hamlet - Winter 2024",
+        "showPoster": "Show Poster",
+        "noPoster": "No Poster",
+        "uploadPoster": "Upload a poster image. We'll automatically generate a thumbnail and extract the theme color.",
+        "dragDrop": "Or drag and drop an image here.",
+        "selectThemeColor": "Select Theme Color",
+        "premiereDate": "Premiere Date",
+        "datePlaceholder": "Select date",
+        "notes": "Notes",
+        "notesPlaceholder": "Director, stage manager, or other details...",
+        "cancel": "Cancel",
+        "saveShow": "Save Show",
+        "unknownError": "An unknown error occurred"
+    },
+    "ScheduledShowsList": {
+        "title": "Scheduled Shows",
+        "exportAll": "Export All",
+        "schedule": "Schedule",
+        "show": "Show",
+        "rehearsal": "Rehearsal",
+        "cast": {
+            "first": "1st Cast",
+            "second": "2nd Cast",
+            "other": "Other Cast"
+        },
+        "live": "LIVE",
+        "scenes": "{count} Scenes",
+        "viewDetails": "View Details →",
+        "noShows": "No shows scheduled.",
+        "showPast": "Show Past ({count})",
+        "hidePast": "Hide Past"
+    },
+    "ScheduledShowDetailsModal": {
+        "show": "Show",
+        "cast": {
+            "first": "1st Cast",
+            "second": "2nd Cast",
+            "other": "Other Cast"
+        },
+        "sceneBreakdown": "Scene Breakdown",
+        "scene": "Scene {number}",
+        "edit": "Edit"
+    },
+    "ReviewList": {
+        "allCaughtUp": "All caught up!",
+        "noDraftItems": "No draft items to review.",
+        "addMoreItems": "Add More Items",
+        "noImage": "No Image",
+        "itemName": "Item Name",
+        "selectLocation": "Select Location...",
+        "selectGroup": "Select Group...",
+        "notes": "Notes...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "draft": "Draft",
+        "location": "Location",
+        "group": "Group",
+        "confirm": "Confirm",
+        "edit": "Edit",
+        "deleteConfirmation": "Are you sure you want to delete this draft?",
+        "updateError": "Failed to update item",
+        "confirmError": "Failed to confirm item",
+        "deleteError": "Failed to delete item"
+    },
+    "ItemDetailsDialog": {
+        "editItem": "Edit Item",
+        "location": "Location",
+        "category": "Category",
+        "added": "Added",
+        "unknown": "Unknown",
+        "unknownLocation": "Unknown Location",
+        "uncategorized": "Uncategorized",
+        "notes": "Notes",
+        "unassigned": "UNASSIGNED"
+    },
+    "SettingsForm": {
+        "account": "Account",
+        "emailAddress": "Email Address",
+        "managedViaSupabase": "Managed via Supabase Auth",
+        "appearance": "Appearance",
+        "darkMode": "Dark Mode",
+        "alwaysOn": "Always on for Rekwizytorium",
+        "timeFormat": "24-Hour Time",
+        "timeFormatDescription": "Use 24-hour format (e.g. 18:00)",
+        "notifications": "Notifications",
+        "emailNotifications": "Email Notifications",
+        "emailNotificationsDescription": "Receive updates about upcoming shows",
+        "notificationsComingSoon": "Notification settings are coming soon.",
+        "security": "Security & Session",
+        "signOut": "Sign Out",
+        "signOutDescription": "End your current session",
+        "signingOut": "Signing out..."
+    }
+}

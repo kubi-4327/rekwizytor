@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 @theme inline {
@@ -10,17 +10,36 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Semantic Colors */
+  --color-ai-primary: #A0232F;
+  /* Burgundy */
+  --color-ai-secondary: #C92F3E;
+  /* Lighter Burgundy */
+  --color-ai-bg: rgba(160, 35, 47, 0.1);
+
+  --color-action-primary: #A0232F;
+  /* Burgundy (replacing Blue) */
+  --color-action-hover: #C92F3E;
+  /* Lighter Burgundy */
+
+  --color-settings-icon: #737373;
+  /* Neutral 500 */
+  --color-settings-hover: #d4d4d4;
+  /* Neutral 300 */
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+}
+
+.btn-burgundy {
+  background: linear-gradient(135deg, #C92F3E, #A0232F);
+}
+
+.btn-burgundy:hover {
+  background: linear-gradient(135deg, #D43A49, #B02735);
 }
