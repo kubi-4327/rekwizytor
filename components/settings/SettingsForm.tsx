@@ -9,6 +9,8 @@ import { useTranslations } from 'next-intl'
 
 type UserData = {
     email: string | undefined
+    full_name?: string | null
+    id?: string
 }
 
 export function SettingsForm({ user }: { user: UserData }) {
@@ -16,6 +18,8 @@ export function SettingsForm({ user }: { user: UserData }) {
     const router = useRouter()
     const supabase = createClient()
     const [loading, setLoading] = useState(false)
+    const [updating, setUpdating] = useState(false)
+    const [fullName, setFullName] = useState(user.full_name || '')
     const { is24Hour, toggleFormat, mounted } = useTimeFormat()
 
     const handleSignOut = async () => {
@@ -23,6 +27,21 @@ export function SettingsForm({ user }: { user: UserData }) {
         await supabase.auth.signOut()
         router.push('/login')
         router.refresh()
+    }
+
+    const handleUpdateProfile = async () => {
+        if (!user.id) return
+
+        setUpdating(true)
+        const { error } = await supabase
+            .from('profiles')
+            .update({ full_name: fullName })
+            .eq('id', user.id)
+
+        if (!error) {
+            router.refresh()
+        }
+        setUpdating(false)
     }
 
     return (
@@ -37,9 +56,30 @@ export function SettingsForm({ user }: { user: UserData }) {
                     <div className="grid gap-6">
                         <div>
                             <label className="block text-sm font-medium text-neutral-400 mb-2">
+                                {t('fullName')}
+                            </label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={fullName}
+                                    onChange={(e) => setFullName(e.target.value)}
+                                    className="flex-1 rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
+                                    placeholder="John Doe"
+                                />
+                                <button
+                                    onClick={handleUpdateProfile}
+                                    disabled={updating || fullName === user.full_name}
+                                    className="rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50"
+                                >
+                                    {updating ? '...' : t('save')}
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-neutral-400 mb-2">
                                 {t('emailAddress')}
                             </label>
-                            <div className="flex items-center rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-neutral-300">
+                            <div className="flex items-center rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-neutral-300 cursor-not-allowed opacity-75">
                                 {user.email}
                             </div>
                             <p className="mt-2 text-xs text-neutral-500">

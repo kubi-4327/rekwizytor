@@ -3,16 +3,30 @@ import Link from 'next/link'
 import { Box, Layers, ClipboardList, ArrowRight } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
+import { Greeting } from '@/components/dashboard/Greeting'
+
 export default async function Home() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  let displayName = 'User'
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .single()
+
+    displayName = profile?.full_name || user.email?.split('@')[0] || 'User'
+  }
+
   const t = await getTranslations('Dashboard')
 
   return (
     <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight text-white">
-          {t('welcome', { name: user?.email?.split('@')[0] || 'User' })}
+          <Greeting name={displayName} />
         </h1>
         <p className="text-neutral-400">
           {t('subtitle')}

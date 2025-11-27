@@ -258,7 +258,9 @@
         "fillTestCredentials": "Fill Test Credentials",
         "alreadyHaveAccount": "Already have an account? Sign in",
         "dontHaveAccount": "Don't have an account? Sign up",
-        "checkEmail": "Check your email for the confirmation link."
+        "checkEmail": "Check your email for the confirmation link.",
+        "name": "Name",
+        "passwordTooWeak": "Password is too weak. It must be at least 8 characters long and contain uppercase letters, numbers, and special characters."
     },
     "ItemsList": {
         "searchPlaceholderSmart": "Describe what you need (e.g. 'vintage suitcase')...",
@@ -449,6 +451,7 @@
     },
     "SettingsForm": {
         "account": "Account",
+        "fullName": "Full Name",
         "emailAddress": "Email Address",
         "managedViaSupabase": "Managed via Supabase Auth",
         "appearance": "Appearance",

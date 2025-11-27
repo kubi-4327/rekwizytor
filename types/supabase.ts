@@ -53,6 +53,7 @@ export type Database = {
           created_at: string | null
           icon: string | null
           id: string
+          location_id: string | null
           name: string
         }
         Insert: {
@@ -60,6 +61,7 @@ export type Database = {
           created_at?: string | null
           icon?: string | null
           id?: string
+          location_id?: string | null
           name: string
         }
         Update: {
@@ -67,9 +69,18 @@ export type Database = {
           created_at?: string | null
           icon?: string | null
           id?: string
+          location_id?: string | null
           name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "groups_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       items: {
         Row: {
@@ -298,6 +309,33 @@ export type Database = {
           thumbnail_url?: string | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+          username: string | null
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+          username?: string | null
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+          website?: string | null
         }
         Relationships: []
       }

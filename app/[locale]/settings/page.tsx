@@ -16,6 +16,12 @@ export default async function SettingsPage() {
         return redirect('/login')
     }
 
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
     return (
         <div className="p-6 md:p-10 max-w-3xl mx-auto space-y-8">
             <div>
@@ -30,7 +36,7 @@ export default async function SettingsPage() {
                 <LanguageSwitcher />
             </div>
 
-            <SettingsForm user={{ email: user.email }} />
+            <SettingsForm user={{ email: user.email, ...profile }} />
         </div>
     )
 }

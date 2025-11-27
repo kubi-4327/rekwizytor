@@ -10,12 +10,25 @@ export default function LoginPage() {
     const t = useTranslations('Login')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [name, setName] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [message, setMessage] = useState<string | null>(null)
     const [isSignUp, setIsSignUp] = useState(false)
     const router = useRouter()
     const supabase = createClient()
+
+    const getPasswordStrength = (pass: string) => {
+        if (!pass) return 0
+        let score = 0
+        if (pass.length >= 8) score += 1
+        if (/[A-Z]/.test(pass)) score += 1
+        if (/[0-9]/.test(pass)) score += 1
+        if (/[^A-Za-z0-9]/.test(pass)) score += 1
+        return score
+    }
+
+    const passwordStrength = getPasswordStrength(password)
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -24,11 +37,20 @@ export default function LoginPage() {
         setMessage(null)
 
         if (isSignUp) {
+            if (passwordStrength < 2) {
+                setError(t('passwordTooWeak'))
+                setLoading(false)
+                return
+            }
+
             const { error } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
                     emailRedirectTo: `${location.origin}/auth/callback`,
+                    data: {
+                        full_name: name.trim(),
+                    },
                 },
             })
             if (error) {
@@ -73,6 +95,27 @@ export default function LoginPage() {
 
                 <form onSubmit={handleAuth} className="space-y-6">
                     <div className="space-y-4">
+                        {isSignUp && (
+                            <div>
+                                <label
+                                    htmlFor="name"
+                                    className="block text-sm font-medium text-neutral-300"
+                                >
+                                    {t('name')}
+                                </label>
+                                <input
+                                    id="name"
+                                    name="name"
+                                    type="text"
+                                    required
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className="mt-1 block w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
+                                    placeholder="John Doe"
+                                />
+                            </div>
+                        )}
+
                         <div>
                             <label
                                 htmlFor="email"
@@ -110,6 +153,23 @@ export default function LoginPage() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="mt-1 block w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
                             />
+                            {isSignUp && password && (
+                                <div className="mt-2 flex gap-1">
+                                    {[1, 2, 3, 4].map((level) => (
+                                        <div
+                                            key={level}
+                                            className={`h-1 flex-1 rounded-full transition-colors ${passwordStrength >= level
+                                                ? passwordStrength >= 3
+                                                    ? 'bg-green-500'
+                                                    : passwordStrength >= 2
+                                                        ? 'bg-yellow-500'
+                                                        : 'bg-red-500'
+                                                : 'bg-neutral-800'
+                                                }`}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -129,7 +189,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="flex w-full justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex w-full justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                             {loading ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -141,7 +201,7 @@ export default function LoginPage() {
                         <button
                             type="button"
                             onClick={fillTestData}
-                            className="flex w-full items-center justify-center rounded-md border border-neutral-800 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-300 hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-neutral-900"
+                            className="flex w-full items-center justify-center rounded-md border border-neutral-800 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-300 hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-neutral-900 cursor-pointer"
                         >
                             <Sparkles className="mr-2 h-4 w-4 text-yellow-500" />
                             {t('fillTestCredentials')}
@@ -157,7 +217,7 @@ export default function LoginPage() {
                             setError(null)
                             setMessage(null)
                         }}
-                        className="text-sm text-neutral-400 hover:text-white underline underline-offset-4"
+                        className="text-sm text-neutral-400 hover:text-white underline underline-offset-4 cursor-pointer"
                     >
                         {isSignUp ? t('alreadyHaveAccount') : t('dontHaveAccount')}
                     </button>

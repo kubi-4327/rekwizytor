@@ -258,7 +258,9 @@
         "fillTestCredentials": "Wypełnij Dane Testowe",
         "alreadyHaveAccount": "Masz już konto? Zaloguj się",
         "dontHaveAccount": "Nie masz konta? Zarejestruj się",
-        "checkEmail": "Sprawdź swoją skrzynkę email, aby potwierdzić konto."
+        "checkEmail": "Sprawdź swoją skrzynkę email, aby potwierdzić konto.",
+        "name": "Imię",
+        "passwordTooWeak": "Hasło jest za słabe. Musi mieć co najmniej 8 znaków i zawierać wielkie litery, cyfry oraz znaki specjalne."
     },
     "ItemsList": {
         "searchPlaceholderSmart": "Opisz czego potrzebujesz (np. 'stara walizka')...",
@@ -449,6 +451,7 @@
     },
     "SettingsForm": {
         "account": "Konto",
+        "fullName": "Imię i Nazwisko",
         "emailAddress": "Adres Email",
         "managedViaSupabase": "Zarządzane przez Supabase Auth",
         "appearance": "Wygląd",

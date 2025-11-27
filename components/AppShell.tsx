@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
-    const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/auth')
+    // Check for /login, /auth, or localized versions like /pl/login, /en/auth
+    const isAuthPage = /^\/(?:[a-z]{2}\/)?(?:login|auth)/.test(pathname)
 
     if (isAuthPage) {
         return <>{children}</>
