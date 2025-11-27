@@ -52,11 +52,14 @@ export async function updateSession(request: NextRequest, response?: NextRespons
         // Treat as unauthenticated
     }
 
-    if (
-        !user &&
-        !request.nextUrl.pathname.startsWith('/login') &&
-        !request.nextUrl.pathname.startsWith('/auth')
-    ) {
+    const path = request.nextUrl.pathname
+    const isAuthPage =
+        path.startsWith('/login') ||
+        path.startsWith('/auth') ||
+        // Check for localized paths (e.g. /pl/login, /en/auth)
+        /^\/(?:en|pl)\/(?:login|auth)/.test(path)
+
+    if (!user && !isAuthPage) {
         // no user, potentially respond by redirecting the user to the login page
         const url = request.nextUrl.clone()
         url.pathname = '/login'
