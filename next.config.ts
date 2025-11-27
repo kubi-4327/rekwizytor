@@ -5,10 +5,6 @@ const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   experimental: {
-    // @ts-expect-error - turbopack is a valid option but missing in types
-    turbopack: {
-      root: __dirname,
-    },
   },
   images: {
     remotePatterns: [
