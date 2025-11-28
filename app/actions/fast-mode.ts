@@ -11,6 +11,7 @@ import { Database } from '@/types/supabase'
 export async function uploadAndAnalyzeImages(formData: FormData) {
     const supabase = await createClient()
     const images = formData.getAll('images') as File[]
+    const thumbnails = formData.getAll('thumbnails') as File[]
     const locationId = formData.get('locationId') as string
     const groupId = formData.get('groupId') as string | null
 
@@ -23,11 +24,15 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
     const { data: groups } = await supabase.from('groups').select('id, name')
     const groupsList = groups?.map(g => g.name).join(', ') || ''
 
-    for (const image of images) {
+    for (let i = 0; i < images.length; i++) {
+        const image = images[i]
+        const thumbnail = thumbnails[i]
+
         // 1. Upload to Supabase Storage
         const fileExt = image.name.split('.').pop()
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
         const filePath = `fast-mode/${fileName}`
+        const thumbPath = `fast-mode/thumb_${fileName}`
 
         const { error: uploadError } = await supabase.storage
             .from('items')
@@ -38,9 +43,22 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
             continue
         }
 
+        const { error: thumbUploadError } = await supabase.storage
+            .from('items')
+            .upload(thumbPath, thumbnail)
+
+        if (thumbUploadError) {
+            console.error('Thumbnail upload error:', thumbUploadError)
+            // Continue without thumbnail? Or fail? Let's continue.
+        }
+
         const { data: { publicUrl } } = supabase.storage
             .from('items')
             .getPublicUrl(filePath)
+
+        const { data: { publicUrl: thumbnailUrl } } = supabase.storage
+            .from('items')
+            .getPublicUrl(thumbPath)
 
         // 2. AI Analysis with Gemini Vision
         try {
@@ -124,6 +142,7 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
                 .insert({
                     name: analysis.name,
                     image_url: publicUrl,
+                    thumbnail_url: thumbnailUrl,
                     location_id: locationId,
                     group_id: matchedGroupId || null,
                     status: 'draft' as Database['public']['Enums']['item_status_enum'],

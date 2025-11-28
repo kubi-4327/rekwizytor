@@ -40,39 +40,20 @@ export function CreateItemForm({ groups, locations }: Props) {
         setError(null)
 
         try {
-            let imageUrl = null
+            const formData = new FormData()
+            formData.append('name', name)
+            if (notes) formData.append('notes', notes)
+            if (groupId) formData.append('group_id', groupId)
+            if (locationId) formData.append('location_id', locationId)
+            if (imageFile) formData.append('image', imageFile)
+            formData.append('is_draft', isDraft.toString())
 
-            if (imageFile) {
-                const fileExt = imageFile.name.split('.').pop()
-                const fileName = `${Math.random()}.${fileExt}`
-                const filePath = `${fileName}`
+            const { createItem } = await import('@/app/actions/create-item')
+            const result = await createItem(formData)
 
-                const { error: uploadError } = await supabase.storage
-                    .from('item-images')
-                    .upload(filePath, imageFile)
-
-                if (uploadError) throw uploadError
-
-                const { data: { publicUrl } } = supabase.storage
-                    .from('item-images')
-                    .getPublicUrl(filePath)
-
-                imageUrl = publicUrl
+            if (result.error) {
+                throw new Error(result.error)
             }
-
-            const { error: insertError } = await supabase
-                .from('items')
-                .insert({
-                    name,
-                    notes: notes || null,
-                    group_id: groupId || null,
-                    location_id: locationId || null,
-                    image_url: imageUrl,
-                    performance_status: 'unassigned',
-                    status: isDraft ? 'draft' : 'active'
-                })
-
-            if (insertError) throw insertError
 
             router.push('/items')
             router.refresh()

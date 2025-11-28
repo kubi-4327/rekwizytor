@@ -75,7 +75,7 @@ export async function smartSearch(query: string) {
     ${richMatches.map((m) => `- [ID: ${m.id}] ${m.name} | Cechy: ${m.ai_description || m.notes || ''} (Podobieństwo: ${(m.similarity * 100).toFixed(0)}%)`).join('\n') || 'Brak przedmiotów'}
 
     Dostępne grupy (kategorie) w magazynie:
-    ${availableGroups.map((g: any) => `- ${g.name} (Lokalizacja: ${g.locations?.name || 'Nieznana'})`).join('\n') || 'Brak grup'}
+    ${availableGroups.map((g: { name: string, locations: { name: string } | null }) => `- ${g.name} (Lokalizacja: ${g.locations?.name || 'Nieznana'})`).join('\n') || 'Brak grup'}
 
     Zadanie:
     1. Wybierz najlepsze dopasowania (maksymalnie 3).

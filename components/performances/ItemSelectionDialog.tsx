@@ -61,7 +61,7 @@ export function ItemSelectionDialog({ isOpen, onClose, onConfirm, items, accentC
                 {/* Header */}
                 <div className="p-4 border-b border-neutral-800 flex items-center justify-between shrink-0">
                     <div>
-                        <h2 className="text-xl font-bold text-white">{t('selectProps')}</h2>
+                        <h2 className="text-xl font-bold text-white mb-2">{t('selectProps')}</h2>
                         <p className="text-sm text-neutral-400">{t('selectPropsSubtitle')}</p>
                     </div>
                     <button onClick={onClose} className="text-neutral-400 hover:text-white transition-colors">

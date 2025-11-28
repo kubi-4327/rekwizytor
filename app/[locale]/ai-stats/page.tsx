@@ -14,10 +14,14 @@ export default async function AIStatsPage() {
         .from('ai_usage_logs')
         .select('tokens_input, tokens_output, operation_type')
 
+    const { data: storageStats } = await supabase
+        .rpc('get_storage_stats')
+
     return (
         <StatsDashboard
             logs={logs || []}
             allStats={stats || []}
+            storageStats={storageStats || []}
         />
     )
 }

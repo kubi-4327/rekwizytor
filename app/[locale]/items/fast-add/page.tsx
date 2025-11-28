@@ -27,7 +27,7 @@ export default async function FastAddPage() {
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     {t('backToInventory')}
                 </Link>
-                <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
+                <h1 className="text-xl font-bold text-white">{t('title')}</h1>
                 <p className="text-neutral-400 text-sm mt-1">
                     {t('subtitle')}
                 </p>

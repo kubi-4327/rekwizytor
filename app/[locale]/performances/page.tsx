@@ -13,6 +13,7 @@ export default async function PerformancesPage() {
     const { data: performances } = await supabase
         .from('performances')
         .select('*')
+        .is('deleted_at', null)
         .order('premiere_date', { ascending: false })
 
     const { data: allScheduledShows } = await supabase
@@ -32,7 +33,7 @@ export default async function PerformancesPage() {
         <div className="p-4 md:p-10 space-y-6 max-w-7xl mx-auto">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
+                    <h1 className="text-xl font-bold text-white">{t('title')}</h1>
                     <p className="text-neutral-400 text-sm mt-1">
                         {t('subtitle')}
                     </p>

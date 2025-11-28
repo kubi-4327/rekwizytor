@@ -71,6 +71,7 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
     }, [facingMode])
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         startStream()
 
         return () => {

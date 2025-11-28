@@ -25,7 +25,7 @@ export default async function SettingsPage() {
     return (
         <div className="p-6 md:p-10 max-w-3xl mx-auto space-y-8">
             <div>
-                <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
+                <h1 className="text-xl font-bold text-white">{t('title')}</h1>
                 <p className="text-neutral-400 text-sm mt-1">
                     {t('description')}
                 </p>

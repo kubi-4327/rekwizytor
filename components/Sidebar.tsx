@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Theater, Box, Layers, ClipboardList, Settings, LogOut, Sparkles, BarChart } from 'lucide-react'
+import { Theater, Box, Layers, ClipboardList, Settings, LogOut, Sparkles, BarChart, Notebook } from 'lucide-react'
 import { clsx } from 'clsx'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -18,6 +18,7 @@ export function Sidebar() {
         { name: t('items'), href: '/items', icon: Box },
         { name: t('productions'), href: '/performances', icon: Layers },
         { name: t('checklists'), href: '/checklists', icon: ClipboardList },
+        { name: t('notes'), href: '/notes', icon: Notebook },
         { name: t('reviewDrafts'), href: '/items/review', icon: Sparkles },
         { name: t('aiStats'), href: '/ai-stats', icon: BarChart },
     ]
@@ -34,7 +35,7 @@ export function Sidebar() {
                 <div className="flex h-16 flex-shrink-0 items-center px-4 bg-[#2a2a2a] border-b border-neutral-800">
                     <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
                         <Theater className="h-8 w-8 text-neutral-200 mr-2" />
-                        <span className="text-xl font-bold text-white tracking-tight">Rekwizytorium</span>
+                        <span className="text-lg font-bold font-boldonse text-white tracking-tight">Rekwizytorium</span>
                     </Link>
                 </div>
                 <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">

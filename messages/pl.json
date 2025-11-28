@@ -26,10 +26,11 @@
         "productions": "Spektakle",
         "checklists": "Live View",
         "reviewDrafts": "Przegląd Szkiców",
-        "aiStats": "Statystyki AI",
+        "aiStats": "Statystyki",
         "settings": "Ustawienia",
         "signOut": "Wyloguj się",
         "lists": "Listy",
+        "notes": "Notatki",
         "more": "Więcej"
     },
     "Items": {
@@ -65,8 +66,8 @@
         "subtitle": "Rób zdjęcia rekwizytów, aby szybko dodać je do magazynu. AI pomoże je zidentyfikować."
     },
     "AIStats": {
-        "title": "Statystyki Użycia AI",
-        "subtitle": "Monitoruj zużycie tokenów i koszty operacji Gemini AI.",
+        "title": "Statystyki",
+        "subtitle": "Monitoruj zużycie tokenów AI oraz miejsce na dysku.",
         "totalTokens": "Całkowita Liczba Tokenów",
         "inOut": "Wej: {input} | Wyj: {output}",
         "estimatedCost": "Szacowany Koszt",
@@ -283,7 +284,9 @@
         "closeMatch": "Bliskie Dopasowanie",
         "alternative": "Alternatywa",
         "noNotes": "Brak notatek",
-        "noItemsFound": "Nie znaleziono przedmiotów pasujących do filtrów."
+        "noItemsFound": "Nie znaleziono przedmiotów pasujących do filtrów.",
+        "loadMore": "Załaduj Więcej",
+        "loading": "Ładowanie..."
     },
     "AddPropsButton": {
         "addItem": "Dodaj Przedmiot",
@@ -447,7 +450,9 @@
         "unknownLocation": "Nieznana Lokalizacja",
         "uncategorized": "Bez Kategorii",
         "notes": "Notatki",
-        "unassigned": "NIEPRZYPISANY"
+        "unassigned": "NIEPRZYPISANY",
+        "delete": "Usuń",
+        "deleteConfirm": "Czy na pewno chcesz usunąć ten przedmiot?"
     },
     "SettingsForm": {
         "account": "Konto",
@@ -467,5 +472,45 @@
         "signOut": "Wyloguj",
         "signOutDescription": "Zakończ bieżącą sesję",
         "signingOut": "Wylogowywanie..."
+    },
+    "Waiting": {
+        "title": "Konto Oczekujące na Zatwierdzenie",
+        "description": "Twoje konto zostało utworzone i oczekuje na zatwierdzenie przez administratora. Zostaniesz powiadomiony, gdy dostęp zostanie przyznany.",
+        "signOut": "Wyloguj się"
+    },
+    "Rejected": {
+        "title": "Konto Odrzucone",
+        "description": "Twoja prośba o założenie konta została odrzucona przez administratora. Jeśli uważasz, że to błąd, skontaktuj się z pomocą techniczną.",
+        "signOut": "Wyloguj się"
+    },
+    "Trash": {
+        "title": "Kosz",
+        "subtitle": "Zarządzaj usuniętymi przedmiotami i przedstawieniami.",
+        "items": "Przedmioty",
+        "performances": "Przedstawienia",
+        "noDeletedItems": "Nie znaleziono usuniętych przedmiotów.",
+        "noDeletedPerformances": "Nie znaleziono usuniętych przedstawień.",
+        "deletedOn": "Usunięto {date}",
+        "restore": "Przywróć",
+        "deleteForever": "Usuń na zawsze",
+        "deleteForeverConfirm": "Czy na pewno chcesz to trwale usunąć? Tej operacji nie można cofnąć."
+    },
+    "AdminUsers": {
+        "title": "Zarządzanie Użytkownikami",
+        "subtitle": "Zarządzaj dostępem, rolami i zatwierdzeniami.",
+        "user": "Użytkownik",
+        "role": "Rola",
+        "status": "Status",
+        "actions": "Akcje",
+        "approve": "Zatwierdź",
+        "reject": "Odrzuć",
+        "delete": "Usuń",
+        "deleteConfirm": "Czy na pewno chcesz usunąć tego użytkownika? Tej operacji nie można cofnąć.",
+        "deleteError": "Nie udało się usunąć użytkownika.",
+        "statuses": {
+            "pending": "Oczekujący",
+            "approved": "Zatwierdzony",
+            "rejected": "Odrzucony"
+        }
     }
 }

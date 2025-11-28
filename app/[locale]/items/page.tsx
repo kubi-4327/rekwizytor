@@ -9,12 +9,13 @@ import { getTranslations } from 'next-intl/server'
 export default async function ItemsPage() {
     const supabase = await createClient()
     const t = await getTranslations('Items')
-    const { data: items } = await supabase
+    const { data: items, count } = await supabase
         .from('items')
-        .select('*')
+        .select('*', { count: 'exact' })
         .is('deleted_at', null)
         .neq('status', 'draft')
         .order('created_at', { ascending: false })
+        .range(0, 49)
 
     const { data: locations } = await supabase.from('locations').select('*').order('name')
     const { data: groups } = await supabase.from('groups').select('*').order('name')
@@ -23,7 +24,7 @@ export default async function ItemsPage() {
         <div className="p-4 md:p-10 space-y-6 max-w-7xl mx-auto">
             <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
+                    <h1 className="text-xl font-bold text-white">{t('title')}</h1>
                     <p className="text-neutral-400 text-sm mt-1">
                         {t('subtitle')}
                     </p>
@@ -37,6 +38,7 @@ export default async function ItemsPage() {
 
             <ItemsList
                 initialItems={items || []}
+                totalCount={count || 0}
                 locations={locations || []}
                 groups={groups || []}
             />

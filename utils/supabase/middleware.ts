@@ -66,6 +66,36 @@ export async function updateSession(request: NextRequest, response?: NextRespons
         return NextResponse.redirect(url)
     }
 
+    if (user && !isAuthPage) {
+        // Check user status
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('status')
+            .eq('id', user.id)
+            .single()
+
+        const isWaitingPage = path.includes('/waiting')
+        const isRejectedPage = path.includes('/rejected')
+
+        if (profile?.status === 'pending' && !isWaitingPage) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/waiting'
+            return NextResponse.redirect(url)
+        }
+
+        if (profile?.status === 'rejected' && !isRejectedPage) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/rejected'
+            return NextResponse.redirect(url)
+        }
+
+        if (profile?.status === 'approved' && (isWaitingPage || isRejectedPage)) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/'
+            return NextResponse.redirect(url)
+        }
+    }
+
     // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
     // creating a new response object with NextResponse.next() make sure to:
     // 1. Pass the request in it, like so:

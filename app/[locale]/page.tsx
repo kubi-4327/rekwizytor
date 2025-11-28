@@ -13,11 +13,11 @@ export default async function Home() {
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('full_name')
+      .select('full_name, username')
       .eq('id', user.id)
       .single()
 
-    displayName = profile?.full_name || user.email?.split('@')[0] || 'User'
+    displayName = profile?.full_name || profile?.username || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User'
   }
 
   const t = await getTranslations('Dashboard')
@@ -25,9 +25,7 @@ export default async function Home() {
   return (
     <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight text-white">
-          <Greeting name={displayName} />
-        </h1>
+        <Greeting name={displayName} />
         <p className="text-neutral-400">
           {t('subtitle')}
         </p>

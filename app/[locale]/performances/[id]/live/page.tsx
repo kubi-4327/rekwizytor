@@ -18,7 +18,7 @@ export default async function LivePerformancePage({ params }: { params: Promise<
     // 1b. Lazy Expiration: Check for stale heartbeats (older than 20 mins)
     // We do this after fetching (or before) to ensure we don't show stale active shows.
     // Ideally, we'd run an UPDATE query here.
-    const twentyMinsAgo = subHours(new Date(), 0.33) // approx 20 mins
+
 
     // We can't easily run a bulk update based on time with simple Supabase client without a stored procedure or Edge Function if we want to be super efficient,
     // but for now, let's find the stale ones and update them one by one or via IN.
@@ -27,6 +27,7 @@ export default async function LivePerformancePage({ params }: { params: Promise<
         .from('scene_checklists')
         .update({ is_active: false })
         .eq('is_active', true)
+        // eslint-disable-next-line react-hooks/purity
         .lt('last_heartbeat', new Date(Date.now() - 20 * 60 * 1000).toISOString())
         .eq('performance_id', id) // Only for this performance to be safe/efficient
 
@@ -119,11 +120,22 @@ export default async function LivePerformancePage({ params }: { params: Promise<
         `)
         .in('scene_checklist_id', showChecklistIds)
 
+
+
+    // Also fetch ALL profiles for the assignment dropdown (if we want to allow assigning to anyone)
+    // For now, let's just fetch all active users (admins/managers/users)
+    const { data: allProfiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, role')
+        .eq('status', 'approved')
+        .order('full_name')
+
     return (
         <LivePerformanceView
             performanceId={id}
             initialChecklists={sanitizedChecklists}
             initialItems={items || []}
+            profiles={allProfiles || []}
         />
     )
 }

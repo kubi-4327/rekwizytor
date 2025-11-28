@@ -29,7 +29,7 @@ export default async function ReviewPage() {
                 </Link>
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center">
+                        <h1 className="text-xl font-bold text-white flex items-center">
                             <CheckCircle2 className="mr-3 h-6 w-6 text-yellow-400" />
                             {t('title')}
                         </h1>

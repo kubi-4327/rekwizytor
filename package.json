@@ -13,6 +13,11 @@
     "@google/generative-ai": "^0.24.1",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.84.0",
+    "@tiptap/extension-mention": "^3.11.1",
+    "@tiptap/extension-placeholder": "^3.11.1",
+    "@tiptap/react": "^3.11.1",
+    "@tiptap/starter-kit": "^3.11.1",
+    "@tiptap/suggestion": "^3.11.1",
     "@types/react-datepicker": "^6.2.0",
     "clsx": "^2.1.1",
     "colorthief": "^2.6.0",
@@ -27,6 +32,7 @@
     "react-datepicker": "^8.9.0",
     "react-dom": "19.2.0",
     "tailwind-merge": "^3.4.0",
+    "tippy.js": "^6.3.7",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

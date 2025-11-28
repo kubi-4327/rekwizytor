@@ -30,6 +30,7 @@
         "settings": "Settings",
         "signOut": "Sign out",
         "lists": "Lists",
+        "notes": "Notes",
         "more": "More"
     },
     "Items": {
@@ -283,7 +284,9 @@
         "closeMatch": "Close Match",
         "alternative": "Alternative",
         "noNotes": "No notes",
-        "noItemsFound": "No items found matching your filters."
+        "noItemsFound": "No items found matching your filters.",
+        "loadMore": "Load More",
+        "loading": "Loading..."
     },
     "AddPropsButton": {
         "addItem": "Add Item",
@@ -447,7 +450,9 @@
         "unknownLocation": "Unknown Location",
         "uncategorized": "Uncategorized",
         "notes": "Notes",
-        "unassigned": "UNASSIGNED"
+        "unassigned": "UNASSIGNED",
+        "delete": "Delete",
+        "deleteConfirm": "Are you sure you want to delete this item?"
     },
     "SettingsForm": {
         "account": "Account",
@@ -462,10 +467,50 @@
         "notifications": "Notifications",
         "emailNotifications": "Email Notifications",
         "emailNotificationsDescription": "Receive updates about upcoming shows",
-        "notificationsComingSoon": "Notification settings are coming soon.",
+        "notificationsComingSoon": "Notification settings coming soon.",
         "security": "Security & Session",
         "signOut": "Sign Out",
         "signOutDescription": "End your current session",
         "signingOut": "Signing out..."
+    },
+    "Waiting": {
+        "title": "Account Pending Approval",
+        "description": "Your account has been created and is waiting for administrator approval. You will be notified once your access is granted.",
+        "signOut": "Sign Out"
+    },
+    "Rejected": {
+        "title": "Account Rejected",
+        "description": "Your account request has been rejected by an administrator. If you believe this is an error, please contact support.",
+        "signOut": "Sign Out"
+    },
+    "Trash": {
+        "title": "Trash",
+        "subtitle": "Manage deleted items and performances.",
+        "items": "Items",
+        "performances": "Performances",
+        "noDeletedItems": "No deleted items found.",
+        "noDeletedPerformances": "No deleted performances found.",
+        "deletedOn": "Deleted on {date}",
+        "restore": "Restore",
+        "deleteForever": "Delete Forever",
+        "deleteForeverConfirm": "Are you sure you want to permanently delete this? This action cannot be undone."
+    },
+    "AdminUsers": {
+        "title": "User Management",
+        "subtitle": "Manage user access, roles, and approvals.",
+        "user": "User",
+        "role": "Role",
+        "status": "Status",
+        "actions": "Actions",
+        "approve": "Approve",
+        "reject": "Reject",
+        "delete": "Delete",
+        "deleteConfirm": "Are you sure you want to delete this user? This action cannot be undone.",
+        "deleteError": "Failed to delete user.",
+        "statuses": {
+            "pending": "Pending",
+            "approved": "Approved",
+            "rejected": "Rejected"
+        }
     }
 }

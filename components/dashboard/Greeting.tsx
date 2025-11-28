@@ -2,28 +2,37 @@
 
 import { useEffect, useState } from 'react'
 
-const GREETINGS_MORNING = [
-    "Dzień dobry {name}, gotowy na nowy dzień?",
-    "Cześć {name}, kawa już wypita?",
-    "Hej {name}, owocnego poranka!",
-    "Witaj {name}, zacznijmy ten dzień produktywnie.",
-    "Dzień dobry {name}, co dzisiaj w planach?"
+const MESSAGES_MORNING = [
+    "Gotowy na nowy dzień?",
+    "Kawa już wypita?",
+    "Owocnego poranka!",
+    "Zacznijmy ten dzień produktywnie.",
+    "Co dzisiaj w planach?"
 ]
 
-const GREETINGS_AFTERNOON = [
-    "Cześć {name}, jak mija dzień?",
-    "Hej {name}, wszystko pod kontrolą?",
-    "Witaj {name}, chwila przerwy czy działamy dalej?",
-    "Siemanko {name}, jak tam rekwizyty?",
-    "Hejka {name}, miłego popołudnia!"
+const MESSAGES_AFTERNOON = [
+    "Jak mija dzień?",
+    "Wszystko pod kontrolą?",
+    "Chwila przerwy czy działamy dalej?",
+    "Jak tam rekwizyty?",
+    "Miłego popołudnia!"
 ]
 
-const GREETINGS_EVENING = [
-    "Dobry wieczór {name}, jak minął dzień?",
-    "Cześć {name}, jeszcze pracujesz?",
-    "Hej {name}, spokojnego wieczoru.",
-    "Witaj {name}, czas na podsumowanie dnia?",
-    "Dobry wieczór {name}, odpoczywasz czy działasz?"
+const MESSAGES_EVENING = [
+    "Jak minął dzień?",
+    "Jeszcze pracujesz?",
+    "Spokojnego wieczoru.",
+    "Czas na podsumowanie dnia?",
+    "Odpoczywasz czy działasz?"
+]
+
+const EASTER_EGG_NAMES = ['jessica', 'jessi', 'dżesika', 'dżesi', 'jesica', 'dzesika']
+const EASTER_EGG_MESSAGES = [
+    "Pamiętaj nie dokręcać słoika!",
+    "Smacznej herbatki ☕",
+    "A Ty nie byłaś chora? 🤔",
+    "Miłego dnia, tylko bez stresu!",
+    "Odpocznij chwilę, robota nie zając."
 ]
 
 interface GreetingProps {
@@ -31,37 +40,59 @@ interface GreetingProps {
 }
 
 export function Greeting({ name }: GreetingProps) {
-    const [greeting, setGreeting] = useState<string>("")
+    const [greetingPart, setGreetingPart] = useState<string>("")
+    const [messagePart, setMessagePart] = useState<string>("")
+    const [easterEgg, setEasterEgg] = useState<string | null>(null)
 
     useEffect(() => {
         const hour = new Date().getHours()
-        let selectedGreetings: string[]
+        let selectedMessages: string[]
+        let timeGreeting = "Witaj"
 
         if (hour >= 5 && hour < 12) {
-            selectedGreetings = GREETINGS_MORNING
+            selectedMessages = MESSAGES_MORNING
+            timeGreeting = "Dzień dobry"
         } else if (hour >= 12 && hour < 18) {
-            selectedGreetings = GREETINGS_AFTERNOON
+            selectedMessages = MESSAGES_AFTERNOON
+            timeGreeting = "Cześć"
         } else {
-            selectedGreetings = GREETINGS_EVENING
+            selectedMessages = MESSAGES_EVENING
+            timeGreeting = "Dobry wieczór"
         }
 
-        const randomIndex = Math.floor(Math.random() * selectedGreetings.length)
-        setGreeting(selectedGreetings[randomIndex].replace("{name}", name))
+        const randomIndex = Math.floor(Math.random() * selectedMessages.length)
+        setGreetingPart(`${timeGreeting}, ${name}`)
+        setMessagePart(selectedMessages[randomIndex])
+
+        // Check for Easter Egg
+        const lowerName = name.toLowerCase()
+        const isTargetUser = EASTER_EGG_NAMES.some(n => lowerName.startsWith(n))
+
+        if (isTargetUser) {
+            const randomEggIndex = Math.floor(Math.random() * EASTER_EGG_MESSAGES.length)
+            setEasterEgg(EASTER_EGG_MESSAGES[randomEggIndex])
+        } else {
+            setEasterEgg(null)
+        }
     }, [name])
 
-    // Render a non-breaking space or a default greeting initially to avoid layout shift if possible,
-    // but since we want random on client, we accept a small jump or show a default one.
-    // To match server rendering (if we were to do it), we'd need a fixed one.
-    // Let's show nothing until client side hydration to avoid mismatch text, 
-    // or better, show a generic one that is replaced.
-    // Given the design, a small fade in or just appearing is fine.
-    if (!greeting) {
-        return <span className="opacity-0">Witaj {name}</span> // Reserve space roughly
+    if (!greetingPart) {
+        return (
+            <div className="flex flex-col gap-1 py-1 opacity-0">
+                <span className="text-2xl font-bold">Witaj {name}</span>
+                <span className="text-base text-neutral-400">Ładowanie...</span>
+            </div>
+        )
     }
 
     return (
-        <span>
-            {greeting}
-        </span>
+        <div className="flex flex-col gap-1 py-1">
+            <span className="text-2xl font-bold text-white tracking-tight">
+                {greetingPart}
+            </span>
+            <span className="text-base text-neutral-400 font-normal">
+                {easterEgg || messagePart}
+            </span>
+        </div>
     )
 }

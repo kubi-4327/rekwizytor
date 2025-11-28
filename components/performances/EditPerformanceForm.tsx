@@ -175,7 +175,7 @@ export function EditPerformanceForm({ performance }: Props) {
         try {
             const { error: deleteError } = await supabase
                 .from('performances')
-                .delete()
+                .update({ deleted_at: new Date().toISOString() })
                 .eq('id', performance.id)
 
             if (deleteError) throw deleteError

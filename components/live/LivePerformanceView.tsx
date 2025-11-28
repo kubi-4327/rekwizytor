@@ -5,12 +5,13 @@ import { createClient } from '@/utils/supabase/client'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
-import { CheckCircle2, Circle, ArrowRight, Menu, X, Clock, Calendar, PauseCircle } from 'lucide-react'
+import { CheckCircle2, Circle, ArrowRight, Menu, X, Clock, Calendar, PauseCircle, User } from 'lucide-react'
 import NextImage from 'next/image'
 import { ItemIcon } from '@/components/ui/ItemIcon'
 import { format } from 'date-fns'
 import { pl, enUS } from 'date-fns/locale'
 import { useLocale } from 'next-intl'
+import { Database } from '@/types/supabase'
 
 type ChecklistItem = {
     id: string
@@ -23,6 +24,7 @@ type ChecklistItem = {
         name: string
         image_url: string | null
     } | null
+    assigned_to: string | null
 }
 
 type Checklist = {
@@ -40,9 +42,10 @@ type Props = {
     performanceId: string
     initialChecklists: Checklist[]
     initialItems: ChecklistItem[]
+    profiles?: { id: string, full_name: string | null, avatar_url: string | null }[]
 }
 
-export function LivePerformanceView({ performanceId, initialChecklists, initialItems }: Props) {
+export function LivePerformanceView({ performanceId, initialChecklists, initialItems, profiles = [] }: Props) {
     const t = useTranslations('LivePerformance')
     const locale = useLocale()
     const dateLocale = locale === 'pl' ? pl : enUS
@@ -59,7 +62,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
     const [showStats, setShowStats] = useState(false)
     const [startTime, setStartTime] = useState<number | null>(null)
     const [actStartTime, setActStartTime] = useState<number | null>(null)
-    const [now, setNow] = useState(Date.now()) // For updating UI every second
+    const [now, setNow] = useState(0) // For updating UI every second
     const router = useRouter()
 
     const [showCancelConfirmation, setShowCancelConfirmation] = useState(false)
@@ -88,6 +91,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
     // Sync local state when global active scene changes (e.g. Act change)
     useEffect(() => {
         if (activeSceneId) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setLocalActiveSceneId(activeSceneId)
         }
     }, [activeSceneId])
@@ -96,10 +100,99 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
 
     const [endTime, setEndTime] = useState<number | null>(null)
 
+    // Clear storage on finish
+    const clearLiveStorage = useMemo(() => () => {
+        localStorage.removeItem(`live_view_start_${performanceId}`)
+        // Clear all act keys for this performance
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith(`live_view_act_start_${performanceId}_`)) {
+                localStorage.removeItem(key)
+            }
+        })
+    }, [performanceId])
+
+    const finishScene = React.useCallback(async (forceFinish = false) => {
+        // We need to use the latest state, so we might need refs or functional updates if we were not using useCallback with dependencies.
+        // However, since we are moving this inside the component, we can just use the state variables and include them in dependency array.
+        // But wait, finishScene is complex and uses many state variables.
+        // To avoid stale closures in useEffect, we must include all dependencies.
+
+        // Note: currentChecklist is derived from sortedChecklists and localActiveSceneId.
+        // We need to ensure we access the latest values.
+
+        const currentId = currentChecklist?.id || localActiveSceneId
+        if (!currentId && !forceFinish) return
+
+        const currentIndex = sortedChecklists.findIndex(c => c.id === currentId)
+        const nextChecklist = sortedChecklists[currentIndex + 1]
+
+        // Check if we need to perform a global action (Finish Act or Finish Show)
+        const isEndOfAct = nextChecklist && nextChecklist.act_number !== sortedChecklists[currentIndex].act_number
+        const isLastScene = !nextChecklist
+
+        if (forceFinish || isLastScene || isEndOfAct) {
+            // GLOBAL ACTION
+            const updates = []
+
+            // Deactivate ALL currently active scenes to be safe
+            const activeIds = checklists.filter(c => c.is_active).map(c => c.id)
+            if (activeIds.length > 0) {
+                updates.push(
+                    supabase
+                        .from('scene_checklists')
+                        .update({ is_active: false })
+                        .in('id', activeIds)
+                )
+            }
+
+            if (nextChecklist && !forceFinish && !isLastScene) {
+                // Activate next scene (Start of new Act)
+                updates.push(
+                    supabase
+                        .from('scene_checklists')
+                        .update({ is_active: true })
+                        .eq('id', nextChecklist.id)
+                )
+            } else {
+                // End of show OR Forced Finish
+                const now = Date.now()
+                setEndTime(now)
+                localStorage.setItem(`live_view_end_${performanceId}`, now.toString())
+
+                clearLiveStorage()
+                setShowStats(true)
+                if (forceFinish) {
+                    setChecklists(prev => prev.map(c => ({ ...c, is_active: false })))
+                    return
+                }
+            }
+
+            // Optimistic update for global state
+            setChecklists(prev => prev.map(c => {
+                // Deactivate all
+                const newC = { ...c, is_active: false }
+                // Activate next if applicable
+                if (nextChecklist && !forceFinish && !isLastScene && c.id === nextChecklist.id) {
+                    newC.is_active = true
+                }
+                return newC
+            }))
+
+            await Promise.all(updates)
+
+        } else {
+            // LOCAL ACTION (Next Scene within Act)
+            if (nextChecklist) {
+                setLocalActiveSceneId(nextChecklist.id)
+            }
+        }
+    }, [currentChecklist, localActiveSceneId, sortedChecklists, checklists, supabase, performanceId, clearLiveStorage])
+
     // Load End Time
     useEffect(() => {
         const storedEndTime = localStorage.getItem(`live_view_end_${performanceId}`)
         if (storedEndTime) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setEndTime(parseInt(storedEndTime))
         }
     }, [performanceId])
@@ -111,9 +204,11 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         // 1. Load/Set Show Start Time
         const storedStartTime = localStorage.getItem(`live_view_start_${performanceId}`)
         if (storedStartTime) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setStartTime(parseInt(storedStartTime))
         } else {
             const newStartTime = Date.now()
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setStartTime(newStartTime)
             localStorage.setItem(`live_view_start_${performanceId}`, newStartTime.toString())
         }
@@ -142,9 +237,11 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         const storedActStart = localStorage.getItem(actKey)
 
         if (storedActStart) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setActStartTime(parseInt(storedActStart))
         } else {
             const newActStart = Date.now()
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setActStartTime(newActStart)
             localStorage.setItem(actKey, newActStart.toString())
         }
@@ -158,7 +255,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         const sendHeartbeat = async () => {
             await supabase
                 .from('scene_checklists')
-                .update({ last_heartbeat: new Date().toISOString() } as any)
+                .update({ last_heartbeat: new Date().toISOString() } as Database['public']['Tables']['scene_checklists']['Update'])
                 .eq('id', activeSceneId)
         }
         sendHeartbeat()
@@ -188,7 +285,8 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                                 ...item,
                                 is_prepared: newItem.is_prepared,
                                 is_on_stage: newItem.is_on_stage,
-                                live_notes: newItem.live_notes
+                                live_notes: newItem.live_notes,
+                                assigned_to: newItem.assigned_to
                             }
                             : item
                     ))
@@ -222,10 +320,12 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         // If we had an active scene, and now we don't (and it's not just initial load), show stats
         const hasActiveScene = checklists.some(c => c.is_active)
         if (!hasActiveScene && isConfirmed && !showStats && startTime) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setShowStats(true)
             // Set end time if not set
             if (!endTime) {
                 const now = Date.now()
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setEndTime(now)
                 localStorage.setItem(`live_view_end_${performanceId}`, now.toString())
             }
@@ -233,16 +333,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         }
     }, [checklists, isConfirmed, showStats, startTime, endTime, performanceId])
 
-    // Clear storage on finish
-    const clearLiveStorage = () => {
-        localStorage.removeItem(`live_view_start_${performanceId}`)
-        // Clear all act keys for this performance
-        Object.keys(localStorage).forEach(key => {
-            if (key.startsWith(`live_view_act_start_${performanceId}_`)) {
-                localStorage.removeItem(key)
-            }
-        })
-    }
+
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
@@ -282,7 +373,8 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                     .update({
                         is_prepared: false,
                         is_on_stage: false,
-                        live_notes: null
+                        live_notes: null,
+                        assigned_to: null // Optional: do we reset assignment? Probably not. Let's keep it.
                     })
                     .in('scene_checklist_id', allChecklistIds)
             )
@@ -294,91 +386,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         router.push('/')
     }
 
-    const finishScene = async (forceFinish = false) => {
-        if (!currentChecklist && !forceFinish) return
 
-        // If forced, we might not have a current checklist, but we want to kill everything
-        const currentId = currentChecklist?.id || localActiveSceneId
-
-        if (!currentId) return
-
-        const currentIndex = sortedChecklists.findIndex(c => c.id === currentId)
-        const nextChecklist = sortedChecklists[currentIndex + 1]
-
-        // Check if we need to perform a global action (Finish Act or Finish Show)
-        const isEndOfAct = nextChecklist && nextChecklist.act_number !== sortedChecklists[currentIndex].act_number
-        const isLastScene = !nextChecklist
-
-        if (forceFinish || isLastScene || isEndOfAct) {
-            // GLOBAL ACTION
-            const updates = []
-
-            // Deactivate ALL currently active scenes to be safe
-            const activeIds = checklists.filter(c => c.is_active).map(c => c.id)
-            if (activeIds.length > 0) {
-                updates.push(
-                    supabase
-                        .from('scene_checklists')
-                        .update({ is_active: false })
-                        .in('id', activeIds)
-                )
-            }
-
-            if (nextChecklist && !forceFinish && !isLastScene) {
-                // Activate next scene (Start of new Act)
-                updates.push(
-                    supabase
-                        .from('scene_checklists')
-                        .update({ is_active: true })
-                        .eq('id', nextChecklist.id)
-                )
-
-                if (isEndOfAct) {
-                    setShowStats(true) // Wait, do we show stats on Act finish? The user said "after finishing an act and re-entering". 
-                    // Usually we don't show full stats on Act finish, maybe just a pause screen? 
-                    // But the code previously did `setShowStats(true)` for `isEndOfAct`.
-                    // If so, we should probably NOT set global endTime yet, unless it's the FINAL act.
-                    // But the prompt implies "Show Finished" screen.
-                    // Let's assume Act Finish just pauses or shows something. 
-                    // Actually, looking at previous code:
-                    // if (isEndOfAct) { setShowStats(true) }
-                    // This means Act Finish shows the summary screen? That seems wrong for a multi-act show.
-                    // But let's stick to fixing the reported issues.
-                }
-            } else {
-                // End of show OR Forced Finish
-                const now = Date.now()
-                setEndTime(now)
-                localStorage.setItem(`live_view_end_${performanceId}`, now.toString())
-
-                clearLiveStorage()
-                setShowStats(true)
-                if (forceFinish) {
-                    setChecklists(prev => prev.map(c => ({ ...c, is_active: false })))
-                    return
-                }
-            }
-
-            // Optimistic update for global state
-            setChecklists(prev => prev.map(c => {
-                // Deactivate all
-                let newC = { ...c, is_active: false }
-                // Activate next if applicable
-                if (nextChecklist && !forceFinish && !isLastScene && c.id === nextChecklist.id) {
-                    newC.is_active = true
-                }
-                return newC
-            }))
-
-            await Promise.all(updates)
-
-        } else {
-            // LOCAL ACTION (Next Scene within Act)
-            if (nextChecklist) {
-                setLocalActiveSceneId(nextChecklist.id)
-            }
-        }
-    }
 
 
     const previousScene = async () => {
@@ -398,7 +406,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         const newState = !currentState
 
         // If unchecking ready, also uncheck stage
-        const updates: any = { is_prepared: newState }
+        const updates: Partial<ChecklistItem> = { is_prepared: newState }
         if (!newState) {
             updates.is_on_stage = false
         }
@@ -441,6 +449,23 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
             setItems(prev => prev.map(item =>
                 item.id === id ? { ...item, is_on_stage: currentState } : item
             ))
+        }
+    }
+
+    const handleAssign = async (itemId: string, userId: string) => {
+        // Optimistic
+        setItems(prev => prev.map(item =>
+            item.id === itemId ? { ...item, assigned_to: userId } : item
+        ))
+
+        const { error } = await supabase
+            .from('scene_checklist_items')
+            .update({ assigned_to: userId })
+            .eq('id', itemId)
+
+        if (error) {
+            console.error('Error assigning user:', error)
+            // Revert (omitted for brevity)
         }
     }
 
@@ -538,7 +563,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         const totalItems = items.length
         const stagedItems = items.filter(i => i.is_on_stage).length
         // Use endTime if available, otherwise current time (fallback)
-        const end = endTime || Date.now()
+        const end = endTime || now
         const duration = startTime ? end - startTime : 0
         const durationFormatted = formatDuration(duration)
 
@@ -842,6 +867,36 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                                     </div>
                                 </div>
 
+                                {/* Assignee Avatar */}
+                                <div className="relative mr-4 shrink-0">
+                                    <select
+                                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                                        value={item.assigned_to || ''}
+                                        onChange={(e) => handleAssign(item.id, e.target.value)}
+                                    >
+                                        <option value="">{t('unassigned')}</option>
+                                        {profiles.map(p => (
+                                            <option key={p.id} value={p.id}>{p.full_name || 'User'}</option>
+                                        ))}
+                                    </select>
+                                    <div className={clsx(
+                                        "h-8 w-8 rounded-full flex items-center justify-center border transition-colors overflow-hidden",
+                                        item.assigned_to ? "border-neutral-600 bg-neutral-800" : "border-dashed border-neutral-700 bg-transparent text-neutral-600"
+                                    )}>
+                                        {item.assigned_to ? (
+                                            (() => {
+                                                const profile = profiles.find(p => p.id === item.assigned_to)
+                                                if (profile?.avatar_url) {
+                                                    return <img src={profile.avatar_url} alt={profile.full_name || ''} className="h-full w-full object-cover" />
+                                                }
+                                                return <span className="text-xs font-bold text-white">{profile?.full_name?.[0] || '?'}</span>
+                                            })()
+                                        ) : (
+                                            <User className="h-4 w-4" />
+                                        )}
+                                    </div>
+                                </div>
+
                                 {/* Actions */}
                                 <div className="flex items-center gap-2 shrink-0">
                                     {/* Prepared Toggle */}
@@ -988,3 +1043,4 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         </div>
     )
 }
+

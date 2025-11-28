@@ -5,7 +5,7 @@ import { Camera, Upload, X, Loader2, MapPin } from 'lucide-react'
 import NextImage from 'next/image'
 import { useRouter } from 'next/navigation'
 import { uploadAndAnalyzeImages } from '@/app/actions/fast-mode'
-import { compressImage } from '@/utils/image-processing'
+import { compressImage, createThumbnail } from '@/utils/image-processing'
 import { CameraCapture } from './CameraCapture'
 
 type Location = {
@@ -24,8 +24,7 @@ type Props = {
 }
 
 export function FastAddForm({ locations }: Props) {
-    const [images, setImages] = useState<File[]>([])
-    const [previews, setPreviews] = useState<string[]>([])
+    const [processedImages, setProcessedImages] = useState<{ file: File, thumbnail: File, preview: string }[]>([])
     const [locationId, setLocationId] = useState<string>('')
     const [isProcessing, setIsProcessing] = useState(false)
     const [isCameraOpen, setIsCameraOpen] = useState(false)
@@ -39,42 +38,45 @@ export function FastAddForm({ locations }: Props) {
         if (e.target.files) {
             const newFiles = Array.from(e.target.files)
             await processFiles(newFiles)
-            // Reset input so same files can be selected again if needed (though unlikely for camera)
             e.target.value = ''
         }
     }
 
     const processFiles = async (newFiles: File[]) => {
-        // Create previews immediately for better UX
-        const newPreviews = newFiles.map(file => URL.createObjectURL(file))
-        setPreviews(prev => [...prev, ...newPreviews])
-
-        // Compress images
-        const compressedFiles = await Promise.all(newFiles.map(async (file) => {
+        const newProcessed = await Promise.all(newFiles.map(async (file) => {
             try {
-                const blob = await compressImage(file)
-                // Convert blob back to file to keep the name
-                return new File([blob], file.name, { type: 'image/jpeg' })
+                const compressedBlob = await compressImage(file)
+                const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' })
+
+                const thumbnailBlob = await createThumbnail(file, 300)
+                const thumbnailFile = new File([thumbnailBlob], `thumb_${file.name}`, { type: 'image/jpeg' })
+
+                return {
+                    file: compressedFile,
+                    thumbnail: thumbnailFile,
+                    preview: URL.createObjectURL(compressedFile)
+                }
             } catch (error) {
-                console.error('Compression failed for', file.name, error)
-                return file // Fallback to original
+                console.error('Processing failed for', file.name, error)
+                return null
             }
         }))
 
-        setImages(prev => [...prev, ...compressedFiles])
+        const validProcessed = newProcessed.filter((p): p is { file: File, thumbnail: File, preview: string } => p !== null)
+        setProcessedImages(prev => [...prev, ...validProcessed])
     }
 
     const removeImage = (index: number) => {
-        setImages(prev => prev.filter((_, i) => i !== index))
-        setPreviews(prev => {
-            // Revoke the URL to avoid memory leaks
-            URL.revokeObjectURL(prev[index])
-            return prev.filter((_, i) => i !== index)
+        setProcessedImages(prev => {
+            const newImages = [...prev]
+            URL.revokeObjectURL(newImages[index].preview)
+            newImages.splice(index, 1)
+            return newImages
         })
     }
 
     const handleSubmit = async () => {
-        if (images.length === 0) return
+        if (processedImages.length === 0) return
         if (!locationId) {
             alert('Please select a location')
             return
@@ -83,15 +85,14 @@ export function FastAddForm({ locations }: Props) {
         setIsProcessing(true)
         try {
             const formData = new FormData()
-            images.forEach(image => {
-                formData.append('images', image)
+            processedImages.forEach(({ file, thumbnail }) => {
+                formData.append('images', file)
+                formData.append('thumbnails', thumbnail)
             })
             formData.append('locationId', locationId)
-            // Group ID is no longer sent, AI will determine it
 
             await uploadAndAnalyzeImages(formData)
 
-            // Redirect to review page
             router.push('/items/review')
         } catch (error) {
             console.error('Error processing images:', error)
@@ -170,12 +171,12 @@ export function FastAddForm({ locations }: Props) {
             </div>
 
             {/* Previews - Masonry-like Grid */}
-            {previews.length > 0 && (
+            {processedImages.length > 0 && (
                 <div className="columns-2 md:columns-3 gap-4 space-y-4">
-                    {previews.map((src, index) => (
+                    {processedImages.map(({ preview }, index) => (
                         <div key={index} className="relative break-inside-avoid rounded-lg overflow-hidden bg-neutral-900 border border-neutral-800 group">
                             <NextImage
-                                src={src}
+                                src={preview}
                                 alt={`Preview ${index}`}
                                 width={500}
                                 height={500}
@@ -201,16 +202,16 @@ export function FastAddForm({ locations }: Props) {
             <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 p-4 bg-neutral-950 border-t border-neutral-900 md:static md:bg-transparent md:border-0 md:p-0 z-40">
                 <button
                     onClick={handleSubmit}
-                    disabled={isProcessing || images.length === 0 || !locationId}
+                    disabled={isProcessing || processedImages.length === 0 || !locationId}
                     className="w-full flex items-center justify-center py-4 rounded-xl bg-white text-black font-bold text-lg hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-white/10"
                 >
                     {isProcessing ? (
                         <>
                             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                            Processing {images.length} items...
+                            Processing {processedImages.length} items...
                         </>
                     ) : (
-                        `Process ${images.length > 0 ? images.length : ''} Items`
+                        `Process ${processedImages.length > 0 ? processedImages.length : ''} Items`
                     )}
                 </button>
             </div>

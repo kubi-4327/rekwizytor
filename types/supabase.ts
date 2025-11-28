@@ -51,6 +51,7 @@ export type Database = {
         Row: {
           color: string | null
           created_at: string | null
+          deleted_at: string | null
           icon: string | null
           id: string
           location_id: string | null
@@ -59,6 +60,7 @@ export type Database = {
         Insert: {
           color?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           icon?: string | null
           id?: string
           location_id?: string | null
@@ -67,6 +69,7 @@ export type Database = {
         Update: {
           color?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           icon?: string | null
           id?: string
           location_id?: string | null
@@ -87,6 +90,7 @@ export type Database = {
           ai_description: string | null
           attributes: Json | null
           created_at: string | null
+          created_by: string | null
           deleted_at: string | null
           embedding: string | null
           group_id: string | null
@@ -98,12 +102,14 @@ export type Database = {
           notes: string | null
           performance_status: Database["public"]["Enums"]["item_performance_status_enum"]
           status: Database["public"]["Enums"]["item_status_enum"]
+          thumbnail_url: string | null
           updated_at: string | null
         }
         Insert: {
           ai_description?: string | null
           attributes?: Json | null
           created_at?: string | null
+          created_by?: string | null
           deleted_at?: string | null
           embedding?: string | null
           group_id?: string | null
@@ -115,12 +121,14 @@ export type Database = {
           notes?: string | null
           performance_status?: Database["public"]["Enums"]["item_performance_status_enum"]
           status?: Database["public"]["Enums"]["item_status_enum"]
+          thumbnail_url?: string | null
           updated_at?: string | null
         }
         Update: {
           ai_description?: string | null
           attributes?: Json | null
           created_at?: string | null
+          created_by?: string | null
           deleted_at?: string | null
           embedding?: string | null
           group_id?: string | null
@@ -132,6 +140,7 @@ export type Database = {
           notes?: string | null
           performance_status?: Database["public"]["Enums"]["item_performance_status_enum"]
           status?: Database["public"]["Enums"]["item_status_enum"]
+          thumbnail_url?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -155,6 +164,7 @@ export type Database = {
         Row: {
           belongs_to: string | null
           created_at: string | null
+          deleted_at: string | null
           description: string | null
           id: string
           name: string
@@ -163,6 +173,7 @@ export type Database = {
         Insert: {
           belongs_to?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           name: string
@@ -171,6 +182,7 @@ export type Database = {
         Update: {
           belongs_to?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           name?: string
@@ -182,6 +194,86 @@ export type Database = {
             columns: ["belongs_to"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      note_mentions: {
+        Row: {
+          created_at: string | null
+          id: string
+          mention_label: string | null
+          mention_type: Database["public"]["Enums"]["mention_type"]
+          mentioned_id: string | null
+          note_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          mention_label?: string | null
+          mention_type: Database["public"]["Enums"]["mention_type"]
+          mentioned_id?: string | null
+          note_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          mention_label?: string | null
+          mention_type?: Database["public"]["Enums"]["mention_type"]
+          mentioned_id?: string | null
+          note_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_mentions_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notes: {
+        Row: {
+          content: Json | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          performance_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          performance_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          performance_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_performance_id_fkey"
+            columns: ["performance_id"]
+            isOneToOne: false
+            referencedRelation: "performances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_performance_id_fkey"
+            columns: ["performance_id"]
+            isOneToOne: false
+            referencedRelation: "vw_active_performances"
             referencedColumns: ["id"]
           },
         ]
@@ -274,6 +366,8 @@ export type Database = {
         Row: {
           color: string | null
           created_at: string | null
+          created_by: string | null
+          deleted_at: string | null
           id: string
           image_url: string | null
           last_show_date: string | null
@@ -287,6 +381,8 @@ export type Database = {
         Insert: {
           color?: string | null
           created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
           id?: string
           image_url?: string | null
           last_show_date?: string | null
@@ -300,6 +396,8 @@ export type Database = {
         Update: {
           color?: string | null
           created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
           id?: string
           image_url?: string | null
           last_show_date?: string | null
@@ -317,6 +415,8 @@ export type Database = {
           avatar_url: string | null
           full_name: string | null
           id: string
+          role: Database["public"]["Enums"]["user_role"] | null
+          status: Database["public"]["Enums"]["user_status"] | null
           updated_at: string | null
           username: string | null
           website: string | null
@@ -325,6 +425,8 @@ export type Database = {
           avatar_url?: string | null
           full_name?: string | null
           id: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          status?: Database["public"]["Enums"]["user_status"] | null
           updated_at?: string | null
           username?: string | null
           website?: string | null
@@ -333,6 +435,8 @@ export type Database = {
           avatar_url?: string | null
           full_name?: string | null
           id?: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          status?: Database["public"]["Enums"]["user_status"] | null
           updated_at?: string | null
           username?: string | null
           website?: string | null
@@ -341,6 +445,7 @@ export type Database = {
       }
       scene_checklist_items: {
         Row: {
+          assigned_to: string | null
           checked_at: string | null
           checked_by: string | null
           created_at: string | null
@@ -352,6 +457,7 @@ export type Database = {
           scene_checklist_id: string
         }
         Insert: {
+          assigned_to?: string | null
           checked_at?: string | null
           checked_by?: string | null
           created_at?: string | null
@@ -363,6 +469,7 @@ export type Database = {
           scene_checklist_id: string
         }
         Update: {
+          assigned_to?: string | null
           checked_at?: string | null
           checked_by?: string | null
           created_at?: string | null
@@ -593,6 +700,14 @@ export type Database = {
       }
     }
     Functions: {
+      get_storage_stats: {
+        Args: never
+        Returns: {
+          category: string
+          label: string
+          size_bytes: number
+        }[]
+      }
       match_items: {
         Args: {
           match_count: number
@@ -619,7 +734,10 @@ export type Database = {
         | "in_maintenance"
       item_status_enum: "draft" | "active"
       location_type_enum: "main_storage" | "backstage" | "stage" | "other"
+      mention_type: "item" | "category" | "location" | "user" | "date"
       performance_status_enum: "active" | "upcoming" | "archived"
+      user_role: "admin" | "user" | "manager"
+      user_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -756,7 +874,10 @@ export const Constants = {
       ],
       item_status_enum: ["draft", "active"],
       location_type_enum: ["main_storage", "backstage", "stage", "other"],
+      mention_type: ["item", "category", "location", "user", "date"],
       performance_status_enum: ["active", "upcoming", "archived"],
+      user_role: ["admin", "user", "manager"],
+      user_status: ["pending", "approved", "rejected"],
     },
   },
 } as const

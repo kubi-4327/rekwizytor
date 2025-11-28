@@ -63,7 +63,7 @@ const PerformanceListItem = ({ show }: { show: Performance }) => {
                         show.status === 'upcoming' ? 'bg-yellow-900/20 text-yellow-400 border-yellow-900/50' :
                             'bg-neutral-800 text-neutral-400 border-neutral-700'
                         }`}>
-                        {tStatus(show.status as any)}
+                        {tStatus(show.status as Database['public']['Enums']['performance_status_enum'])}
                     </span>
                 </div>
             </div>
@@ -115,7 +115,7 @@ const PerformanceGridItem = ({ show }: { show: Performance }) => {
                             show.status === 'upcoming' ? 'bg-yellow-900/40 text-yellow-300 border-yellow-500/30' :
                                 'bg-neutral-800/80 text-neutral-400 border-neutral-700'
                             }`}>
-                            {tStatus(show.status as any)}
+                            {tStatus(show.status as Database['public']['Enums']['performance_status_enum'])}
                         </span>
                         <span className="text-xs text-neutral-300">
                             {show.premiere_date ? new Date(show.premiere_date).toLocaleDateString() : t('tbd')}

@@ -1,38 +1,45 @@
 'use client'
 
-import { useState } from 'react'
-import { LayoutGrid, List } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { LayoutGrid, List, Filter, Sparkles, Loader2, Layers } from 'lucide-react'
 import NextImage from 'next/image'
 import { Database } from '@/types/supabase'
 import { ItemIcon } from '@/components/ui/ItemIcon'
 import { useTranslations } from 'next-intl'
+import { smartSearch } from '@/app/actions/smart-search'
+import { getItems } from '@/app/actions/get-items'
+import { EditItemDialog } from './EditItemDialog'
+import { ItemDetailsDialog } from './ItemDetailsDialog'
+import { SearchInput } from '@/components/ui/SearchInput'
+import { FilterSelect } from '@/components/ui/FilterSelect'
 
 type Item = Database['public']['Tables']['items']['Row']
-
-type Props = {
-    initialItems: Item[]
-    locations: Database['public']['Tables']['locations']['Row'][]
-    groups: Database['public']['Tables']['groups']['Row'][]
-}
-
-import { smartSearch } from '@/app/actions/smart-search'
-import { Filter, Layers, Sparkles } from 'lucide-react'
+type ItemStatus = Database['public']['Enums']['item_performance_status_enum']
 
 type SearchResult = Item & {
     explanation?: string
     matchType?: 'exact' | 'close' | 'alternative'
 }
 
-import { EditItemDialog } from './EditItemDialog'
-import { ItemDetailsDialog } from './ItemDetailsDialog'
-import { SearchInput } from '@/components/ui/SearchInput'
-import { FilterSelect } from '@/components/ui/FilterSelect'
+type Props = {
+    initialItems: Item[]
+    totalCount: number
+    locations: Database['public']['Tables']['locations']['Row'][]
+    groups: Database['public']['Tables']['groups']['Row'][]
+}
 
-export function ItemsList({ initialItems, locations, groups }: Props) {
+export function ItemsList({ initialItems, totalCount, locations, groups }: Props) {
     const t = useTranslations('ItemsList')
     const [view, setView] = useState<'grid' | 'list'>('grid')
     const [searchMode, setSearchMode] = useState<'classic' | 'smart'>('classic')
     const [search, setSearch] = useState('')
+
+    // Pagination State
+    const [items, setItems] = useState<Item[]>(initialItems)
+    const [page, setPage] = useState(1)
+    const [hasMore, setHasMore] = useState(initialItems.length < totalCount)
+    const [isLoadingMore, setIsLoadingMore] = useState(false)
+    const [isFiltering, setIsFiltering] = useState(false)
 
     // Edit Dialog State
     const [selectedItem, setSelectedItem] = useState<Item | null>(null)
@@ -63,6 +70,68 @@ export function ItemsList({ initialItems, locations, groups }: Props) {
     const [isSmartSearching, setIsSmartSearching] = useState(false)
     const [hasSmartSearched, setHasSmartSearched] = useState(false)
 
+    // Fetch items when filters change (Classic Mode)
+    useEffect(() => {
+        if (searchMode === 'smart') return
+
+        // Skip initial fetch if we have initial items and no filters
+        if (page === 1 && items === initialItems && search === '' && categoryFilter === 'all' && locationFilter === 'all' && statusFilter === 'all' && dateSort === 'newest') {
+            return
+        }
+
+        const fetchFilteredItems = async () => {
+            setIsFiltering(true)
+            try {
+                const { items: newItems, count } = await getItems({
+                    page: 1,
+                    limit: 50,
+                    search: search,
+                    status: statusFilter,
+                    categoryId: categoryFilter,
+                    locationId: locationFilter,
+                    sort: dateSort
+                })
+                setItems(newItems)
+                setPage(1)
+                setHasMore(newItems.length < count)
+            } catch (error) {
+                console.error('Failed to fetch items:', error)
+            } finally {
+                setIsFiltering(false)
+            }
+        }
+
+        const debounceTimer = setTimeout(fetchFilteredItems, 300)
+        return () => clearTimeout(debounceTimer)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [search, categoryFilter, locationFilter, statusFilter, dateSort, searchMode])
+
+    const loadMore = async () => {
+        if (isLoadingMore || !hasMore) return
+
+        setIsLoadingMore(true)
+        try {
+            const nextPage = page + 1
+            const { items: newItems, count } = await getItems({
+                page: nextPage,
+                limit: 50,
+                search: search,
+                status: statusFilter,
+                categoryId: categoryFilter,
+                locationId: locationFilter,
+                sort: dateSort
+            })
+
+            setItems(prev => [...prev, ...newItems])
+            setPage(nextPage)
+            setHasMore(items.length + newItems.length < count)
+        } catch (error) {
+            console.error('Failed to load more items:', error)
+        } finally {
+            setIsLoadingMore(false)
+        }
+    }
+
     const performSmartSearch = async (query: string) => {
         if (!query.trim()) return
 
@@ -90,39 +159,10 @@ export function ItemsList({ initialItems, locations, groups }: Props) {
         }
     }
 
-    const filteredItems = initialItems.filter((item) => {
-        // Text Search (Classic)
-        const matchesSearch = searchMode === 'smart' ? true : (
-            item.name.toLowerCase().includes(search.toLowerCase()) ||
-            (item.notes && item.notes.toLowerCase().includes(search.toLowerCase()))
-        )
-
-        // Filters
-        const matchesStatus = statusFilter === 'all' || item.performance_status === statusFilter
-        const matchesCategory = categoryFilter === 'all' || item.group_id === categoryFilter
-        const matchesLocation = locationFilter === 'all' || item.location_id === locationFilter
-
-        // Production Filter (This requires joining/fetching performance_items, which we don't have here easily yet. 
-        // For now, we'll skip strict production filtering on client-side or we need to pass that data.
-        // Let's assume we filter by status for now, and add production filter later or fetch it.)
-        // TODO: Implement strict production filtering if needed.
-
-        return matchesSearch && matchesStatus && matchesCategory && matchesLocation
-    }).sort((a, b) => {
-        if (dateSort === 'newest') {
-            return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-        } else {
-            return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
-        }
-    })
-
-    const displayItems = searchMode === 'smart' && hasSmartSearched ? smartResults : filteredItems
+    const displayItems = searchMode === 'smart' && hasSmartSearched ? smartResults : items
 
     return (
         <div className="space-y-6">
-            {/* Smart Search */}
-
-
             <div className="bg-neutral-900/50 p-4 rounded-lg border border-neutral-800 space-y-4">
                 {/* Search Bar & Toggle */}
                 <div className="flex flex-col md:flex-row gap-4">
@@ -142,6 +182,12 @@ export function ItemsList({ initialItems, locations, groups }: Props) {
                                 setHasSmartSearched(false)
                                 setSmartResults([])
                                 setSmartSuggestion(null)
+                                // Reset filters when switching modes
+                                if (searchMode === 'smart') {
+                                    setCategoryFilter('all')
+                                    setLocationFilter('all')
+                                    setStatusFilter('all')
+                                }
                             }}
                         />
                     </div>
@@ -156,6 +202,7 @@ export function ItemsList({ initialItems, locations, groups }: Props) {
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className="w-full sm:w-auto"
+                        disabled={searchMode === 'smart'}
                     >
                         <option value="all">{t('allStatuses')}</option>
                         <option value="active">{t('statuses.active')}</option>
@@ -170,6 +217,7 @@ export function ItemsList({ initialItems, locations, groups }: Props) {
                         value={categoryFilter}
                         onChange={(e) => setCategoryFilter(e.target.value)}
                         className="w-full sm:w-auto"
+                        disabled={searchMode === 'smart'}
                     >
                         <option value="all">{t('allCategories')}</option>
                         {groups.map(g => (
@@ -182,6 +230,7 @@ export function ItemsList({ initialItems, locations, groups }: Props) {
                         value={locationFilter}
                         onChange={(e) => setLocationFilter(e.target.value)}
                         className="w-full sm:w-auto"
+                        disabled={searchMode === 'smart'}
                     >
                         <option value="all">{t('allLocations')}</option>
                         {locations.map(l => (
@@ -194,6 +243,7 @@ export function ItemsList({ initialItems, locations, groups }: Props) {
                         value={dateSort}
                         onChange={(e) => setDateSort(e.target.value as 'newest' | 'oldest')}
                         className="w-full sm:w-auto sm:ml-auto"
+                        disabled={searchMode === 'smart'}
                     >
                         <option value="newest">{t('newestFirst')}</option>
                         <option value="oldest">{t('oldestFirst')}</option>
@@ -256,7 +306,7 @@ export function ItemsList({ initialItems, locations, groups }: Props) {
                 </div>
             )}
 
-            {isSmartSearching ? (
+            {isSmartSearching || isFiltering ? (
                 view === 'grid' ? (
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {[...Array(8)].map((_, i) => (
@@ -293,7 +343,7 @@ export function ItemsList({ initialItems, locations, groups }: Props) {
                             <div className="aspect-square w-full bg-neutral-800 relative flex items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900">
                                 {item.image_url ? (
                                     <NextImage
-                                        src={item.image_url}
+                                        src={item.thumbnail_url || item.image_url}
                                         alt={item.name}
                                         fill
                                         className="object-cover transition-transform group-hover:scale-105"
@@ -344,7 +394,7 @@ export function ItemsList({ initialItems, locations, groups }: Props) {
                                 <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-md bg-neutral-800 flex items-center justify-center">
                                     {item.image_url ? (
                                         <NextImage
-                                            src={item.image_url}
+                                            src={item.thumbnail_url || item.image_url}
                                             alt={item.name}
                                             fill
                                             className="object-cover"
@@ -404,6 +454,26 @@ export function ItemsList({ initialItems, locations, groups }: Props) {
                 </div>
             )}
 
+            {/* Load More Button */}
+            {hasMore && searchMode === 'classic' && !isFiltering && (
+                <div className="flex justify-center pt-8 pb-4">
+                    <button
+                        onClick={loadMore}
+                        disabled={isLoadingMore}
+                        className="px-6 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    >
+                        {isLoadingMore ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                {t('loading')}
+                            </>
+                        ) : (
+                            t('loadMore')
+                        )}
+                    </button>
+                </div>
+            )}
+
             <EditItemDialog
                 item={selectedItem}
                 isOpen={isEditDialogOpen}
@@ -437,7 +507,7 @@ function StatusBadge({ status }: { status: string | null }) {
     }
 
     const style = styles[status as keyof typeof styles] || styles.unassigned
-    const label = t(status as any) || status.replace('_', ' ')
+    const label = t(status as ItemStatus) || status.replace('_', ' ')
 
     return (
         <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset ${style}`}>

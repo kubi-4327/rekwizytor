@@ -8,6 +8,7 @@ import { ItemSelectionDialog } from './ItemSelectionDialog'
 import NextImage from 'next/image'
 import { ItemIcon } from '@/components/ui/ItemIcon'
 import { useTranslations } from 'next-intl'
+import { Database } from '@/types/supabase'
 
 type Item = {
     id: string
@@ -16,6 +17,8 @@ type Item = {
     notes: string | null
     performance_status: string | null
 }
+
+
 
 type Assignment = {
     id: string
@@ -103,9 +106,9 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
             await supabase
                 .from('items')
                 .update({
-                    performance_status: 'active',
-                    status: 'active' // Promote draft to active if assigned
-                } as any)
+                    performance_status: 'active' as Database['public']['Enums']['item_performance_status_enum'],
+                    status: 'active' as Database['public']['Enums']['item_status_enum']
+                })
                 .in('id', selectedIds)
 
             // Optimistic update

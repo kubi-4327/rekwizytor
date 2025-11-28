@@ -112,7 +112,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
                     <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-4">
                             <div>
-                                <h1 className="text-3xl font-bold text-white">{production.title}</h1>
+                                <h1 className="text-2xl font-bold text-white">{production.title}</h1>
                                 <div className="flex items-center flex-wrap gap-3 mt-3 text-neutral-400">
                                     <span className={`capitalize px-2.5 py-0.5 rounded-full text-xs border flex items-center gap-2 ${production.status === 'active'
                                         ? 'bg-green-500/10 text-green-400 border-green-500/20'
@@ -182,7 +182,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
                 {/* Props List Column */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-semibold text-white">{t('propsList')}</h2>
+                        <h2 className="text-lg font-semibold text-white">{t('propsList')}</h2>
                         <Link
                             href={`/performances/${id}/props`}
                             className="inline-flex items-center justify-center rounded-md bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-700"
