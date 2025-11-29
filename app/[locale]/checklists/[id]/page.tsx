@@ -113,7 +113,7 @@ export default async function ChecklistPage({ params }: Props) {
                         {nextScene ? (
                             <Link
                                 href={`/checklists/${nextScene.id}`}
-                                className="text-sm text-blue-400 hover:text-blue-300 flex items-center font-medium"
+                                className="text-sm text-burgundy-light hover:text-burgundy-bright flex items-center font-medium"
                             >
                                 {t('scene', { number: nextScene.scene_number })}
                                 <ArrowRight className="ml-1 h-3 w-3" />

@@ -49,7 +49,7 @@ export function SettingsForm({ user }: { user: UserData }) {
             {/* Profile Section */}
             <section className="space-y-4">
                 <h2 className="text-lg font-medium text-white flex items-center">
-                    <User className="mr-2 h-5 w-5 text-blue-400" />
+                    <User className="mr-2 h-5 w-5 text-burgundy-light" />
                     {t('account')}
                 </h2>
                 <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6">

@@ -37,7 +37,7 @@ export default async function Home() {
           className="group relative overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 p-6 hover:border-neutral-700 transition-colors"
         >
           <div className="flex items-center justify-between">
-            <div className="rounded-lg bg-blue-900/20 p-3 text-blue-400">
+            <div className="rounded-lg bg-burgundy-main/20 p-3 text-burgundy-light">
               <Box className="h-6 w-6" />
             </div>
             <ArrowRight className="h-5 w-5 text-neutral-600 group-hover:text-white transition-colors" />

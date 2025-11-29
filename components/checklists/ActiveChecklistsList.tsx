@@ -172,8 +172,8 @@ export function ActiveChecklistsList({ initialChecklists }: Props) {
                                             {t('live')}
                                         </span>
                                     ) : (
-                                        <span className="text-xs font-bold text-blue-400 bg-blue-400/10 px-3 py-1 rounded-full flex items-center gap-2">
-                                            <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                                        <span className="text-xs font-bold text-burgundy-light bg-burgundy-main/10 px-3 py-1 rounded-full flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-burgundy-main"></span>
                                             {t('upcoming')}
                                         </span>
                                     )}
@@ -257,8 +257,8 @@ export function ActiveChecklistsList({ initialChecklists }: Props) {
                                 disabled={isResetting}
                                 className="w-full p-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 transition-all flex items-center gap-4 group text-left"
                             >
-                                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
-                                    <RotateCcw className="w-5 h-5 text-blue-500" />
+                                <div className="w-10 h-10 rounded-full bg-burgundy-main/10 flex items-center justify-center group-hover:bg-burgundy-main/20 transition-colors">
+                                    <RotateCcw className="w-5 h-5 text-burgundy-main" />
                                 </div>
                                 <div>
                                     <div className="font-bold text-white">{t('restartShow')}</div>

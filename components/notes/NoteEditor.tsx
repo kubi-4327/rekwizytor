@@ -102,7 +102,7 @@ export default function NoteEditor({
             }),
             UserMention.configure({
                 HTMLAttributes: {
-                    class: 'mention user-mention bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded px-1 py-0.5 font-medium cursor-pointer',
+                    class: 'mention user-mention bg-burgundy-main/10 dark:bg-burgundy-main/20 text-burgundy-main dark:text-burgundy-light rounded px-1 py-0.5 font-medium cursor-pointer',
                 },
                 suggestion: {
                     char: '@',

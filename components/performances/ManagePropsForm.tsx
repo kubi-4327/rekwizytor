@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, Loader2, Package, GripVertical, CheckSquare, Square, User, MoreHorizontal } from 'lucide-react'
+import { Plus, Trash2, Loader2, Package, GripVertical, CheckSquare, Square, User, MoreHorizontal, ChevronDown, Camera, List } from 'lucide-react'
 import { ItemSelectionDialog } from './ItemSelectionDialog'
 import NextImage from 'next/image'
 import { ItemIcon } from '@/components/ui/ItemIcon'
@@ -21,6 +21,7 @@ import {
     DragStartEvent,
     DragEndEvent,
     DragOverEvent,
+    useDroppable,
 } from '@dnd-kit/core'
 import {
     arrayMove,
@@ -118,7 +119,7 @@ function SortableItem({
                     {...listeners}
                     className="cursor-grab active:cursor-grabbing p-1 text-neutral-600 hover:text-neutral-400"
                 >
-                    <GripVertical className="h-4 w-4" />
+                    <GripVertical className="h-4 w-4 touch-none" />
                 </div>
                 <button
                     onClick={() => onToggleSelect(assignment.id)}
@@ -168,6 +169,17 @@ function SortableItem({
     )
 }
 
+// Droppable Container Component
+function DroppableContainer({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
+    const { setNodeRef } = useDroppable({ id })
+
+    return (
+        <div ref={setNodeRef} className={className}>
+            {children}
+        </div>
+    )
+}
+
 export function ManagePropsForm({ performanceId, initialAssignments, availableItems, definedScenes, accentColor, profiles }: Props) {
     const t = useTranslations('ManagePropsForm')
     const [assignments, setAssignments] = useState<Assignment[]>(initialAssignments)
@@ -183,7 +195,11 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
     const supabase = createClient()
 
     const sensors = useSensors(
-        useSensor(PointerSensor),
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
@@ -605,7 +621,7 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                 items={items.map(i => i.id)}
                 strategy={verticalListSortingStrategy}
             >
-                <div className="space-y-2 min-h-[50px]">
+                <DroppableContainer id={id} className="space-y-2 min-h-[50px]">
                     {items.map((assignment) => (
                         <SortableItem
                             key={assignment.id}
@@ -622,7 +638,7 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                             {t('dropHere')}
                         </div>
                     )}
-                </div>
+                </DroppableContainer>
             </SortableContext>
         )
     }
@@ -717,13 +733,53 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                             <Package className="h-5 w-5 text-neutral-400" />
                             {t('unassignedItems')}
                         </h3>
-                        <button
-                            onClick={() => handleOpenAddDialog(null, null)}
-                            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-neutral-300 bg-neutral-800 hover:bg-neutral-700 rounded-md transition-colors"
-                        >
-                            <Plus className="h-4 w-4" />
-                            {t('addProp')}
-                        </button>
+                        <Menu as="div" className="relative">
+                            <Menu.Button
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-neutral-300 bg-neutral-800 hover:bg-neutral-700 rounded-md transition-colors"
+                            >
+                                <Plus className="h-4 w-4" />
+                                <span className="hidden sm:inline">{t('addProp')}</span>
+                                <ChevronDown className="h-3 w-3 sm:ml-1" />
+                            </Menu.Button>
+                            <Transition
+                                as={Fragment}
+                                enter="transition ease-out duration-100"
+                                enterFrom="transform opacity-0 scale-95"
+                                enterTo="transform opacity-100 scale-100"
+                                leave="transition ease-in duration-75"
+                                leaveFrom="transform opacity-100 scale-100"
+                                leaveTo="transform opacity-0 scale-95"
+                            >
+                                <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-neutral-800 border border-neutral-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                    <div className="p-1">
+                                        <Menu.Item>
+                                            {({ active }) => (
+                                                <button
+                                                    onClick={() => handleOpenAddDialog(null, null)}
+                                                    className={`${active ? 'bg-neutral-700 text-white' : 'text-neutral-300'
+                                                        } group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm`}
+                                                >
+                                                    <List className="h-4 w-4" />
+                                                    {t('selectExisting')}
+                                                </button>
+                                            )}
+                                        </Menu.Item>
+                                        <Menu.Item>
+                                            {({ active }) => (
+                                                <a
+                                                    href={`/items/fast-add?performanceId=${performanceId}`}
+                                                    className={`${active ? 'bg-neutral-700 text-white' : 'text-neutral-300'
+                                                        } group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm`}
+                                                >
+                                                    <Camera className="h-4 w-4" />
+                                                    {t('fastAdd')}
+                                                </a>
+                                            )}
+                                        </Menu.Item>
+                                    </div>
+                                </Menu.Items>
+                            </Transition>
+                        </Menu>
                     </div>
                     <div className="bg-neutral-900/30 p-4 rounded-xl border border-neutral-800/50 border-dashed">
                         {renderAssignmentList('unassigned', groupedAssignments['unassigned'])}
@@ -743,14 +799,54 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                                         <p className="text-sm text-neutral-400">{scene.name}</p>
                                     )}
                                 </div>
-                                <button
-                                    onClick={() => handleOpenAddDialog(scene.scene_number.toString(), scene.name)}
-                                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-black bg-white hover:bg-neutral-200 rounded-md transition-colors"
-                                    style={accentColor ? { backgroundColor: accentColor, color: 'white' } : {}}
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    {t('addProp')}
-                                </button>
+                                <Menu as="div" className="relative">
+                                    <Menu.Button
+                                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-burgundy-main hover:bg-burgundy-light rounded-md transition-colors"
+                                        style={accentColor ? { backgroundColor: accentColor } : {}}
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        <span className="hidden sm:inline">{t('addProp')}</span>
+                                        <ChevronDown className="h-3 w-3 sm:ml-1" />
+                                    </Menu.Button>
+                                    <Transition
+                                        as={Fragment}
+                                        enter="transition ease-out duration-100"
+                                        enterFrom="transform opacity-0 scale-95"
+                                        enterTo="transform opacity-100 scale-100"
+                                        leave="transition ease-in duration-75"
+                                        leaveFrom="transform opacity-100 scale-100"
+                                        leaveTo="transform opacity-0 scale-95"
+                                    >
+                                        <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-neutral-800 border border-neutral-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                            <div className="p-1">
+                                                <Menu.Item>
+                                                    {({ active }) => (
+                                                        <button
+                                                            onClick={() => handleOpenAddDialog(scene.scene_number.toString(), scene.name)}
+                                                            className={`${active ? 'bg-neutral-700 text-white' : 'text-neutral-300'
+                                                                } group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm`}
+                                                        >
+                                                            <List className="h-4 w-4" />
+                                                            {t('selectExisting')}
+                                                        </button>
+                                                    )}
+                                                </Menu.Item>
+                                                <Menu.Item>
+                                                    {({ active }) => (
+                                                        <a
+                                                            href={`/items/fast-add?performanceId=${performanceId}`}
+                                                            className={`${active ? 'bg-neutral-700 text-white' : 'text-neutral-300'
+                                                                } group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm`}
+                                                        >
+                                                            <Camera className="h-4 w-4" />
+                                                            {t('fastAdd')}
+                                                        </a>
+                                                    )}
+                                                </Menu.Item>
+                                            </div>
+                                        </Menu.Items>
+                                    </Transition>
+                                </Menu>
                             </div>
                             <div>
                                 {renderAssignmentList(scene.scene_number.toString(), groupedAssignments[scene.scene_number.toString()] || [])}

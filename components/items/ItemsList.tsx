@@ -371,7 +371,7 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                                     <div className="mt-2">
                                         <span className={`text-xs px-2 py-0.5 rounded-full border ${(item as SearchResult).matchType === 'exact' ? 'bg-green-900/30 text-green-400 border-green-900/50' :
                                             (item as SearchResult).matchType === 'close' ? 'bg-yellow-900/30 text-yellow-400 border-yellow-900/50' :
-                                                'bg-blue-900/30 text-blue-400 border-blue-900/50'
+                                                'bg-burgundy-main/30 text-burgundy-light border-burgundy-main/50'
                                             }`}>
                                             {(item as SearchResult).matchType === 'exact' ? t('bestMatch') : (item as SearchResult).matchType === 'close' ? t('closeMatch') : t('alternative')}
                                         </span>
@@ -501,7 +501,7 @@ function StatusBadge({ status }: { status: string | null }) {
         active: 'bg-green-400/10 text-green-400 ring-green-400/20',
         upcoming: 'bg-yellow-400/10 text-yellow-400 ring-yellow-400/20',
         archived: 'bg-neutral-400/10 text-neutral-400 ring-neutral-400/20',
-        unassigned: 'bg-blue-400/10 text-blue-400 ring-blue-400/20',
+        unassigned: 'bg-burgundy-main/10 text-burgundy-light ring-burgundy-main/20',
         in_maintenance: 'bg-orange-400/10 text-orange-400 ring-orange-400/20',
     }
 

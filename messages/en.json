@@ -377,7 +377,9 @@
         "dropHere": "Drop here",
         "selectedCount": "{count} selected",
         "assignTo": "Assign to",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "selectExisting": "Select from list",
+        "fastAdd": "Fast Add (Photo)"
     },
     "ItemSelectionDialog": {
         "selectProps": "Select Props",

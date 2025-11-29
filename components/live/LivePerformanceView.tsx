@@ -704,7 +704,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                                     className={clsx(
                                         "w-full text-left p-3 rounded-lg text-sm transition-colors relative overflow-hidden",
                                         localActiveSceneId === checklist.id
-                                            ? "bg-blue-600/20 text-blue-400 border border-blue-500/50"
+                                            ? "bg-burgundy-main/20 text-burgundy-light border border-burgundy-main/50"
                                             : "text-neutral-400 hover:bg-neutral-800 hover:text-white"
                                     )}
                                 >
@@ -780,7 +780,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                                                 "h-2 rounded-full flex-1 min-w-[20px] max-w-[60px] transition-all duration-300 shrink-0",
                                                 isCurrent ? "h-4 opacity-100 animate-pulse ring-1 ring-white/20" : "opacity-60",
                                                 allOnStage ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" :
-                                                    allPrepared ? "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" :
+                                                    allPrepared ? "bg-burgundy-main shadow-[0_0_8px_rgba(160,35,47,0.5)]" :
                                                         "bg-neutral-800 border border-neutral-600"
                                             )}
                                             title={`${t('scene', { number: checklist.scene_number })} - ${checklist.scene_name || ''}`}
@@ -831,7 +831,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                                     item.is_on_stage
                                         ? "bg-green-900/20 border-green-900/50"
                                         : item.is_prepared
-                                            ? "bg-blue-900/20 border-blue-900/50"
+                                            ? "bg-burgundy-main/20 border-burgundy-main/50"
                                             : "bg-neutral-900/50 border-neutral-800"
                                 )}
                             >
@@ -855,7 +855,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                                     <div className="flex-1 min-w-0">
                                         <h4 className={clsx(
                                             "text-base font-medium break-words whitespace-normal leading-tight",
-                                            item.is_on_stage ? "text-green-400" : item.is_prepared ? "text-blue-400" : "text-white"
+                                            item.is_on_stage ? "text-green-400" : item.is_prepared ? "text-burgundy-light" : "text-white"
                                         )}>
                                             {item.items?.name}
                                         </h4>
@@ -908,7 +908,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                                         className={clsx(
                                             "flex flex-col items-center justify-center h-14 w-14 sm:h-16 sm:w-16 rounded-xl border-2 transition-all active:scale-95 touch-manipulation",
                                             item.is_prepared
-                                                ? "bg-blue-500/20 border-blue-500 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                                                ? "bg-burgundy-main/20 border-burgundy-main text-burgundy-light shadow-[0_0_15px_rgba(160,35,47,0.3)]"
                                                 : "bg-neutral-950 border-neutral-700 text-neutral-600 hover:border-neutral-500"
                                         )}
                                     >

@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { Camera, Upload, X, Loader2, MapPin, Sparkles } from 'lucide-react'
 import NextImage from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { uploadAndAnalyzeImages } from '@/app/actions/fast-mode'
 import { compressImage, createThumbnail } from '@/utils/image-processing'
 import { CameraCapture } from './CameraCapture'
@@ -30,10 +30,13 @@ type Props = {
 }
 
 export function FastAddForm({ locations, performances }: Props) {
+    const searchParams = useSearchParams()
+    const initialPerformanceId = searchParams.get('performanceId') || ''
+
     const [processedImages, setProcessedImages] = useState<{ file: File, thumbnail: File, preview: string }[]>([])
     const [locationId, setLocationId] = useState<string>('')
-    const [performanceId, setPerformanceId] = useState<string>('')
-    const [assignmentType, setAssignmentType] = useState<'location' | 'performance'>('location')
+    const [performanceId, setPerformanceId] = useState<string>(initialPerformanceId)
+    const [assignmentType, setAssignmentType] = useState<'location' | 'performance'>(initialPerformanceId ? 'performance' : 'location')
     const [isProcessing, setIsProcessing] = useState(false)
     const [isCameraOpen, setIsCameraOpen] = useState(false)
 
@@ -153,13 +156,13 @@ export function FastAddForm({ locations, performances }: Props) {
                     {assignmentType === 'location' ? (
                         <div>
                             <label className="block text-sm font-medium text-white mb-2 flex items-center">
-                                <MapPin className="w-4 h-4 mr-2 text-blue-400" />
+                                <MapPin className="w-4 h-4 mr-2 text-burgundy-light" />
                                 Default Location <span className="text-red-400">*</span>
                             </label>
                             <select
                                 value={locationId}
                                 onChange={(e) => setLocationId(e.target.value)}
-                                className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-3 text-white focus:border-blue-500 focus:outline-none"
+                                className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-3 text-white focus:border-burgundy-main focus:outline-none"
                             >
                                 <option value="">Select Location...</option>
                                 {locations.map(loc => (
@@ -176,7 +179,7 @@ export function FastAddForm({ locations, performances }: Props) {
                             <select
                                 value={performanceId}
                                 onChange={(e) => setPerformanceId(e.target.value)}
-                                className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-3 text-white focus:border-blue-500 focus:outline-none"
+                                className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-3 text-white focus:border-burgundy-main focus:outline-none"
                             >
                                 <option value="">Select Performance...</option>
                                 {performances.map(perf => (

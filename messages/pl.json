@@ -377,7 +377,9 @@
         "dropHere": "Upuść tutaj",
         "selectedCount": "Wybrano: {count}",
         "assignTo": "Przypisz do",
-        "cancel": "Anuluj"
+        "cancel": "Anuluj",
+        "selectExisting": "Wybierz z listy",
+        "fastAdd": "Szybkie dodawanie (Zdjęcie)"
     },
     "ItemSelectionDialog": {
         "selectProps": "Wybierz Rekwizyty",

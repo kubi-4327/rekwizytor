@@ -133,7 +133,7 @@ export function LiveChecklist({ initialItems }: Props) {
                             className={clsx(
                                 "flex flex-col items-center justify-center h-14 w-14 sm:h-16 sm:w-16 rounded-xl border-2 transition-all active:scale-95 touch-manipulation",
                                 item.is_prepared
-                                    ? "bg-blue-500/20 border-blue-500 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                                    ? "bg-burgundy-main/20 border-burgundy-main text-burgundy-light shadow-[0_0_15px_rgba(160,35,47,0.3)]"
                                     : "bg-neutral-950 border-neutral-700 text-neutral-600 hover:border-neutral-500"
                             )}
                         >
