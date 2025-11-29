@@ -56,6 +56,7 @@ export type Database = {
           id: string
           location_id: string | null
           name: string
+          parent_id: string | null
         }
         Insert: {
           color?: string | null
@@ -65,6 +66,7 @@ export type Database = {
           id?: string
           location_id?: string | null
           name: string
+          parent_id?: string | null
         }
         Update: {
           color?: string | null
@@ -74,6 +76,7 @@ export type Database = {
           id?: string
           location_id?: string | null
           name?: string
+          parent_id?: string | null
         }
         Relationships: [
           {
@@ -81,6 +84,13 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "groups_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
             referencedColumns: ["id"]
           },
         ]
@@ -239,6 +249,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           id: string
+          is_master: boolean | null
           performance_id: string | null
           title: string
           updated_at: string | null
@@ -248,6 +259,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           id?: string
+          is_master?: boolean | null
           performance_id?: string | null
           title: string
           updated_at?: string | null
@@ -257,6 +269,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           id?: string
+          is_master?: boolean | null
           performance_id?: string | null
           title?: string
           updated_at?: string | null
@@ -280,6 +293,7 @@ export type Database = {
       }
       performance_items: {
         Row: {
+          assigned_to: string | null
           created_at: string | null
           id: string
           image_url_snapshot: string | null
@@ -291,10 +305,12 @@ export type Database = {
           scene_name: string | null
           scene_number: string | null
           setup_instructions: string | null
+          sort_order: number | null
           updated_at: string | null
           usage_notes: string | null
         }
         Insert: {
+          assigned_to?: string | null
           created_at?: string | null
           id?: string
           image_url_snapshot?: string | null
@@ -306,10 +322,12 @@ export type Database = {
           scene_name?: string | null
           scene_number?: string | null
           setup_instructions?: string | null
+          sort_order?: number | null
           updated_at?: string | null
           usage_notes?: string | null
         }
         Update: {
+          assigned_to?: string | null
           created_at?: string | null
           id?: string
           image_url_snapshot?: string | null
@@ -321,10 +339,18 @@ export type Database = {
           scene_name?: string | null
           scene_number?: string | null
           setup_instructions?: string | null
+          sort_order?: number | null
           updated_at?: string | null
           usage_notes?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "performance_items_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "performance_items_item_id_fkey"
             columns: ["item_id"]

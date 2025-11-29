@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Loader2, Theater, Sparkles } from 'lucide-react'
+import { Loader2, Sparkles } from 'lucide-react'
+import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 
 export default function LoginPage() {
@@ -82,8 +83,14 @@ export default function LoginPage() {
         <div className="flex min-h-screen flex-col items-center justify-center bg-neutral-950 p-4 text-neutral-200">
             <div className="w-full max-w-md space-y-8">
                 <div className="flex flex-col items-center text-center">
-                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-900 border border-neutral-800">
-                        <Theater className="h-8 w-8 text-neutral-400" />
+                    <div className="mb-4 relative h-24 w-24">
+                        <Image
+                            src="/logo.png"
+                            alt="Rekwizytor"
+                            fill
+                            className="object-contain"
+                            priority
+                        />
                     </div>
                     <h2 className="text-3xl font-bold tracking-tight text-white">
                         {t('title')}

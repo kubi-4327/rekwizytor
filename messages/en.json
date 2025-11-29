@@ -33,6 +33,11 @@
         "notes": "Notes",
         "more": "More"
     },
+    "Groups": {
+        "title": "Groups",
+        "subtitle": "Browse and manage prop groups.",
+        "allGroups": "All Groups"
+    },
     "Items": {
         "title": "Props Inventory",
         "subtitle": "Manage your theater collection",
@@ -101,7 +106,7 @@
         "manageScenes": "Manage Scenes",
         "editDetails": "Edit Details",
         "liveView": "Live View",
-        "propsList": "Props List (Script)",
+        "propsList": "Props List",
         "manageProps": "Manage Props",
         "table": {
             "scene": "Scene",
@@ -109,7 +114,9 @@
             "instructions": "Instructions"
         },
         "act": "Act {actNum}",
-        "noProps": "No props assigned to this production yet."
+        "noProps": "No props assigned to this production yet.",
+        "sceneView": "Scene View",
+        "allItemsView": "All Items View"
     },
     "ManageScenes": {
         "backToProduction": "Back to Production",
@@ -337,6 +344,8 @@
         "updateError": "Failed to update scene"
     },
     "ManagePropsForm": {
+        "unassignedItems": "Unassigned Items",
+        "addProp": "Add Prop",
         "addPropToScene": "Add Prop to Scene",
         "scene": "Scene",
         "selectScene": "Select a scene...",
@@ -364,7 +373,11 @@
         "deleteConfirm": "Are you sure you want to remove this prop from the production?",
         "addError": "Failed to add prop",
         "deleteError": "Failed to remove prop",
-        "selectPropsButton": "Select Props"
+        "selectPropsButton": "Select Props",
+        "dropHere": "Drop here",
+        "selectedCount": "{count} selected",
+        "assignTo": "Assign to",
+        "cancel": "Cancel"
     },
     "ItemSelectionDialog": {
         "selectProps": "Select Props",
@@ -457,6 +470,7 @@
     "SettingsForm": {
         "account": "Account",
         "fullName": "Full Name",
+        "save": "Save",
         "emailAddress": "Email Address",
         "managedViaSupabase": "Managed via Supabase Auth",
         "appearance": "Appearance",

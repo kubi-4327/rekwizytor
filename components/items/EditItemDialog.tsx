@@ -149,9 +149,21 @@ export function EditItemDialog({ item, isOpen, onClose, locations, groups }: Pro
                                     className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-3 py-2 text-white focus:border-ai-primary focus:outline-none transition-colors"
                                 >
                                     <option value="">No Category</option>
-                                    {groups.map(g => (
-                                        <option key={g.id} value={g.id}>{g.name}</option>
-                                    ))}
+                                    {(() => {
+                                        // Helper to render groups hierarchically
+                                        const renderGroupOptions = (parentId: string | null = null, depth = 0): React.ReactNode[] => {
+                                            const children = groups.filter(g => g.parent_id === parentId)
+                                            return children.map(group => (
+                                                <>
+                                                    <option key={group.id} value={group.id}>
+                                                        {'\u00A0'.repeat(depth * 4)}{group.name}
+                                                    </option>
+                                                    {renderGroupOptions(group.id, depth + 1)}
+                                                </>
+                                            ))
+                                        }
+                                        return renderGroupOptions()
+                                    })()}
                                 </select>
                             </div>
 

@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { Calendar, Box, ArrowLeft } from 'lucide-react'
 import { ScheduledShowsList } from '@/components/performances/ScheduledShowsList'
+import { PerformanceContent } from '@/components/performances/PerformanceContent'
 import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
@@ -180,72 +181,12 @@ export default async function ProductionDetailsPage({ params }: Props) {
                 </div>
 
                 {/* Props List Column */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold text-white">{t('propsList')}</h2>
-                        <Link
-                            href={`/performances/${id}/props`}
-                            className="inline-flex items-center justify-center rounded-md bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-700"
-                        >
-                            <Box className="mr-1.5 h-3.5 w-3.5" />
-                            {t('manageProps')}
-                        </Link>
-                    </div>
-
-                    <div className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
-                        <table className="min-w-full divide-y divide-neutral-800">
-                            <thead className="bg-neutral-950">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('table.scene')}</th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('table.item')}</th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('table.instructions')}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-neutral-800">
-                                {Object.entries(propsByAct)
-                                    .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-                                    .map(([actNum, props]) => (
-                                        <Fragment key={actNum}>
-                                            {/* Act Header */}
-                                            <tr className="bg-neutral-950/50">
-                                                <td colSpan={3} className="px-4 py-2 text-xs font-bold text-neutral-500 uppercase tracking-wider border-y border-neutral-800 text-center">
-                                                    {t('act', { actNum })}
-                                                </td>
-                                            </tr>
-                                            {props.map((prop, index) => {
-                                                const isFirstInScene = index === 0 || prop.scene_number !== props[index - 1].scene_number
-                                                return (
-                                                    <tr key={prop.id} className="hover:bg-neutral-800/50">
-                                                        <td className="px-4 py-3 text-sm text-neutral-300 align-top">
-                                                            {isFirstInScene && (
-                                                                <>
-                                                                    <div className="font-medium">{prop.scene_number}</div>
-                                                                    <div className="text-xs text-neutral-500">{prop.scene_name}</div>
-                                                                </>
-                                                            )}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-sm text-white align-top">
-                                                            {prop.items?.name || prop.item_name_snapshot}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-sm text-neutral-400 align-top">
-                                                            {prop.setup_instructions || '-'}
-                                                        </td>
-                                                    </tr>
-                                                )
-                                            })}
-                                        </Fragment>
-                                    ))}
-
-                                {(!assignedProps || assignedProps.length === 0) && (
-                                    <tr>
-                                        <td colSpan={3} className="px-4 py-8 text-center text-sm text-neutral-500">
-                                            {t('noProps')}
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                <div className="lg:col-span-2">
+                    <PerformanceContent
+                        performanceId={id}
+                        propsByAct={propsByAct}
+                        assignedProps={assignedProps}
+                    />
                 </div>
             </div>
         </div >

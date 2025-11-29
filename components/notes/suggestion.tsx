@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/client'
 import { Box, MapPin, Tag, User, Calendar } from 'lucide-react'
 import React from 'react'
 
-const fetchItems = async (query: string) => {
+export const getItemSuggestions = async (query: string) => {
     const supabase = createClient()
     const { data } = await supabase
         .from('items')
@@ -22,6 +22,8 @@ const fetchItems = async (query: string) => {
         icon: <Box size={14} />
     })) || []
 }
+
+
 
 const fetchCategories = async (query: string) => {
     const supabase = createClient()
@@ -53,12 +55,44 @@ const fetchUsers = async (query: string) => {
     return data?.map(d => ({ id: d.id, label: d.full_name || d.username || 'Unknown', type: 'user', icon: <User size={14} /> })) || []
 }
 
-const getDates = (query: string) => {
+import { format, parse, isValid } from 'date-fns'
+
+export const getDateSuggestions = (query: string) => {
     const options = [
         { id: 'today', label: 'Today', type: 'date', value: new Date().toISOString(), icon: <Calendar size={14} /> },
         { id: 'tomorrow', label: 'Tomorrow', type: 'date', value: new Date(Date.now() + 86400000).toISOString(), icon: <Calendar size={14} /> },
         { id: 'next-week', label: 'Next Week', type: 'date', value: new Date(Date.now() + 7 * 86400000).toISOString(), icon: <Calendar size={14} /> },
     ]
+
+    if (!query) return options
+
+    // Try to parse the query as a date
+    // Supported formats: YYYY-MM-DD, DD.MM.YYYY, DD/MM/YYYY
+    const formats = ['yyyy-MM-dd', 'dd.MM.yyyy', 'dd/MM/yyyy', 'd.MM.yyyy', 'd/MM/yyyy']
+    let parsedDate: Date | null = null
+
+    for (const fmt of formats) {
+        const d = parse(query, fmt, new Date())
+        if (isValid(d)) {
+            parsedDate = d
+            break
+        }
+    }
+
+    if (parsedDate) {
+        const formatted = format(parsedDate, 'MMM d, yyyy')
+        return [
+            {
+                id: query,
+                label: formatted,
+                type: 'date',
+                value: parsedDate.toISOString(),
+                icon: <Calendar size={14} />
+            },
+            ...options.filter(o => o.label.toLowerCase().includes(query.toLowerCase()))
+        ]
+    }
+
     return options.filter(o => o.label.toLowerCase().includes(query.toLowerCase()))
 }
 
@@ -70,7 +104,7 @@ export const getSlashSuggestions = async (query: string) => {
 
     // Trigger specific searches immediately if the command is typed
     if (lower === 'item' || lower.startsWith('item ')) {
-        return await fetchItems(query.slice(lower.startsWith('item ') ? 5 : 4))
+        return await getItemSuggestions(query.slice(lower.startsWith('item ') ? 5 : 4))
     }
     if (lower === 'cat' || lower === 'category' || lower.startsWith('cat ') || lower.startsWith('category ')) {
         const offset = lower.startsWith('category ') ? 9 : (lower.startsWith('cat ') ? 4 : (lower === 'category' ? 8 : 3))
@@ -80,7 +114,11 @@ export const getSlashSuggestions = async (query: string) => {
         return await fetchLocations(query.slice(lower.startsWith('place ') ? 6 : 5))
     }
     if (lower === 'data' || lower.startsWith('data ')) {
-        return getDates(query.slice(lower.startsWith('data ') ? 5 : 4))
+        return getDateSuggestions(query.slice(lower.startsWith('data ') ? 5 : 4))
+    }
+
+    if (lower === 'user' || lower === 'person' || lower.startsWith('user ') || lower.startsWith('person ')) {
+        return await getUserSuggestions(query.slice(lower.startsWith('person ') ? 7 : (lower.startsWith('user ') ? 5 : (lower === 'person' ? 6 : 4))))
     }
 
     const commands = [
@@ -88,6 +126,7 @@ export const getSlashSuggestions = async (query: string) => {
         { id: 'cmd-cat', label: 'Category', type: 'command', value: 'category', icon: <Tag size={14} /> },
         { id: 'cmd-place', label: 'Place', type: 'command', value: 'place', icon: <MapPin size={14} /> },
         { id: 'cmd-date', label: 'Date', type: 'command', value: 'data', icon: <Calendar size={14} /> },
+        { id: 'cmd-user', label: 'Person', type: 'command', value: 'user', icon: <User size={14} /> },
     ]
     return commands.filter(c => c.label.toLowerCase().startsWith(lower) || c.value.startsWith(lower))
 }

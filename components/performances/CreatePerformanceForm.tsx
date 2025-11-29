@@ -127,7 +127,7 @@ export function CreatePerformanceForm() {
                 thumbnailUrl = publicThumbUrl
             }
 
-            const { error: insertError } = await supabase
+            const { data: performanceData, error: insertError } = await supabase
                 .from('performances')
                 .insert({
                     title,
@@ -138,6 +138,33 @@ export function CreatePerformanceForm() {
                     thumbnail_url: thumbnailUrl,
                     color: selectedColor
                 })
+                .select()
+                .single()
+
+            if (insertError) throw insertError
+
+            // Create Master Note
+            if (performanceData) {
+                await supabase.from('notes').insert({
+                    title: `${title} - Master Note`,
+                    performance_id: performanceData.id,
+                    content: {
+                        type: 'doc',
+                        content: [
+                            {
+                                type: 'heading',
+                                attrs: { level: 1 },
+                                content: [{ type: 'text', text: `${title} - Master Note` }]
+                            },
+                            {
+                                type: 'paragraph',
+                                content: [{ type: 'text', text: notes || 'General information about the performance.' }]
+                            }
+                        ]
+                    },
+                    is_master: true
+                })
+            }
 
             if (insertError) throw insertError
 

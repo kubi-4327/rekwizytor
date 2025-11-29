@@ -45,6 +45,7 @@ export function CreateItemForm({ groups, locations }: Props) {
             if (notes) formData.append('notes', notes)
             if (groupId) formData.append('group_id', groupId)
             if (locationId) formData.append('location_id', locationId)
+
             if (imageFile) formData.append('image', imageFile)
             formData.append('is_draft', isDraft.toString())
 
@@ -168,7 +169,7 @@ export function CreateItemForm({ groups, locations }: Props) {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mt-4">
                         <input
                             type="checkbox"
                             id="draft"

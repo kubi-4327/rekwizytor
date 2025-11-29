@@ -6,16 +6,29 @@ import { AddPropsButton } from '@/components/items/AddPropsButton'
 import { ExportButton } from '@/components/items/ExportButton'
 import { getTranslations } from 'next-intl/server'
 
-export default async function ItemsPage() {
+type Props = {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function ItemsPage({ searchParams }: Props) {
+    const resolvedSearchParams = await searchParams
     const supabase = await createClient()
     const t = await getTranslations('Items')
-    const { data: items, count } = await supabase
+
+    const groupId = typeof resolvedSearchParams.groupId === 'string' ? resolvedSearchParams.groupId : undefined
+
+    let query = supabase
         .from('items')
         .select('*', { count: 'exact' })
         .is('deleted_at', null)
         .neq('status', 'draft')
         .order('created_at', { ascending: false })
-        .range(0, 49)
+
+    if (groupId) {
+        query = query.eq('group_id', groupId)
+    }
+
+    const { data: items, count } = await query.range(0, 49)
 
     const { data: locations } = await supabase.from('locations').select('*').order('name')
     const { data: groups } = await supabase.from('groups').select('*').order('name')
@@ -41,6 +54,7 @@ export default async function ItemsPage() {
                 totalCount={count || 0}
                 locations={locations || []}
                 groups={groups || []}
+                initialCategoryId={groupId}
             />
         </div>
     )

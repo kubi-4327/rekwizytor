@@ -67,7 +67,14 @@ export default async function ManagePropsPage({ params }: Props) {
     `)
         .eq('performance_id', id)
         .order('scene_number', { ascending: true })
+        .order('sort_order', { ascending: true })
         .returns<PerformanceItem[]>()
+
+    // Fetch all profiles for assignment
+    const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .order('full_name')
 
     return (
         <div className="p-4 md:p-10 max-w-5xl mx-auto">
@@ -88,6 +95,7 @@ export default async function ManagePropsPage({ params }: Props) {
                 availableItems={items || []}
                 definedScenes={scenes?.map((s: Scene) => ({ ...s, act_number: s.act_number ?? 1 })) || []}
                 accentColor={production.color}
+                profiles={profiles || []}
             />
         </div>
     )

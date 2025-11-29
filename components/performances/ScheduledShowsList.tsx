@@ -160,25 +160,24 @@ END:VCALENDAR`
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-white">{t('title')}</h2>
+                <h2 className="text-lg font-bold text-white leading-tight">{t('title')}</h2>
                 <div className="flex gap-2">
                     {sortedDates.length > 0 && (
                         <button
                             onClick={handleDownloadAll}
-                            className="inline-flex items-center justify-center rounded-md bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-700"
-                            title="Download full schedule (.ics)"
+                            className="p-2 text-neutral-400 hover:text-white border border-neutral-800 rounded-md hover:bg-neutral-900 transition-colors"
+                            title={t('exportAll')}
                         >
-                            <Download className="mr-1.5 h-3.5 w-3.5" />
-                            {t('exportAll')}
+                            <Download className="w-4 h-4" />
                         </button>
                     )}
                     <Link
                         href={`/performances/${performanceId}/schedule`}
-                        className="inline-flex items-center justify-center rounded-md bg-white px-3 py-1.5 text-xs font-medium text-black hover:bg-neutral-200"
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-white text-black rounded-md hover:bg-neutral-200 transition-colors"
                     >
-                        <Plus className="mr-1.5 h-3.5 w-3.5" />
+                        <Plus className="w-4 h-4" />
                         {t('schedule')}
                     </Link>
                 </div>

@@ -12,10 +12,11 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
     const supabase = await createClient()
     const images = formData.getAll('images') as File[]
     const thumbnails = formData.getAll('thumbnails') as File[]
-    const locationId = formData.get('locationId') as string
+    const locationId = formData.get('locationId') as string | null
     const groupId = formData.get('groupId') as string | null
+    const performanceId = formData.get('performanceId') as string | null
 
-    if (!images.length || !locationId) {
+    if (!images.length || (!locationId && !performanceId)) {
         throw new Error('Missing required fields')
     }
 
@@ -143,13 +144,14 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
                     name: analysis.name,
                     image_url: publicUrl,
                     thumbnail_url: thumbnailUrl,
-                    location_id: locationId,
+                    location_id: locationId || null,
                     group_id: matchedGroupId || null,
                     status: 'draft' as Database['public']['Enums']['item_status_enum'],
                     notes: analysis.description,
                     ai_description: analysis.ai_description,
                     attributes: analysis.attributes || {},
-                    embedding: JSON.stringify(embedding)
+                    embedding: JSON.stringify(embedding),
+                    performance_status: performanceId ? 'active' : 'unassigned'
                 })
                 .select()
                 .single()
@@ -158,6 +160,23 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
                 console.error('Database error:', dbError)
             } else {
                 results.push(newItem)
+
+                // If performanceId is present, link item to performance
+                if (performanceId && newItem) {
+                    const { error: linkError } = await supabase
+                        .from('performance_items')
+                        .insert({
+                            performance_id: performanceId,
+                            item_id: newItem.id,
+                            notes_snapshot: newItem.notes,
+                            item_name_snapshot: newItem.name,
+                            image_url_snapshot: newItem.image_url
+                        })
+
+                    if (linkError) {
+                        console.error('Failed to link item to performance:', linkError)
+                    }
+                }
             }
 
         } catch (error) {
@@ -169,15 +188,29 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
                 .insert({
                     name: `New Item (${new Date().toLocaleTimeString()})`,
                     image_url: publicUrl,
-                    location_id: locationId,
+                    location_id: locationId || null,
                     group_id: groupId || null,
                     status: 'draft' as Database['public']['Enums']['item_status_enum'],
-                    notes: "AI Analysis Failed"
+                    notes: "AI Analysis Failed",
+                    performance_status: performanceId ? 'active' : 'unassigned'
                 })
                 .select()
                 .single()
 
-            if (newItem) results.push(newItem)
+            if (newItem) {
+                results.push(newItem)
+
+                // If performanceId is present, link item to performance (fallback case)
+                if (performanceId) {
+                    await supabase
+                        .from('performance_items')
+                        .insert({
+                            performance_id: performanceId,
+                            item_id: newItem.id,
+                            image_url_snapshot: newItem.image_url
+                        })
+                }
+            }
         }
     }
 

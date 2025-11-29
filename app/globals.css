@@ -11,11 +11,17 @@
   --font-boldonse: "Boldonse", "Impact", sans-serif;
 
   /* Semantic Colors */
-  --color-ai-primary: #A0232F;
-  --color-ai-secondary: #C92F3E;
+  --color-burgundy-main: #A0232F;
+  --color-burgundy-dark: #6B1722;
+  --color-burgundy-extra-dark: #4A0F17;
+  --color-burgundy-light: #C92F3E;
+  --color-burgundy-bright: #DC3545;
+
+  --color-ai-primary: var(--color-burgundy-main);
+  --color-ai-secondary: var(--color-burgundy-light);
   --color-ai-bg: rgba(160, 35, 47, 0.1);
-  --color-action-primary: #A0232F;
-  --color-action-hover: #C92F3E;
+  --color-action-primary: var(--color-burgundy-main);
+  --color-action-hover: var(--color-burgundy-light);
   --color-settings-icon: #737373;
   --color-settings-hover: #d4d4d4;
 }

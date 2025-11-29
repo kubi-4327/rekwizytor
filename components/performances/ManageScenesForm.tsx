@@ -122,7 +122,7 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
                 <h3 className="text-lg font-medium text-white flex items-center">
                     <Plus
                         className="mr-2 h-5 w-5"
-                        style={{ color: performanceColor || '#60a5fa' }} // Default to blue-400
+                        style={{ color: performanceColor || '#C92F3E' }} // Default to burgundy-light
                     />
                     {t('addNewScene')}
                 </h3>

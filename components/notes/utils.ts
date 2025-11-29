@@ -21,3 +21,23 @@ export const extractMentions = (content: any) => {
 
     return mentions
 }
+
+export const extractTextFromContent = (content: any): string => {
+    if (!content) return ''
+    let text = ''
+
+    const traverse = (node: any) => {
+        if (node.type === 'text') {
+            text += node.text + ' '
+        } else if (node.type === 'userMention' || node.type === 'slashMention') {
+            text += (node.attrs.label || '') + ' '
+        }
+
+        if (node.content) {
+            node.content.forEach(traverse)
+        }
+    }
+
+    traverse(content)
+    return text.trim()
+}

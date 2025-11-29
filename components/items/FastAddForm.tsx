@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Camera, Upload, X, Loader2, MapPin } from 'lucide-react'
+import { Camera, Upload, X, Loader2, MapPin, Sparkles } from 'lucide-react'
 import NextImage from 'next/image'
 import { useRouter } from 'next/navigation'
 import { uploadAndAnalyzeImages } from '@/app/actions/fast-mode'
@@ -18,14 +18,22 @@ type Group = {
     name: string
 }
 
+type Performance = {
+    id: string
+    title: string
+}
+
 type Props = {
     locations: Location[]
     groups: Group[]
+    performances: Performance[]
 }
 
-export function FastAddForm({ locations }: Props) {
+export function FastAddForm({ locations, performances }: Props) {
     const [processedImages, setProcessedImages] = useState<{ file: File, thumbnail: File, preview: string }[]>([])
     const [locationId, setLocationId] = useState<string>('')
+    const [performanceId, setPerformanceId] = useState<string>('')
+    const [assignmentType, setAssignmentType] = useState<'location' | 'performance'>('location')
     const [isProcessing, setIsProcessing] = useState(false)
     const [isCameraOpen, setIsCameraOpen] = useState(false)
 
@@ -77,8 +85,13 @@ export function FastAddForm({ locations }: Props) {
 
     const handleSubmit = async () => {
         if (processedImages.length === 0) return
-        if (!locationId) {
+
+        if (assignmentType === 'location' && !locationId) {
             alert('Please select a location')
+            return
+        }
+        if (assignmentType === 'performance' && !performanceId) {
+            alert('Please select a performance')
             return
         }
 
@@ -89,7 +102,12 @@ export function FastAddForm({ locations }: Props) {
                 formData.append('images', file)
                 formData.append('thumbnails', thumbnail)
             })
-            formData.append('locationId', locationId)
+
+            if (assignmentType === 'location') {
+                formData.append('locationId', locationId)
+            } else {
+                formData.append('performanceId', performanceId)
+            }
 
             await uploadAndAnalyzeImages(formData)
 
@@ -108,21 +126,65 @@ export function FastAddForm({ locations }: Props) {
             <div className="bg-neutral-900/50 p-4 rounded-xl border border-neutral-800 space-y-4">
                 <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">Session Settings</h2>
 
-                <div>
-                    <label className="block text-sm font-medium text-white mb-2 flex items-center">
-                        <MapPin className="w-4 h-4 mr-2 text-blue-400" />
-                        Default Location <span className="text-red-400">*</span>
-                    </label>
-                    <select
-                        value={locationId}
-                        onChange={(e) => setLocationId(e.target.value)}
-                        className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-3 text-white focus:border-blue-500 focus:outline-none"
-                    >
-                        <option value="">Select Location...</option>
-                        {locations.map(loc => (
-                            <option key={loc.id} value={loc.id}>{loc.name}</option>
-                        ))}
-                    </select>
+                <div className="space-y-4">
+                    <div className="flex gap-4 p-1 bg-neutral-950 rounded-lg border border-neutral-800">
+                        <button
+                            type="button"
+                            onClick={() => setAssignmentType('location')}
+                            className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${assignmentType === 'location'
+                                ? 'bg-neutral-800 text-white'
+                                : 'text-neutral-400 hover:text-white'
+                                }`}
+                        >
+                            Location
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setAssignmentType('performance')}
+                            className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${assignmentType === 'performance'
+                                ? 'bg-neutral-800 text-white'
+                                : 'text-neutral-400 hover:text-white'
+                                }`}
+                        >
+                            Performance
+                        </button>
+                    </div>
+
+                    {assignmentType === 'location' ? (
+                        <div>
+                            <label className="block text-sm font-medium text-white mb-2 flex items-center">
+                                <MapPin className="w-4 h-4 mr-2 text-blue-400" />
+                                Default Location <span className="text-red-400">*</span>
+                            </label>
+                            <select
+                                value={locationId}
+                                onChange={(e) => setLocationId(e.target.value)}
+                                className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-3 text-white focus:border-blue-500 focus:outline-none"
+                            >
+                                <option value="">Select Location...</option>
+                                {locations.map(loc => (
+                                    <option key={loc.id} value={loc.id}>{loc.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    ) : (
+                        <div>
+                            <label className="block text-sm font-medium text-white mb-2 flex items-center">
+                                <Sparkles className="w-4 h-4 mr-2 text-purple-400" />
+                                Performance <span className="text-red-400">*</span>
+                            </label>
+                            <select
+                                value={performanceId}
+                                onChange={(e) => setPerformanceId(e.target.value)}
+                                className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-3 text-white focus:border-blue-500 focus:outline-none"
+                            >
+                                <option value="">Select Performance...</option>
+                                {performances.map(perf => (
+                                    <option key={perf.id} value={perf.id}>{perf.title}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -202,7 +264,7 @@ export function FastAddForm({ locations }: Props) {
             <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 p-4 bg-neutral-950 border-t border-neutral-900 md:static md:bg-transparent md:border-0 md:p-0 z-40">
                 <button
                     onClick={handleSubmit}
-                    disabled={isProcessing || processedImages.length === 0 || !locationId}
+                    disabled={isProcessing || processedImages.length === 0 || (!locationId && !performanceId)}
                     className="w-full flex items-center justify-center py-4 rounded-xl bg-white text-black font-bold text-lg hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-white/10"
                 >
                     {isProcessing ? (

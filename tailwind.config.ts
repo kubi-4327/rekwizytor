@@ -18,6 +18,13 @@ const config: Config = {
                 "action-hover": "#C92F3E",
                 "settings-icon": "#737373",
                 "settings-hover": "#d4d4d4",
+                burgundy: {
+                    main: "#A0232F",
+                    dark: "#6B1722",
+                    "extra-dark": "#4A0F17",
+                    light: "#C92F3E",
+                    bright: "#DC3545",
+                },
             },
             fontFamily: {
                 sans: ["var(--font-geist-sans)"],

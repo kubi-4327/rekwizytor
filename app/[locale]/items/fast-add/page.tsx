@@ -20,6 +20,12 @@ export default async function FastAddPage() {
         .select('id, name')
         .order('name')
 
+    // Fetch performances
+    const { data: performances } = await supabase
+        .from('performances')
+        .select('id, title')
+        .order('title')
+
     return (
         <div className="p-4 md:p-10 max-w-2xl mx-auto">
             <div className="mb-6">
@@ -36,6 +42,7 @@ export default async function FastAddPage() {
             <FastAddForm
                 locations={locations || []}
                 groups={groups || []}
+                performances={performances || []}
             />
         </div>
     )

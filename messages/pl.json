@@ -33,6 +33,11 @@
         "notes": "Notatki",
         "more": "Więcej"
     },
+    "Groups": {
+        "title": "Grupy",
+        "subtitle": "Przeglądaj i zarządzaj grupami rekwizytów.",
+        "allGroups": "Wszystkie Grupy"
+    },
     "Items": {
         "title": "Magazyn Rekwizytów",
         "subtitle": "Zarządzaj swoją kolekcją teatralną",
@@ -101,7 +106,7 @@
         "manageScenes": "Zarządzaj Scenami",
         "editDetails": "Edytuj Szczegóły",
         "liveView": "Podgląd Na Żywo",
-        "propsList": "Lista Rekwizytów (Scenariusz)",
+        "propsList": "Lista Rekwizytów",
         "manageProps": "Zarządzaj Rekwizytami",
         "table": {
             "scene": "Scena",
@@ -109,7 +114,9 @@
             "instructions": "Instrukcje"
         },
         "act": "Akt {actNum}",
-        "noProps": "Nie przypisano jeszcze żadnych rekwizytów do tego Spektaklu."
+        "noProps": "Nie przypisano jeszcze żadnych rekwizytów do tego Spektaklu.",
+        "sceneView": "Widok Scen",
+        "allItemsView": "Wszystkie Przedmioty"
     },
     "ManageScenes": {
         "backToProduction": "Powrót do Spektakli",
@@ -337,6 +344,8 @@
         "updateError": "Nie udało się zaktualizować sceny"
     },
     "ManagePropsForm": {
+        "unassignedItems": "Nieprzypisane Przedmioty",
+        "addProp": "Dodaj Rekwizyt",
         "addPropToScene": "Dodaj Rekwizyt do Sceny",
         "scene": "Scena",
         "selectScene": "Wybierz scenę...",
@@ -364,7 +373,11 @@
         "deleteConfirm": "Czy na pewno chcesz usunąć ten rekwizyt ze spektaklu?",
         "addError": "Nie udało się dodać rekwizytu",
         "deleteError": "Nie udało się usunąć rekwizytu",
-        "selectPropsButton": "Wybierz Rekwizyty"
+        "selectPropsButton": "Wybierz Rekwizyty",
+        "dropHere": "Upuść tutaj",
+        "selectedCount": "Wybrano: {count}",
+        "assignTo": "Przypisz do",
+        "cancel": "Anuluj"
     },
     "ItemSelectionDialog": {
         "selectProps": "Wybierz Rekwizyty",
@@ -457,6 +470,7 @@
     "SettingsForm": {
         "account": "Konto",
         "fullName": "Imię i Nazwisko",
+        "save": "Zapisz",
         "emailAddress": "Adres Email",
         "managedViaSupabase": "Zarządzane przez Supabase Auth",
         "appearance": "Wygląd",

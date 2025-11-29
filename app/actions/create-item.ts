@@ -104,7 +104,31 @@ export async function createItem(formData: FormData) {
 
         if (insertError) throw insertError
 
+        // 4. Assign to Performance if selected
+        const performanceId = formData.get('performance_id') as string | null
+        if (performanceId && newItem) {
+            const { error: assignError } = await supabase
+                .from('performance_items')
+                .insert({
+                    performance_id: performanceId,
+                    item_id: newItem.id,
+                    scene_number: null, // Unassigned to scene
+                    scene_name: null
+                })
+
+            if (assignError) throw assignError
+
+            // Update item status to active since it's now in a performance
+            await supabase
+                .from('items')
+                .update({ performance_status: 'active' })
+                .eq('id', newItem.id)
+        }
+
         revalidatePath('/items')
+        if (performanceId) {
+            revalidatePath(`/performances/${performanceId}/props`)
+        }
         return { success: true, item: newItem }
 
     } catch (error: any) {

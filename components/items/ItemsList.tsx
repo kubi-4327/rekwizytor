@@ -26,9 +26,10 @@ type Props = {
     totalCount: number
     locations: Database['public']['Tables']['locations']['Row'][]
     groups: Database['public']['Tables']['groups']['Row'][]
+    initialCategoryId?: string
 }
 
-export function ItemsList({ initialItems, totalCount, locations, groups }: Props) {
+export function ItemsList({ initialItems, totalCount, locations, groups, initialCategoryId }: Props) {
     const t = useTranslations('ItemsList')
     const [view, setView] = useState<'grid' | 'list'>('grid')
     const [searchMode, setSearchMode] = useState<'classic' | 'smart'>('classic')
@@ -59,7 +60,7 @@ export function ItemsList({ initialItems, totalCount, locations, groups }: Props
 
     // Filters
     const [statusFilter, setStatusFilter] = useState<string>('all')
-    const [categoryFilter, setCategoryFilter] = useState<string>('all')
+    const [categoryFilter, setCategoryFilter] = useState<string>(initialCategoryId || 'all')
     const [locationFilter, setLocationFilter] = useState<string>('all')
     const [dateSort, setDateSort] = useState<'newest' | 'oldest'>('newest')
 
@@ -352,9 +353,7 @@ export function ItemsList({ initialItems, totalCount, locations, groups }: Props
                                 ) : (
                                     <ItemIcon name={item.name} className="h-16 w-16 text-neutral-600 group-hover:text-neutral-500 transition-colors" />
                                 )}
-                                <div className="absolute top-2 right-2">
-                                    <StatusBadge status={item.performance_status} />
-                                </div>
+
                             </div>
                             <div className="p-4">
                                 <h3 className="text-lg font-bold text-white truncate">
@@ -432,7 +431,7 @@ export function ItemsList({ initialItems, totalCount, locations, groups }: Props
                                         {t('bestMatch')}
                                     </span>
                                 )}
-                                <StatusBadge status={item.performance_status} />
+
                             </div>
                         </div>
                     ))}
