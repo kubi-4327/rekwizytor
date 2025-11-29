@@ -5,7 +5,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Mention from '@tiptap/extension-mention'
 import { getSlashSuggestions, getUserSuggestions, getItemSuggestions, getDateSuggestions, renderSuggestion } from './suggestion'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, forwardRef, useImperativeHandle } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDebounce } from '@/hooks/useDebounce'
 
@@ -81,16 +81,28 @@ const SlashMention = Mention.extend({
     },
 })
 
-export default function NoteEditor({
-    initialContent,
-    onSave,
-    readOnly = false
-}: {
+export interface NoteEditorRef {
+    getJSON: () => any
+}
+
+const NoteEditor = forwardRef<NoteEditorRef, {
     initialContent?: any,
     onSave?: (content: any) => void,
-    readOnly?: boolean
-}) {
+    readOnly?: boolean,
+    noteId?: string,
+    serverUpdatedAt?: string
+}>(({
+    initialContent,
+    onSave,
+    readOnly = false,
+    noteId,
+    serverUpdatedAt
+}, ref) => {
     const router = useRouter()
+    const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'local' | 'unsaved'>('saved')
+    const [lastServerSave, setLastServerSave] = useState<Date | null>(null)
+    const [hasLocalDraft, setHasLocalDraft] = useState(false)
+    const [localDraftContent, setLocalDraftContent] = useState<any>(null)
 
     const editor = useEditor({
         immediatelyRender: false,
@@ -205,17 +217,84 @@ export default function NoteEditor({
                 class: 'prose dark:prose-invert focus:outline-none max-w-none min-h-[200px] p-4',
             },
         },
+        onBlur: ({ editor }) => {
+            if (!readOnly && onSave) {
+                const content = editor.getJSON()
+                // Force save on blur
+                onSave(content)
+                setSaveStatus('saved')
+            }
+        }
     })
+
+    useImperativeHandle(ref, () => ({
+        getJSON: () => editor?.getJSON()
+    }))
 
     // Debounce saving
     const [content, setContent] = useState(initialContent)
+
+    // Load from LocalStorage on mount
+    useEffect(() => {
+        if (!noteId || typeof window === 'undefined') return
+
+        const key = `rekwizytor_note_draft_${noteId}`
+        const savedDraft = localStorage.getItem(key)
+
+        if (savedDraft) {
+            try {
+                const { content: draftContent, timestamp } = JSON.parse(savedDraft)
+
+                // If serverUpdatedAt is provided, check if draft is newer
+                const serverTime = serverUpdatedAt ? new Date(serverUpdatedAt).getTime() : 0
+                const draftTime = new Date(timestamp).getTime()
+
+                // Check if server content is effectively empty
+                // Tiptap empty doc is usually { type: 'doc', content: [] } or just null/undefined
+                const isServerEmpty = !initialContent ||
+                    !initialContent.content ||
+                    initialContent.content.length === 0 ||
+                    (initialContent.content.length === 1 && !initialContent.content[0].content)
+
+                console.log('Checking draft:', { draftTime, serverTime, isServerEmpty })
+
+                if (draftTime > serverTime || isServerEmpty) {
+                    console.log('Restoring draft from LocalStorage (newer or server empty)')
+                    setContent(draftContent)
+                    // If editor is already initialized, set its content
+                    if (editor) {
+                        editor.commands.setContent(draftContent)
+                    }
+                    setSaveStatus('local')
+                } else {
+                    console.log('Server is newer, but keeping draft available for manual restore')
+                    setHasLocalDraft(true)
+                    setLocalDraftContent(draftContent)
+                }
+            } catch (e) {
+                console.error('Failed to parse draft', e)
+            }
+        }
+    }, [noteId, serverUpdatedAt, editor]) // Add editor dependency to ensure content is set if editor loads after effect
 
     // Update local state when editor content changes
     useEffect(() => {
         if (!editor) return
 
         const handleUpdate = () => {
-            setContent(editor.getJSON())
+            const newContent = editor.getJSON()
+            setContent(newContent)
+            setSaveStatus('unsaved')
+
+            // Immediate LocalStorage save (or very short debounce could be used here)
+            if (noteId) {
+                const key = `rekwizytor_note_draft_${noteId}`
+                localStorage.setItem(key, JSON.stringify({
+                    content: newContent,
+                    timestamp: new Date().toISOString()
+                }))
+                setSaveStatus('local')
+            }
         }
 
         editor.on('update', handleUpdate)
@@ -223,17 +302,29 @@ export default function NoteEditor({
         return () => {
             editor.off('update', handleUpdate)
         }
-    }, [editor])
+    }, [editor, noteId])
 
-    // Debounce the content value
-    const debouncedContent = useDebounce(content, 1000)
+    // Debounce the content value for SERVER save - 30 seconds
+    const debouncedContent = useDebounce(content, 30000)
 
     // Trigger save when debounced content changes
     useEffect(() => {
-        if (debouncedContent && onSave) {
+        if (debouncedContent && onSave && !readOnly) {
+            // Don't save if it's the initial load
+            if (debouncedContent === initialContent && !lastServerSave) return
+
+            setSaveStatus('saving')
             onSave(debouncedContent)
+            setLastServerSave(new Date())
+
+            // After successful save (assuming onSave is async but we don't await it here directly easily without changing interface)
+            // Ideally onSave should return a promise. For now, we assume it works or the parent handles errors.
+            // We'll set status to saved after a short delay to simulate completion or just assume success.
+            // Better: The parent component handles the "Saving..." UI based on its own state, 
+            // but we want a local indicator too.
+            setTimeout(() => setSaveStatus('saved'), 1000)
         }
-    }, [debouncedContent, onSave])
+    }, [debouncedContent, onSave, readOnly])
 
     // Handle clicks on mentions in readOnly mode (or even edit mode if desired, but request said "outside edit mode")
     // But if we are in readOnly mode, we definitely want navigation.
@@ -279,8 +370,37 @@ export default function NoteEditor({
     }, [editor, readOnly])
 
     return (
-        <div className={`border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-950 ${readOnly ? 'border-transparent bg-transparent' : ''}`}>
+        <div className={`border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-950 ${readOnly ? 'border-transparent bg-transparent' : ''} relative`}>
+            {!readOnly && (
+                <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1 pointer-events-none">
+                    {hasLocalDraft && (
+                        <button
+                            onClick={() => {
+                                if (confirm('Are you sure you want to restore the local backup? This will overwrite the current view.')) {
+                                    editor?.commands.setContent(localDraftContent)
+                                    setContent(localDraftContent)
+                                    setSaveStatus('unsaved') // Trigger save
+                                    setHasLocalDraft(false)
+                                }
+                            }}
+                            className="pointer-events-auto text-[10px] uppercase tracking-wider font-bold bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 px-2 py-1 rounded shadow-sm hover:bg-amber-200 dark:hover:bg-amber-900 transition-colors border border-amber-200 dark:border-amber-800"
+                        >
+                            Restore Backup
+                        </button>
+                    )}
+                    <div className="text-[10px] uppercase tracking-wider font-medium text-zinc-400 bg-white/50 dark:bg-zinc-950/50 px-2 py-1 rounded backdrop-blur-md border border-zinc-100 dark:border-zinc-800/50 shadow-sm">
+                        {saveStatus === 'saved' && 'Saved'}
+                        {saveStatus === 'saving' && 'Syncing...'}
+                        {saveStatus === 'local' && 'Local'}
+                        {saveStatus === 'unsaved' && 'Unsaved'}
+                    </div>
+                </div>
+            )}
             <EditorContent editor={editor} />
         </div>
     )
-}
+})
+
+NoteEditor.displayName = 'NoteEditor'
+
+export default NoteEditor

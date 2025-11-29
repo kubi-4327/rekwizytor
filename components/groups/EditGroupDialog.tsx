@@ -2,7 +2,21 @@
 
 import { Fragment, useState, useEffect } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { X, Loader2, Tag, Box, Layers, ClipboardList, Settings, Sparkles, BarChart, Notebook, Home, Star, Heart, Flag, Bookmark, Camera, Video, Mic, Music, Speaker, Monitor, Smartphone, Laptop, Tablet, Watch, Headphones, Battery, Zap, Sun, Moon, Cloud, Umbrella, Droplets, Snowflake, Flame, Wind, Anchor, Map, Compass, Navigation, Globe, Truck, Car, Bike, Plane, Ship, Package, ShoppingBag, ShoppingCart, Gift, CreditCard, Wallet, DollarSign, Euro, PoundSterling, Bitcoin, Briefcase, Folder, File, FileText, Image, Film, User, Users, UserPlus, UserMinus, UserCheck, UserX, Smile, Frown, Meh, ThumbsUp, ThumbsDown, Check, CheckCircle, AlertCircle, AlertTriangle, Info, HelpCircle, Search, Filter, SortAsc, SortDesc, List, Grid, Layout, LayoutGrid, LayoutList, LayoutPanelLeft, LayoutPanelTop, Sidebar, Menu, MoreHorizontal, MoreVertical, Plus, Minus, Trash, Edit, Save, Download, Upload, Share, Link as LinkIcon, ExternalLink, RefreshCw, RotateCw, RotateCcw, Shuffle, Repeat, Play, Pause, StopCircle, SkipBack, SkipForward, Volume, Volume1, Volume2, VolumeX, Mute, Unmute, Eye, EyeOff, Lock, Unlock, Key, Shield, ShieldCheck, ShieldAlert, ShieldOff } from 'lucide-react'
+import {
+    X, Loader2, Tag, Box, Package, Layers, Archive, ShoppingBag,
+    Armchair, Sofa, Lamp, Bed, DoorOpen, Frame,
+    Hammer, Wrench, Ruler, Paintbrush, Palette, Scissors, Axe,
+    Tv, Radio, Mic, Speaker, Camera, Video, Laptop, Smartphone, Watch, Plug, Battery,
+    Utensils, Wine, Coffee, ChefHat,
+    Shirt, Glasses, Umbrella, Briefcase, Backpack,
+    Stethoscope, Syringe, Thermometer,
+    Music, Guitar, Drum, Clapperboard, Ticket,
+    Flower, Leaf, Feather, Tent, Flame, Snowflake,
+    Sword, Shield, Target,
+    Book, Newspaper, Scroll, FileText, Pen,
+    Car, Bike, Truck, Plane, Ship,
+    Ghost, Skull, Crown, Gem, Gift, Key
+} from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/types/supabase'
@@ -17,102 +31,164 @@ type Props = {
 }
 
 const ICONS = [
+    // Storage & General
     { name: 'Tag', icon: Tag },
     { name: 'Box', icon: Box },
+    { name: 'Package', icon: Package },
+    { name: 'Archive', icon: Archive },
     { name: 'Layers', icon: Layers },
-    { name: 'ClipboardList', icon: ClipboardList },
-    { name: 'Settings', icon: Settings },
-    { name: 'Sparkles', icon: Sparkles },
-    { name: 'BarChart', icon: BarChart },
-    { name: 'Notebook', icon: Notebook },
-    { name: 'Home', icon: Home },
-    { name: 'Star', icon: Star },
-    { name: 'Heart', icon: Heart },
-    { name: 'Flag', icon: Flag },
-    { name: 'Bookmark', icon: Bookmark },
+    { name: 'ShoppingBag', icon: ShoppingBag },
+
+    // Furniture & Decor
+    { name: 'Armchair', icon: Armchair },
+    { name: 'Sofa', icon: Sofa },
+    { name: 'Lamp', icon: Lamp },
+    { name: 'Bed', icon: Bed },
+    { name: 'DoorOpen', icon: DoorOpen },
+    { name: 'Frame', icon: Frame },
+
+    // Tools & Construction
+    { name: 'Hammer', icon: Hammer },
+    { name: 'Wrench', icon: Wrench },
+    { name: 'Ruler', icon: Ruler },
+    { name: 'Paintbrush', icon: Paintbrush },
+    { name: 'Palette', icon: Palette },
+    { name: 'Scissors', icon: Scissors },
+    { name: 'Axe', icon: Axe },
+
+    // Electronics
+    { name: 'Tv', icon: Tv },
+    { name: 'Radio', icon: Radio },
+    { name: 'Mic', icon: Mic },
+    { name: 'Speaker', icon: Speaker },
     { name: 'Camera', icon: Camera },
     { name: 'Video', icon: Video },
-    { name: 'Mic', icon: Mic },
-    { name: 'Music', icon: Music },
-    { name: 'Speaker', icon: Speaker },
-    { name: 'Monitor', icon: Monitor },
-    { name: 'Smartphone', icon: Smartphone },
     { name: 'Laptop', icon: Laptop },
-    { name: 'Tablet', icon: Tablet },
+    { name: 'Smartphone', icon: Smartphone },
     { name: 'Watch', icon: Watch },
-    { name: 'Headphones', icon: Headphones },
+    { name: 'Plug', icon: Plug },
     { name: 'Battery', icon: Battery },
-    { name: 'Zap', icon: Zap },
-    { name: 'Sun', icon: Sun },
-    { name: 'Moon', icon: Moon },
-    { name: 'Cloud', icon: Cloud },
+
+    // Kitchen & Food
+    { name: 'Utensils', icon: Utensils },
+    { name: 'Wine', icon: Wine },
+    { name: 'Coffee', icon: Coffee },
+    { name: 'ChefHat', icon: ChefHat },
+
+    // Clothing & Accessories
+    { name: 'Shirt', icon: Shirt },
+    { name: 'Glasses', icon: Glasses },
     { name: 'Umbrella', icon: Umbrella },
-    { name: 'Droplets', icon: Droplets },
-    { name: 'Snowflake', icon: Snowflake },
+    { name: 'Briefcase', icon: Briefcase },
+    { name: 'Backpack', icon: Backpack },
+    { name: 'Gem', icon: Gem },
+    { name: 'Crown', icon: Crown },
+
+    // Medical
+    { name: 'Stethoscope', icon: Stethoscope },
+    { name: 'Syringe', icon: Syringe },
+    { name: 'Thermometer', icon: Thermometer },
+    { name: 'Skull', icon: Skull },
+
+    // Arts & Entertainment
+    { name: 'Music', icon: Music },
+    { name: 'Guitar', icon: Guitar },
+    { name: 'Drum', icon: Drum },
+    { name: 'Clapperboard', icon: Clapperboard },
+    { name: 'Ticket', icon: Ticket },
+    { name: 'Ghost', icon: Ghost },
+
+    // Nature & Outdoor
+    { name: 'Flower', icon: Flower },
+    { name: 'Leaf', icon: Leaf },
+    { name: 'Feather', icon: Feather },
+    { name: 'Tent', icon: Tent },
     { name: 'Flame', icon: Flame },
-    { name: 'Wind', icon: Wind },
-    { name: 'Anchor', icon: Anchor },
-    { name: 'Map', icon: Map },
-    { name: 'Compass', icon: Compass },
-    { name: 'Navigation', icon: Navigation },
-    { name: 'Globe', icon: Globe },
-    { name: 'Truck', icon: Truck },
+    { name: 'Snowflake', icon: Snowflake },
+
+    // Weapons & Action
+    { name: 'Sword', icon: Sword },
+    { name: 'Shield', icon: Shield },
+    { name: 'Target', icon: Target },
+
+    // Office & Paper
+    { name: 'Book', icon: Book },
+    { name: 'Newspaper', icon: Newspaper },
+    { name: 'Scroll', icon: Scroll },
+    { name: 'FileText', icon: FileText },
+    { name: 'Pen', icon: Pen },
+    { name: 'Gift', icon: Gift },
+    { name: 'Key', icon: Key },
+
+    // Vehicles
     { name: 'Car', icon: Car },
     { name: 'Bike', icon: Bike },
+    { name: 'Truck', icon: Truck },
     { name: 'Plane', icon: Plane },
     { name: 'Ship', icon: Ship },
-    { name: 'Package', icon: Package },
-    { name: 'ShoppingBag', icon: ShoppingBag },
-    { name: 'ShoppingCart', icon: ShoppingCart },
-    { name: 'Gift', icon: Gift },
-    { name: 'CreditCard', icon: CreditCard },
-    { name: 'Wallet', icon: Wallet },
-    { name: 'DollarSign', icon: DollarSign },
-    { name: 'Euro', icon: Euro },
-    { name: 'PoundSterling', icon: PoundSterling },
-    { name: 'Bitcoin', icon: Bitcoin },
-    { name: 'Briefcase', icon: Briefcase },
-    { name: 'Folder', icon: Folder },
-    { name: 'File', icon: File },
-    { name: 'FileText', icon: FileText },
-    { name: 'Image', icon: Image },
-    { name: 'Film', icon: Film },
-    { name: 'User', icon: User },
-    { name: 'Users', icon: Users },
-    { name: 'Smile', icon: Smile },
-    { name: 'Frown', icon: Frown },
-    { name: 'Meh', icon: Meh },
-    { name: 'ThumbsUp', icon: ThumbsUp },
-    { name: 'ThumbsDown', icon: ThumbsDown },
-    { name: 'Check', icon: Check },
-    { name: 'AlertCircle', icon: AlertCircle },
-    { name: 'Info', icon: Info },
-    { name: 'HelpCircle', icon: HelpCircle },
-    { name: 'Search', icon: Search },
-    { name: 'Filter', icon: Filter },
-    { name: 'List', icon: List },
-    { name: 'Grid', icon: Grid },
-    { name: 'Layout', icon: Layout },
-    { name: 'Menu', icon: Menu },
-    { name: 'MoreHorizontal', icon: MoreHorizontal },
-    { name: 'Trash', icon: Trash },
-    { name: 'Edit', icon: Edit },
-    { name: 'Save', icon: Save },
-    { name: 'Download', icon: Download },
-    { name: 'Upload', icon: Upload },
-    { name: 'Share', icon: Share },
-    { name: 'Link', icon: LinkIcon },
-    { name: 'ExternalLink', icon: ExternalLink },
-    { name: 'RefreshCw', icon: RefreshCw },
-    { name: 'Play', icon: Play },
-    { name: 'Pause', icon: Pause },
-    { name: 'Eye', icon: Eye },
-    { name: 'EyeOff', icon: EyeOff },
-    { name: 'Lock', icon: Lock },
-    { name: 'Unlock', icon: Unlock },
-    { name: 'Key', icon: Key },
-    { name: 'Shield', icon: Shield },
 ]
+
+const KEYWORD_MAPPINGS: Record<string, string[]> = {
+    'meble': ['Armchair', 'Sofa', 'Bed', 'Lamp', 'Frame'],
+    'krzesło': ['Armchair', 'Sofa'],
+    'stół': ['Frame', 'Box'], // No direct table icon, using generic
+    'oświetlenie': ['Lamp', 'Plug', 'Sun'],
+    'narzędzia': ['Hammer', 'Wrench', 'Ruler', 'Axe'],
+    'budowa': ['Hammer', 'Wrench', 'Paintbrush'],
+    'elektronika': ['Tv', 'Radio', 'Laptop', 'Smartphone', 'Plug'],
+    'audio': ['Mic', 'Speaker', 'Headphones', 'Music', 'Radio'],
+    'wideo': ['Camera', 'Video', 'Tv', 'Clapperboard'],
+    'kuchnia': ['Utensils', 'ChefHat', 'Coffee', 'Wine'],
+    'jedzenie': ['Utensils', 'Apple', 'Coffee'],
+    'naczynia': ['Utensils', 'Coffee', 'Wine'],
+    'ubrania': ['Shirt', 'Glasses', 'Briefcase', 'Backpack'],
+    'kostiumy': ['Shirt', 'Crown', 'Glasses', 'Gem'],
+    'medyczne': ['Stethoscope', 'Syringe', 'Thermometer', 'Skull'],
+    'szpital': ['Bed', 'Stethoscope', 'Syringe'],
+    'muzyka': ['Music', 'Guitar', 'Drum', 'Mic'],
+    'instrumenty': ['Guitar', 'Drum', 'Music'],
+    'biuro': ['Briefcase', 'Book', 'Pen', 'FileText', 'Laptop'],
+    'dokumenty': ['FileText', 'Newspaper', 'Scroll', 'Archive'],
+    'papier': ['FileText', 'Book', 'Scroll'],
+    'broń': ['Sword', 'Shield', 'Target', 'Axe'],
+    'wojsko': ['Sword', 'Shield', 'Tent', 'Target'],
+    'pojazdy': ['Car', 'Truck', 'Bike', 'Plane', 'Ship'],
+    'transport': ['Truck', 'Car', 'Box', 'Package'],
+    'plener': ['Tent', 'Tree', 'Flower', 'Leaf', 'Sun'],
+    'przyroda': ['Flower', 'Leaf', 'Feather', 'Flame'],
+    'magazyn': ['Box', 'Package', 'Archive', 'Layers'],
+    'pudła': ['Box', 'Package', 'Archive'],
+    'różne': ['Box', 'Star', 'Ghost', 'Gift'],
+    'ozdoby': ['Gem', 'Crown', 'Frame', 'Flower'],
+    'klucze': ['Key', 'Lock'],
+}
+
+const getSuggestedIcons = (inputName: string): typeof ICONS => {
+    if (!inputName) return []
+
+    const lowerName = inputName.toLowerCase()
+    const suggestions = new Set<string>()
+
+    // Check mappings
+    Object.entries(KEYWORD_MAPPINGS).forEach(([keyword, icons]) => {
+        if (lowerName.includes(keyword) || keyword.includes(lowerName)) {
+            icons.forEach(icon => suggestions.add(icon))
+        }
+    })
+
+    // Check direct name matches (fuzzy)
+    ICONS.forEach(item => {
+        if (item.name.toLowerCase().includes(lowerName)) {
+            suggestions.add(item.name)
+        }
+    })
+
+    // Return top 3 icon objects
+    return Array.from(suggestions)
+        .map(name => ICONS.find(i => i.name === name))
+        .filter((i): i is typeof ICONS[0] => !!i)
+        .slice(0, 3)
+}
 
 export function EditGroupDialog({ group, isOpen, onClose }: Props) {
     const t = useTranslations('Groups') // Assuming translations exist or fallback
@@ -205,7 +281,7 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
                                                 id="name"
                                                 value={name}
                                                 onChange={(e) => setName(e.target.value)}
-                                                className="block w-full rounded-md border-0 bg-neutral-900 py-1.5 text-white shadow-sm ring-1 ring-inset ring-neutral-800 placeholder:text-neutral-500 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
+                                                className="block w-full rounded-md border-0 bg-neutral-900 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-neutral-800 placeholder:text-neutral-500 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
                                             />
                                         </div>
 
@@ -213,6 +289,29 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
                                             <label className="block text-sm font-medium text-neutral-400 mb-2">
                                                 Icon
                                             </label>
+
+                                            {/* Suggested Icons */}
+                                            {getSuggestedIcons(name).length > 0 && (
+                                                <div className="mb-3">
+                                                    <p className="text-xs text-neutral-500 mb-2">Suggested</p>
+                                                    <div className="flex gap-2">
+                                                        {getSuggestedIcons(name).map((item) => (
+                                                            <button
+                                                                key={`suggested-${item.name}`}
+                                                                onClick={() => setSelectedIcon(item.name)}
+                                                                className={`p-2 rounded-md flex items-center justify-center transition-colors border border-neutral-700 ${selectedIcon === item.name
+                                                                    ? 'bg-white text-black'
+                                                                    : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                                                                    }`}
+                                                                title={item.name}
+                                                            >
+                                                                <item.icon className="w-5 h-5" />
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             <div className="grid grid-cols-6 gap-2 max-h-60 overflow-y-auto p-2 bg-neutral-900 rounded-md border border-neutral-800">
                                                 {ICONS.map((item) => (
                                                     <button
@@ -235,6 +334,13 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
                                 <div className="mt-5 sm:mt-6 flex gap-3">
                                     <button
                                         type="button"
+                                        className="inline-flex w-full justify-center rounded-md bg-neutral-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600"
+                                        onClick={onClose}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
                                         className="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-black shadow-sm hover:bg-neutral-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-50 disabled:cursor-not-allowed"
                                         onClick={handleSave}
                                         disabled={isSaving}
@@ -247,13 +353,6 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
                                         ) : (
                                             'Save Changes'
                                         )}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="inline-flex w-full justify-center rounded-md bg-neutral-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600"
-                                        onClick={onClose}
-                                    >
-                                        Cancel
                                     </button>
                                 </div>
                             </Dialog.Panel>

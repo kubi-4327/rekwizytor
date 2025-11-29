@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
-import NoteEditor from '@/components/notes/NoteEditor'
+import NoteEditor, { NoteEditorRef } from '@/components/notes/NoteEditor'
 import { ArrowLeft, Share, Copy, Download } from 'lucide-react'
 import Link from 'next/link'
 import { extractMentions } from '@/components/notes/utils'
@@ -18,6 +18,7 @@ export default function NoteDetailPage() {
     const [showExportMenu, setShowExportMenu] = useState(false)
     const supabase = createClient()
     const router = useRouter()
+    const editorRef = useRef<NoteEditorRef>(null)
 
     useEffect(() => {
         if (id) fetchNote()
@@ -151,9 +152,19 @@ export default function NoteDetailPage() {
     return (
         <div className="p-6 w-full">
             <div className="flex items-center gap-4 mb-6">
-                <Link href="/notes" className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+                <button
+                    onClick={async () => {
+                        // Force save before navigation
+                        if (editorRef.current) {
+                            const content = editorRef.current.getJSON()
+                            await saveNote(content)
+                        }
+                        router.push('/notes')
+                    }}
+                    className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+                >
                     <ArrowLeft size={20} />
-                </Link>
+                </button>
                 <input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -161,9 +172,6 @@ export default function NoteDetailPage() {
                     className="text-3xl font-bold bg-transparent border-none focus:outline-none w-full"
                 />
                 <div className="flex items-center gap-2">
-                    <div className="text-sm text-zinc-500 whitespace-nowrap mr-2">
-                        {saving ? 'Saving...' : 'Saved'}
-                    </div>
 
                     <select
                         value={note.performance_id || ''}
@@ -214,7 +222,10 @@ export default function NoteDetailPage() {
             </div>
 
             <NoteEditor
+                ref={editorRef}
                 initialContent={note.content}
+                noteId={note.id}
+                serverUpdatedAt={note.updated_at}
                 onSave={(content) => saveNote(content)}
             />
         </div>
