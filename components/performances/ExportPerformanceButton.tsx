@@ -79,6 +79,24 @@ export function ExportPerformanceButton({ production, items, user, variant = 'de
                 }
             }
 
+            // Load Logo
+            let logoBase64: string | null = null
+            try {
+                const logoUrl = window.location.origin + '/logo-full-sub.png'
+                const response = await fetch(logoUrl)
+                const blob = await response.blob()
+                const reader = new FileReader()
+                await new Promise((resolve) => {
+                    reader.onloadend = () => {
+                        logoBase64 = reader.result as string
+                        resolve(null)
+                    }
+                    reader.readAsDataURL(blob)
+                })
+            } catch (e) {
+                console.error("Failed to load logo", e)
+            }
+
             // --- PDF Layout ---
             let yPos = 15
             const margin = 14
@@ -93,6 +111,14 @@ export function ExportPerformanceButton({ production, items, user, variant = 'de
             doc.text(`${t('generatedOn')}: ${dateStr}`, pageWidth - margin, yPos, { align: 'right' })
             yPos += 4
             doc.text(`${t('generatedBy')}: ${userStr}`, pageWidth - margin, yPos, { align: 'right' })
+
+            // Add Logo if available
+            if (logoBase64) {
+                const imgProps = doc.getImageProperties(logoBase64)
+                const pdfWidth = 40
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+                doc.addImage(logoBase64, 'PNG', margin, 10, pdfWidth, pdfHeight)
+            }
 
             // Move Y down for Title/Poster start
             yPos = 30

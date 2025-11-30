@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Loader2, Upload, Save, X } from 'lucide-react'
+import { Loader2, Upload, Save, X, Sparkles } from 'lucide-react'
 import Image from 'next/image'
 import { SearchableSelect } from '@/components/ui/SearchableSelect'
 
@@ -177,8 +177,12 @@ export function CreateItemForm({ groups, locations }: Props) {
                             onChange={(e) => setIsDraft(e.target.checked)}
                             className="h-4 w-4 rounded border-neutral-800 bg-neutral-950 text-white focus:ring-neutral-500"
                         />
-                        <label htmlFor="draft" className="text-sm font-medium text-neutral-300">
-                            Save as Draft (skip AI generation)
+                        <label htmlFor="draft" className="text-sm font-medium text-neutral-300 flex items-center gap-2">
+                            Save as Draft
+                            <span className="text-xs text-neutral-500 flex items-center gap-1 bg-neutral-900 px-2 py-0.5 rounded-full border border-neutral-800">
+                                <Sparkles className="w-3 h-3 text-neutral-500" />
+                                Skips AI generation
+                            </span>
                         </label>
                     </div>
                 </div>

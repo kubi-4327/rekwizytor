@@ -13,13 +13,7 @@ type Props = {
 type Scene = Database['public']['Tables']['scenes']['Row']
 type Item = Database['public']['Tables']['items']['Row']
 type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] & {
-    items: {
-        id: string
-        name: string
-        image_url: string | null
-        notes: string | null
-        performance_status: string | null
-    } | null
+    items: Database['public']['Tables']['items']['Row'] | null
 }
 
 export default async function ManagePropsPage({ params }: Props) {
@@ -41,7 +35,7 @@ export default async function ManagePropsPage({ params }: Props) {
     // Fetch all available items
     const { data: items } = await supabase
         .from('items')
-        .select('id, name, image_url, notes, performance_status')
+        .select('*')
         .is('deleted_at', null)
         .order('name')
         .returns<Item[]>()
@@ -59,11 +53,7 @@ export default async function ManagePropsPage({ params }: Props) {
         .from('performance_items')
         .select(`
       *,
-      items (
-        id,
-        name,
-        image_url
-      )
+      items (*)
     `)
         .eq('performance_id', id)
         .order('scene_number', { ascending: true })

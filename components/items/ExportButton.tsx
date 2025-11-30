@@ -82,8 +82,35 @@ export function ExportButton({ items }: ExportButtonProps) {
                 console.error("Failed to load font, falling back to default", e)
             }
 
+            // Load Logo
+            let logoBase64: string | null = null
+            try {
+                const logoUrl = window.location.origin + '/logo-full-sub.png'
+                const response = await fetch(logoUrl)
+                const blob = await response.blob()
+                const reader = new FileReader()
+                await new Promise((resolve) => {
+                    reader.onloadend = () => {
+                        logoBase64 = reader.result as string
+                        resolve(null)
+                    }
+                    reader.readAsDataURL(blob)
+                })
+            } catch (e) {
+                console.error("Failed to load logo", e)
+            }
+
             doc.setFontSize(18)
-            doc.text(t('pdfTitle'), 14, 22)
+
+            if (logoBase64) {
+                const imgProps = doc.getImageProperties(logoBase64)
+                const pdfWidth = 40
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+                doc.addImage(logoBase64, 'PNG', 14, 10, pdfWidth, pdfHeight)
+                doc.text(t('pdfTitle'), 14, 10 + pdfHeight + 10)
+            } else {
+                doc.text(t('pdfTitle'), 14, 22)
+            }
 
             doc.setFontSize(11)
             doc.text(`${t('generatedOn')} ${new Date().toLocaleDateString()}`, 14, 30)

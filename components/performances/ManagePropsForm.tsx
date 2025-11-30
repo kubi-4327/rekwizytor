@@ -34,13 +34,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { Menu, Transition } from '@headlessui/react'
 import { Fragment } from 'react'
 
-type Item = {
-    id: string
-    name: string
-    image_url: string | null
-    notes: string | null
-    performance_status: string | null
-}
+type ItemRow = Database['public']['Tables']['items']['Row']
 
 type Assignment = {
     id: string
@@ -50,7 +44,7 @@ type Assignment = {
     setup_instructions: string | null
     sort_order: number | null
     assigned_to: string | null
-    items: Item | null // Join result
+    items: ItemRow | null // Join result
 }
 
 type Scene = {
@@ -71,7 +65,7 @@ import { ItemDetailsDialog } from '@/components/items/ItemDetailsDialog'
 type Props = {
     performanceId: string
     initialAssignments: Assignment[]
-    availableItems: Item[]
+    availableItems: ItemRow[]
     definedScenes: Scene[]
     accentColor?: string | null
     profiles: Profile[]
@@ -95,7 +89,7 @@ function SortableItem({
     onDelete: (id: string) => void
     accentColor?: string | null
     profile?: Profile | null
-    onItemClick: (item: Item) => void
+    onItemClick: (item: ItemRow) => void
 }) {
     const {
         attributes,
@@ -214,10 +208,10 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
         })
     )
 
-    const [selectedDetailItem, setSelectedDetailItem] = useState<Item | null>(null)
+    const [selectedDetailItem, setSelectedDetailItem] = useState<ItemRow | null>(null)
     const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
-    const handleItemClick = (item: Item) => {
+    const handleItemClick = (item: ItemRow) => {
         setSelectedDetailItem(item)
         setIsDetailsOpen(true)
     }
@@ -301,7 +295,7 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const newAssignments: Assignment[] = (data as unknown as any[]).map(d => ({
                 ...d,
-                items: d.items as Item
+                items: d.items as ItemRow
             }))
 
             setAssignments([...assignments, ...newAssignments])

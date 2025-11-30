@@ -3,7 +3,7 @@
 import { Database } from '@/types/supabase'
 import Image from 'next/image'
 import { ItemIcon } from '@/components/ui/ItemIcon'
-import { Pencil, MapPin, Layers, Calendar, X, Trash2 } from 'lucide-react'
+import { Pencil, MapPin, Layers, Calendar, X, Trash2, Tag } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
@@ -137,7 +137,7 @@ export function ItemDetailsDialog({ item, isOpen, onClose, onEdit, locations, gr
                         </div>
                         <div className="space-y-1">
                             <div className="flex items-center text-neutral-500 text-sm mb-1">
-                                <Layers className="w-4 h-4 mr-2" />
+                                <Tag className="w-4 h-4 mr-2" />
                                 {t('category')}
                             </div>
                             <p className="text-neutral-200 font-medium pl-6 text-lg">{groupName}</p>

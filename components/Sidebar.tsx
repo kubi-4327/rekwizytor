@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Theater, Box, Layers, ClipboardList, Settings, LogOut, Sparkles, BarChart, Notebook, Tag } from 'lucide-react'
+import { Theater, Box, Layers, ClipboardList, Settings, LogOut, Sparkles, BarChart, Notebook, Tag, CheckCircle2 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -22,7 +22,7 @@ export function Sidebar() {
         { name: t('productions'), href: '/performances', icon: Layers },
         { name: t('checklists'), href: '/checklists', icon: ClipboardList },
         { name: t('notes'), href: '/notes', icon: Notebook },
-        { name: t('reviewDrafts'), href: '/items/review', icon: Sparkles },
+        { name: t('reviewDrafts'), href: '/items/review', icon: CheckCircle2 },
         { name: t('aiStats'), href: '/ai-stats', icon: BarChart },
     ]
 
@@ -39,10 +39,10 @@ export function Sidebar() {
                     <Link href="/" className="flex items-center hover:opacity-80 transition-opacity w-full h-full justify-center">
                         <div className="relative w-full h-full">
                             <Image
-                                src="/logo.png"
+                                src="/logo-full.png"
                                 alt="Rekwizytor"
                                 fill
-                                className="object-cover"
+                                className="object-contain p-4"
                                 priority
                             />
                         </div>

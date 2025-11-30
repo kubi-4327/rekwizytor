@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Calendar, Filter, LayoutGrid, List as ListIcon } from 'lucide-react'
+import { Calendar, Filter, LayoutGrid, List as ListIcon, Layers } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Database } from '@/types/supabase'
@@ -45,7 +45,7 @@ const PerformanceListItem = ({ show }: { show: Performance }) => {
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-neutral-600">
-                        <Calendar className="w-6 h-6" />
+                        <Layers className="w-6 h-6" />
                     </div>
                 )}
             </div>
@@ -99,7 +99,7 @@ const PerformanceGridItem = ({ show }: { show: Performance }) => {
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-neutral-700">
-                        <Calendar className="w-12 h-12" />
+                        <Layers className="w-12 h-12" />
                     </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />

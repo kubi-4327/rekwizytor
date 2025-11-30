@@ -97,18 +97,15 @@ export default function LoginPage() {
 
             <div className="w-full max-w-md space-y-8 relative z-10">
                 <div className="flex flex-col items-center text-center">
-                    <div className="mb-4 relative h-24 w-24">
+                    <div className="mb-8 relative h-32 w-80">
                         <Image
-                            src="/logo.png"
+                            src="/logo-full-sub.png"
                             alt="Rekwizytor"
                             fill
                             className="object-contain"
                             priority
                         />
                     </div>
-                    <h2 className="text-3xl font-bold tracking-tight text-white">
-                        {t('title')}
-                    </h2>
                     <p className="mt-2 text-sm text-neutral-400">
                         {isSignUp ? t('subtitleSignUp') : t('subtitleSignIn')}
                     </p>

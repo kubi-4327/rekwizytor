@@ -12,44 +12,44 @@ Skopiuj poniższy kod i wklej go w ustawieniach Supabase Auth -> Email Templates
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Confirm your signup</title>
+  <title>Potwierdź rejestrację</title>
 </head>
 <body style="font-family: Arial, Helvetica, sans-serif; background-color: #0a0a0a; color: #ededed; margin: 0; padding: 0;">
   <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #0a0a0a; padding: 40px 20px;">
     <tr>
       <td align="center">
         <!-- Logo / Header -->
-        <div style="font-size: 24px; font-weight: bold; color: #ededed; margin-bottom: 30px; letter-spacing: 1px; text-transform: uppercase;">
+        <div style="font-family: 'Courier New', Courier, monospace; font-size: 24px; font-weight: bold; color: #ededed; margin-bottom: 30px; letter-spacing: 1px; text-transform: uppercase;">
           Rekwizytor
         </div>
 
         <!-- Card -->
-        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #171717; border-radius: 12px; border: 1px solid #333333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #171717; border-radius: 0px; border: 1px solid #333333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
           <tr>
             <td style="padding: 40px; text-align: center;">
-              <h2 style="color: #ededed; margin-top: 0; margin-bottom: 20px; font-size: 24px;">Confirm your signup</h2>
+              <h2 style="font-family: 'Courier New', Courier, monospace; color: #ededed; margin-top: 0; margin-bottom: 20px; font-size: 24px;">Potwierdź rejestrację</h2>
               
-              <p style="color: #a1a1aa; font-size: 16px; line-height: 1.5; margin-bottom: 30px;">
-                Follow this link to confirm your user account.
+              <p style="font-family: Arial, Helvetica, sans-serif; color: #a1a1aa; font-size: 16px; line-height: 1.5; margin-bottom: 30px;">
+                Kliknij w poniższy przycisk, aby potwierdzić swój adres e-mail.
                 <br><br>
-                <strong>Note:</strong> After confirming your email, your account will be placed in a <strong>pending queue</strong> until an administrator approves it. You will not be able to access the application immediately.
+                <strong style="color: #eab308;">Ważne:</strong> Po potwierdzeniu maila, Twoje konto trafi do <strong>kolejki oczekujących</strong>. Dostęp do aplikacji uzyskasz dopiero po zatwierdzeniu konta przez administratora.
               </p>
 
               <!-- Button -->
-              <a href="{{ .ConfirmationURL }}" style="display: inline-block; background-color: #A0232F; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: bold; font-size: 16px;">
-                Confirm your mail
+              <a href="{{ .ConfirmationURL }}" style="font-family: 'Courier New', Courier, monospace; display: inline-block; background-color: #A0232F; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 4px; font-weight: bold; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">
+                Potwierdź e-mail
               </a>
 
-              <p style="margin-top: 30px; font-size: 13px; color: #52525b;">
-                If you didn't request this, you can safely ignore this email.
+              <p style="font-family: Arial, Helvetica, sans-serif; margin-top: 30px; font-size: 13px; color: #52525b;">
+                Jeśli to nie Ty zakładałeś konto, zignoruj tę wiadomość.
               </p>
             </td>
           </tr>
         </table>
 
         <!-- Footer -->
-        <div style="margin-top: 30px; color: #52525b; font-size: 12px;">
-          &copy; 2025 Rekwizytor. All rights reserved.
+        <div style="font-family: Arial, Helvetica, sans-serif; margin-top: 30px; color: #52525b; font-size: 12px;">
+          &copy; 2025 Rekwizytor. Wszelkie prawa zastrzeżone.
         </div>
       </td>
     </tr>

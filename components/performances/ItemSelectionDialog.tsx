@@ -6,13 +6,9 @@ import NextImage from 'next/image'
 import { ItemIcon } from '@/components/ui/ItemIcon'
 import { useTranslations } from 'next-intl'
 
-type Item = {
-    id: string
-    name: string
-    image_url: string | null
-    notes: string | null
-    performance_status: string | null
-}
+import { Database } from '@/types/supabase'
+
+type Item = Database['public']['Tables']['items']['Row']
 
 type Props = {
     isOpen: boolean
