@@ -66,6 +66,8 @@ type Profile = {
     avatar_url: string | null
 }
 
+import { ItemDetailsDialog } from '@/components/items/ItemDetailsDialog'
+
 type Props = {
     performanceId: string
     initialAssignments: Assignment[]
@@ -73,6 +75,8 @@ type Props = {
     definedScenes: Scene[]
     accentColor?: string | null
     profiles: Profile[]
+    locations: Database['public']['Tables']['locations']['Row'][]
+    groups: Database['public']['Tables']['groups']['Row'][]
 }
 
 // Sortable Item Component
@@ -82,7 +86,8 @@ function SortableItem({
     onToggleSelect,
     onDelete,
     accentColor,
-    profile
+    profile,
+    onItemClick
 }: {
     assignment: Assignment
     isSelected: boolean
@@ -90,6 +95,7 @@ function SortableItem({
     onDelete: (id: string) => void
     accentColor?: string | null
     profile?: Profile | null
+    onItemClick: (item: Item) => void
 }) {
     const {
         attributes,
@@ -131,15 +137,18 @@ function SortableItem({
                         <Square className="h-5 w-5" />
                     )}
                 </button>
-                <div className="h-10 w-10 flex-shrink-0 relative bg-neutral-800 rounded overflow-hidden flex items-center justify-center">
+                <div
+                    className="h-10 w-10 flex-shrink-0 relative bg-neutral-800 rounded overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => assignment.items && onItemClick(assignment.items)}
+                >
                     {assignment.items?.image_url ? (
                         <NextImage src={assignment.items.image_url} alt="" fill className="object-cover" unoptimized />
                     ) : (
                         <ItemIcon name={assignment.items?.name || ''} className="h-5 w-5 text-neutral-600" />
                     )}
                 </div>
-                <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium text-white truncate">{assignment.items?.name || 'Unknown Item'}</div>
+                <div className="min-w-0 flex-1 cursor-pointer" onClick={() => assignment.items && onItemClick(assignment.items)}>
+                    <div className="text-sm font-medium text-white truncate hover:text-action-primary transition-colors">{assignment.items?.name || 'Unknown Item'}</div>
                     <div className="flex items-center gap-2 text-xs text-neutral-500">
                         {assignment.setup_instructions && (
                             <span className="truncate">{assignment.setup_instructions}</span>
@@ -180,7 +189,7 @@ function DroppableContainer({ id, children, className }: { id: string, children:
     )
 }
 
-export function ManagePropsForm({ performanceId, initialAssignments, availableItems, definedScenes, accentColor, profiles }: Props) {
+export function ManagePropsForm({ performanceId, initialAssignments, availableItems, definedScenes, accentColor, profiles, locations, groups }: Props) {
     const t = useTranslations('ManagePropsForm')
     const [assignments, setAssignments] = useState<Assignment[]>(initialAssignments)
     const [loading, setLoading] = useState(false)
@@ -204,6 +213,14 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
             coordinateGetter: sortableKeyboardCoordinates,
         })
     )
+
+    const [selectedDetailItem, setSelectedDetailItem] = useState<Item | null>(null)
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+
+    const handleItemClick = (item: Item) => {
+        setSelectedDetailItem(item)
+        setIsDetailsOpen(true)
+    }
 
     // Group assignments by scene
     const groupedAssignments = useMemo(() => {
@@ -631,6 +648,7 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                             onDelete={handleDelete}
                             accentColor={accentColor}
                             profile={profiles.find(p => p.id === assignment.assigned_to)}
+                            onItemClick={handleItemClick}
                         />
                     ))}
                     {items.length === 0 && (
@@ -658,6 +676,15 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                     onConfirm={handleMultiAdd}
                     items={availableItems}
                     accentColor={accentColor}
+                />
+
+                <ItemDetailsDialog
+                    item={selectedDetailItem}
+                    isOpen={isDetailsOpen}
+                    onClose={() => setIsDetailsOpen(false)}
+                    onEdit={() => { }} // Read-only or implement edit if needed
+                    locations={locations}
+                    groups={groups}
                 />
 
                 {/* Bulk Actions Toolbar */}

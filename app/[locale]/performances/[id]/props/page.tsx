@@ -76,6 +76,10 @@ export default async function ManagePropsPage({ params }: Props) {
         .select('id, full_name, avatar_url')
         .order('full_name')
 
+    // Fetch locations and groups for item details
+    const { data: locations } = await supabase.from('locations').select('*').order('name')
+    const { data: groups } = await supabase.from('groups').select('*').order('name')
+
     return (
         <div className="p-4 md:p-10 max-w-5xl mx-auto">
             <div className="mb-8">
@@ -96,6 +100,8 @@ export default async function ManagePropsPage({ params }: Props) {
                 definedScenes={scenes?.map((s: Scene) => ({ ...s, act_number: s.act_number ?? 1 })) || []}
                 accentColor={production.color}
                 profiles={profiles || []}
+                locations={locations || []}
+                groups={groups || []}
             />
         </div>
     )

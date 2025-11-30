@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Courier_Prime } from "next/font/google";
+import localFont from "next/font/local";
 import "../globals.css";
 import { AppShell } from "@/components/AppShell";
 import { NextIntlClientProvider } from 'next-intl';
@@ -21,6 +22,12 @@ const courierPrime = Courier_Prime({
   subsets: ["latin"],
 });
 
+const boldonse = localFont({
+  src: "../../public/fonts/Boldonse-Regular.ttf",
+  variable: "--font-boldonse",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Rekwizytorium",
   description: "Theater props management system",
@@ -39,7 +46,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${courierPrime.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${courierPrime.variable} ${boldonse.variable} antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
           <AppShell>{children}</AppShell>

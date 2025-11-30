@@ -8,6 +8,7 @@ import { Database } from '@/types/supabase'
 import { SearchInput } from '@/components/ui/SearchInput'
 import { FilterSelect } from '@/components/ui/FilterSelect'
 import { useTranslations } from 'next-intl'
+import { format } from 'date-fns'
 
 type Performance = Database['public']['Tables']['performances']['Row']
 
@@ -58,7 +59,7 @@ const PerformanceListItem = ({ show }: { show: Performance }) => {
                     {show.title}
                 </h3>
                 <div className="flex items-center gap-3 text-sm text-neutral-400 mt-1">
-                    <span>{show.premiere_date ? new Date(show.premiere_date).toLocaleDateString() : t('tbd')}</span>
+                    <span>{show.premiere_date ? format(new Date(show.premiere_date), 'MM/dd/yyyy') : t('tbd')}</span>
                     <span className={`px-2 py-0.5 rounded-full text-xs border ${show.status === 'active' ? 'bg-emerald-900/20 text-emerald-400 border-emerald-900/50' :
                         show.status === 'upcoming' ? 'bg-yellow-900/20 text-yellow-400 border-yellow-900/50' :
                             'bg-neutral-800 text-neutral-400 border-neutral-700'
@@ -118,7 +119,7 @@ const PerformanceGridItem = ({ show }: { show: Performance }) => {
                             {tStatus(show.status as Database['public']['Enums']['performance_status_enum'])}
                         </span>
                         <span className="text-xs text-neutral-300">
-                            {show.premiere_date ? new Date(show.premiere_date).toLocaleDateString() : t('tbd')}
+                            {show.premiere_date ? format(new Date(show.premiere_date), 'MM/dd/yyyy') : t('tbd')}
                         </span>
                     </div>
                 </div>

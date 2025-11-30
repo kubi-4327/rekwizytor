@@ -119,29 +119,29 @@ export default function NotesList({ performanceId }: { performanceId?: string })
     })
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 overflow-x-hidden max-w-full">
             {/* Header */}
             <div className="flex justify-between items-start">
                 <div>
                     <h1 className="text-xl font-bold text-white">Notes</h1>
-                    <p className="text-neutral-400 text-sm mt-1">Manage your personal and performance-related notes</p>
+                    <p className="text-neutral-400 text-xs sm:text-sm mt-1">Manage your personal and performance-related notes</p>
                 </div>
                 <button
                     onClick={createNote}
-                    className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-md hover:bg-neutral-200 transition-colors font-medium text-sm"
+                    className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-md hover:bg-neutral-200 transition-colors font-medium text-sm sm:min-w-[140px] border border-transparent justify-center"
                 >
                     <Plus size={16} />
-                    New Note
+                    <span className="hidden sm:inline">New Note</span>
                 </button>
             </div>
 
             {/* Search Section */}
-            <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-4">
+            <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-2 sm:p-4 max-w-full overflow-hidden">
                 <SearchInput
                     placeholder="Search notes..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-neutral-900 border-neutral-700"
+                    className="bg-neutral-900 border-neutral-700 w-full"
                 />
             </div>
 
@@ -152,20 +152,20 @@ export default function NotesList({ performanceId }: { performanceId?: string })
             ) : (
                 <div className="space-y-6">
                     {sortedGroups.map((group: any) => (
-                        <div key={group.id} className="space-y-2">
+                        <div key={group.id} className="space-y-3">
                             <button
                                 onClick={() => toggleGroup(group.id)}
-                                className="flex items-center gap-2 text-sm font-semibold text-zinc-500 uppercase tracking-wider hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors w-full text-left"
+                                className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors w-full text-left py-2"
                             >
-                                {expandedGroups[group.id] ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                {expandedGroups[group.id] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                                 {group.title}
-                                <span className="text-xs bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full text-zinc-500">
+                                <span className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-full text-zinc-500 ml-1">
                                     {group.notes.length}
                                 </span>
                             </button>
 
                             {expandedGroups[group.id] && (
-                                <div className="grid gap-3 pl-2">
+                                <div className="grid gap-2">
                                     {group.notes.map((note: any) => {
                                         const perfColor = note.performances?.color
                                         const isMaster = note.is_master
@@ -173,41 +173,44 @@ export default function NotesList({ performanceId }: { performanceId?: string })
                                         return (
                                             <div
                                                 key={note.id}
-                                                className={`group relative bg-neutral-900/50 border rounded-lg p-4 transition-all hover:border-neutral-700 flex justify-between items-start ${isMaster && !perfColor ? 'border-amber-900/50 bg-amber-900/10' : 'border-neutral-800'}`}
-                                                style={isMaster && perfColor ? {
-                                                    borderColor: perfColor,
-                                                    backgroundColor: `${perfColor}10` // 10% opacity
+                                                className={`group relative bg-neutral-900/30 border border-transparent hover:border-neutral-800 rounded-xl p-4 transition-all hover:bg-neutral-900/50 flex justify-between items-start w-full max-w-full overflow-hidden`}
+                                                style={isMaster ? {
+                                                    borderLeft: `3px solid ${perfColor || '#d97706'}`, // Amber-600 default
+                                                    backgroundColor: isMaster ? 'rgba(255, 255, 255, 0.02)' : undefined
                                                 } : undefined}
                                             >
-                                                <Link href={`/notes/${note.id}`} className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <FileText
-                                                            size={16}
-                                                            className={isMaster && !perfColor ? "text-amber-500" : "text-neutral-500 group-hover:text-neutral-300 transition-colors"}
-                                                            style={isMaster && perfColor ? { color: perfColor } : undefined}
-                                                        />
-                                                        <h3 className="font-medium text-white truncate">{note.title}</h3>
+                                                <Link href={`/notes/${note.id}`} className="flex-1 min-w-0 w-full block">
+                                                    <div className="flex items-center gap-2 mb-1.5 w-full min-w-0">
+                                                        {isMaster && (
+                                                            <FileText
+                                                                size={16}
+                                                                className="text-amber-500/80 flex-shrink-0"
+                                                                style={perfColor ? { color: perfColor } : undefined}
+                                                            />
+                                                        )}
+                                                        <h3 className={`font-medium text-base truncate flex-1 min-w-0 ${isMaster ? 'text-white' : 'text-neutral-200 group-hover:text-white transition-colors'}`}>
+                                                            {note.title}
+                                                        </h3>
                                                         {isMaster && (
                                                             <span
-                                                                className={`text-xs px-1.5 py-0.5 rounded border ${!perfColor ? 'bg-amber-900/30 text-amber-400 border-amber-900/50' : ''}`}
+                                                                className="text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 ml-2 flex-shrink-0"
                                                                 style={perfColor ? {
-                                                                    backgroundColor: `${perfColor}30`,
+                                                                    backgroundColor: `${perfColor}15`,
                                                                     color: perfColor,
-                                                                    borderColor: `${perfColor}50`
                                                                 } : undefined}
                                                             >
                                                                 Master
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-neutral-400 line-clamp-2 pl-6">
-                                                        {extractTextFromContent(note.content) || <span className="italic opacity-50">No content</span>}
+                                                    <p className="text-sm text-neutral-400 line-clamp-2 leading-relaxed break-words w-full">
+                                                        {extractTextFromContent(note.content) || <span className="italic opacity-30">No content</span>}
                                                     </p>
-                                                    <p className="text-xs text-neutral-500 mt-2 pl-6">
-                                                        {format(new Date(note.created_at), 'MMM d, yyyy HH:mm')}
+                                                    <p className="text-xs text-neutral-600 mt-3 font-medium">
+                                                        {format(new Date(note.created_at), 'MMM d, yyyy • HH:mm')}
                                                     </p>
                                                 </Link>
-                                                <button onClick={() => deleteNote(note.id)} className="text-neutral-500 hover:text-red-400 hover:bg-red-900/20 p-2 rounded transition-colors opacity-0 group-hover:opacity-100">
+                                                <button onClick={() => deleteNote(note.id)} className="text-neutral-600 hover:text-red-400 p-2 rounded-lg hover:bg-red-900/10 transition-colors opacity-0 group-hover:opacity-100 absolute top-3 right-3 z-10">
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>

@@ -92,14 +92,14 @@ export function ItemDetailsDialog({ item, isOpen, onClose, onEdit, locations, gr
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 to-transparent opacity-80" />
 
-                    <div className="absolute bottom-6 left-6 right-6">
-                        <h2 className="text-3xl font-bold text-white drop-shadow-md">{item.name}</h2>
+                    <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-md leading-tight">{item.name}</h2>
                     </div>
                 </div>
 
-                <div className="p-6 space-y-6">
+                <div className="p-4 sm:p-6 space-y-6">
                     {/* Status & Actions */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
                             <span className={`px-3 py-1 rounded-full text-sm font-medium border ${item.performance_status === 'active' ? 'bg-red-900/20 text-red-400 border-red-900/50' :
                                 item.performance_status === 'upcoming' ? 'bg-yellow-900/20 text-yellow-400 border-yellow-900/50' :
@@ -108,20 +108,22 @@ export function ItemDetailsDialog({ item, isOpen, onClose, onEdit, locations, gr
                                 {item.performance_status ? item.performance_status.replace('_', ' ').toUpperCase() : t('unassigned')}
                             </span>
                         </div>
-                        <button
-                            onClick={() => onEdit(item)}
-                            className="inline-flex items-center justify-center rounded-md bg-action-primary px-4 py-2 text-sm font-medium text-white hover:bg-action-hover transition-colors"
-                        >
-                            <Pencil className="w-4 h-4 mr-2" />
-                            {t('editItem')}
-                        </button>
-                        <button
-                            onClick={handleDelete}
-                            className="inline-flex items-center justify-center rounded-md bg-red-900/20 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-900/40 transition-colors ml-2"
-                        >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            {t('delete')}
-                        </button>
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <button
+                                onClick={() => onEdit(item)}
+                                className="flex-1 sm:flex-none inline-flex items-center justify-center rounded-md bg-action-primary px-4 py-2 text-sm font-medium text-white hover:bg-action-hover transition-colors"
+                            >
+                                <Pencil className="w-4 h-4 mr-2" />
+                                {t('editItem')}
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                className="flex-1 sm:flex-none inline-flex items-center justify-center rounded-md bg-red-900/20 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-900/40 transition-colors"
+                            >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                {t('delete')}
+                            </button>
+                        </div>
                     </div>
 
                     {/* Details Grid */}

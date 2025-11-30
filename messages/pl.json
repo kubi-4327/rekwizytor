@@ -97,16 +97,42 @@
             "smartSearch": "Inteligentne Wyszukiwanie",
             "generateDesc": "Generowanie Opisu"
         },
-        "noLogs": "Nie znaleziono jeszcze żadnych logów. Wykonaj operacje AI, aby zobaczyć dane."
+        "noLogs": "Nie znaleziono jeszcze żadnych logów. Wykonaj operacje AI, aby zobaczyć dane.",
+        "costBreakdown": "Podział Kosztów",
+        "avgTokens": "Średnia Liczba Tokenów / Op",
+        "tokenUsageChart": "Zużycie Tokenów w Czasie",
+        "storage": {
+            "database": "Baza Danych",
+            "databaseDesc": "Tabele, Tekst, Wektory AI",
+            "files": "Pliki",
+            "filesDesc": "Zdjęcia, Zasoby, Przesłane Pliki",
+            "system": "System",
+            "user": "Użytkownik",
+            "groups": "Kategorie (Grupy)",
+            "locations": "Lokalizacje",
+            "profiles": "Profile",
+            "aiDescriptions": "Opisy AI (Wektory)",
+            "items": "Wszystkie Przedmioty",
+            "itemNotes": "Notatki Przedmiotów",
+            "performanceNotes": "Notatki Spektakli",
+            "filesLabel": "Pliki (Zdjęcia/Zasoby)",
+            "disclaimer": "* Wartości odpowiadają limitom planu Supabase Free (500MB dla Bazy Danych, 1GB dla Plików). Limity te są narzucone przez platformę niezależnie od fizycznego rozmiaru dysku. Możesz zwiększyć te limity, ulepszając plan Supabase lub hostując własną instancję bazy danych."
+        }
     },
     "ProductionDetails": {
         "backToProductions": "Powrót do Spektakli",
         "scenes": "Sceny",
         "acts": "Akty",
+        "liveView": "Podgląd Na Żywo",
         "manageScenes": "Zarządzaj Scenami",
         "editDetails": "Edytuj Szczegóły",
-        "liveView": "Podgląd Na Żywo",
+        "actions": "Akcje",
         "propsList": "Lista Rekwizytów",
+        "viewScenes": "Widok Scen",
+        "viewAll": "Wszystkie Przedmioty",
+        "searchPlaceholder": "Szukaj rekwizytów...",
+        "filterStatus": "Filtruj po statusie",
+        "addItem": "Dodaj Przedmiot",
         "manageProps": "Zarządzaj Rekwizytami",
         "table": {
             "scene": "Scena",
@@ -296,7 +322,7 @@
         "loading": "Ładowanie..."
     },
     "AddPropsButton": {
-        "addItem": "Dodaj Przedmiot",
+        "addItem": "Dodaj",
         "fastAdd": "Szybkie Dodawanie (AI)",
         "fastAddDesc": "Skanuj i automatycznie taguj",
         "manualAdd": "Ręczne Dodawanie",
@@ -308,6 +334,7 @@
         "toPdf": "Do PDF (Lista Kontrolna)",
         "pdfTitle": "Lista Kontrolna Magazynu Rekwizytów",
         "generatedOn": "Wygenerowano",
+        "generatedBy": "Wygenerowano przez",
         "columns": {
             "name": "Nazwa Przedmiotu",
             "notes": "Notatki",

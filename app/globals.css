@@ -57,3 +57,24 @@ h2,
 .btn-burgundy:hover {
   background: linear-gradient(135deg, #D43A49, #B02735);
 }
+
+/* Note Editor Specifics */
+.ProseMirror hr {
+  opacity: 0.1 !important;
+  margin-top: 1em !important;
+  margin-bottom: 1em !important;
+  border-color: var(--foreground) !important;
+  border-top-width: 2px !important;
+}
+
+/* Ensure Boldonse is used in prose headings - override Tailwind Typography */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose :where(h1):not(:where([class~="not-prose"] *)),
+.prose :where(h2):not(:where([class~="not-prose"] *)),
+.prose :where(h3):not(:where([class~="not-prose"] *)) {
+  font-family: 'Boldonse', 'Impact', sans-serif !important;
+  letter-spacing: 0.05em !important;
+  line-height: 1.4 !important;
+}

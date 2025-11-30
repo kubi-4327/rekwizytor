@@ -47,12 +47,7 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
         return acc
     }, {} as Record<string, number>) || {}
 
-    // Storage Stats Grouping
-    const storageByCat = storageStats.reduce((acc, curr) => {
-        if (!acc[curr.category]) acc[curr.category] = []
-        acc[curr.category].push(curr)
-        return acc
-    }, {} as Record<string, typeof storageStats>)
+
 
     const formatBytes = (bytes: number) => {
         if (bytes === 0) return '0 B'
@@ -75,7 +70,7 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2 bg-neutral-900 p-1 rounded-lg border border-neutral-800">
+                <div className="flex items-center gap-2 bg-neutral-900 p-1 rounded-lg border border-neutral-800 self-start md:self-auto">
                     <button
                         onClick={() => setActiveTab('ai')}
                         className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === 'ai' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white'}`}
@@ -89,46 +84,47 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
                         Storage
                     </button>
                 </div>
-
-                {activeTab === 'ai' && (
-                    <button
-                        onClick={() => setCurrency(c => c === 'USD' ? 'PLN' : 'USD')}
-                        className="flex items-center px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors"
-                    >
-                        <ArrowRightLeft className="w-4 h-4 mr-2 text-ai-secondary" />
-                        {currency}
-                    </button>
-                )}
             </div>
 
             {activeTab === 'ai' ? (
                 <>
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-lg">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-neutral-400 text-sm">{t('totalTokens')}</span>
-                                <DatabaseIcon className="h-4 w-4 text-ai-secondary" />
+                    {/* Primary Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-lg">
+                            <div className="flex items-center justify-between mb-4">
+                                <span className="text-neutral-400 text-sm font-courier">{t('totalTokens')}</span>
+                                <DatabaseIcon className="h-5 w-5 text-ai-secondary" />
                             </div>
-                            <div className="text-2xl font-bold text-white">{totalTokens.toLocaleString()}</div>
-                            <div className="text-xs text-neutral-500 mt-1">
+                            <div className="text-3xl font-bold text-white mb-2">{totalTokens.toLocaleString()}</div>
+                            <div className="text-xs text-neutral-500 font-mono">
                                 {t('inOut', { input: totalInput.toLocaleString(), output: totalOutput.toLocaleString() })}
                             </div>
                         </div>
 
-                        <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-lg">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-neutral-400 text-sm">{t('estimatedCost')}</span>
-                                <DollarSign className="h-4 w-4 text-green-400" />
+                        <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-lg relative overflow-hidden">
+                            <div className="flex items-center justify-between mb-4">
+                                <span className="text-neutral-400 text-sm font-courier">{t('estimatedCost')}</span>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setCurrency(c => c === 'USD' ? 'PLN' : 'USD')}
+                                        className="text-[10px] px-2 py-1 rounded bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors font-mono"
+                                    >
+                                        {currency}
+                                    </button>
+                                    <DollarSign className="h-5 w-5 text-green-400" />
+                                </div>
                             </div>
-                            <div className="text-2xl font-bold text-white">
+                            <div className="text-3xl font-bold text-white mb-2">
                                 {currency === 'USD' ? '$' : 'PLN '}{totalCost.toFixed(4)}
                             </div>
-                            <div className="text-xs text-neutral-500 mt-1">
+                            <div className="text-xs text-neutral-500 font-mono">
                                 {t('pricingNote')} {currency === 'PLN' && `(~${EXCHANGE_RATE} PLN/USD)`}
                             </div>
                         </div>
+                    </div>
 
+                    {/* Secondary Stats - Operations */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-lg">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-neutral-400 text-sm">{t('fastAdds')}</span>
@@ -166,7 +162,7 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
                     {/* Cost & Usage Breakdown */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
-                            <h3 className="text-base font-medium text-white mb-4 font-boldonse">Cost Breakdown</h3>
+                            <h3 className="text-base font-medium text-white mb-4 font-boldonse">{t('costBreakdown')}</h3>
                             <div className="space-y-4">
                                 {Object.entries(byType).map(([type]) => {
                                     const typeLogs = allStats.filter(s => s.operation_type === type)
@@ -198,7 +194,7 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
                         </div>
 
                         <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
-                            <h3 className="text-base font-medium text-white mb-4 font-boldonse">Average Tokens / Op</h3>
+                            <h3 className="text-base font-medium text-white mb-4 font-boldonse">{t('avgTokens')}</h3>
                             <div className="space-y-4">
                                 {Object.entries(byType).map(([type, count]) => {
                                     const typeLogs = allStats.filter(s => s.operation_type === type)
@@ -222,7 +218,7 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
 
                     {/* Token Usage Chart */}
                     <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
-                        <h3 className="text-base font-medium text-white mb-6 font-boldonse">Token Usage Over Time</h3>
+                        <h3 className="text-base font-medium text-white mb-6 font-boldonse">{t('tokenUsageChart')}</h3>
                         <div className="h-64 flex items-end gap-2">
                             {(() => {
                                 // Group logs by date (last 14 days)
@@ -231,8 +227,15 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
                                 const data = Array.from({ length: days }).map((_, i) => {
                                     const d = new Date()
                                     d.setDate(now.getDate() - (days - 1 - i))
-                                    const dateStr = d.toISOString().split('T')[0]
-                                    const dayLogs = logs.filter(l => l.created_at?.startsWith(dateStr))
+                                    // Use local date string for comparison (YYYY-MM-DD)
+                                    const dateStr = d.toLocaleDateString('en-CA')
+
+                                    const dayLogs = logs.filter(l => {
+                                        if (!l.created_at) return false
+                                        const logDate = new Date(l.created_at).toLocaleDateString('en-CA')
+                                        return logDate === dateStr
+                                    })
+
                                     const total = dayLogs.reduce((acc, curr) => acc + (curr.total_tokens || 0), 0)
                                     return { date: dateStr, total, label: d.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' }) }
                                 })
@@ -320,30 +323,125 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
                     </div>
                 </>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {Object.entries(storageByCat).map(([category, items]) => (
-                        <div key={category} className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
-                            <div className="px-4 py-3 border-b border-neutral-800 bg-neutral-950/50">
-                                <h3 className="text-md font-bold text-white font-boldonse">{category}</h3>
+                <div className="space-y-8">
+                    {/* Database Storage Section */}
+                    <div className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
+                        <div className="px-6 py-4 border-b border-neutral-800 bg-neutral-950/50 flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <DatabaseIcon className="h-5 w-5 text-ai-secondary" />
+                                <div>
+                                    <h3 className="text-md font-bold text-white font-boldonse">{t('storage.database')}</h3>
+                                    <p className="text-xs text-neutral-500 font-courier">{t('storage.databaseDesc')}</p>
+                                </div>
                             </div>
-                            <div className="p-4 space-y-4">
-                                {items.map((item, idx) => (
-                                    <div key={idx} className="flex justify-between items-center">
-                                        <span className="text-neutral-400 text-sm font-courier">{item.label}</span>
-                                        <span className="text-white font-mono text-sm">{formatBytes(item.size_bytes)}</span>
+                            <div className="text-right">
+                                <span className="text-sm font-mono text-white block">
+                                    {formatBytes(storageStats.filter(s => s.category !== 'storage').reduce((acc, curr) => acc + curr.size_bytes, 0))}
+                                    <span className="text-neutral-500"> / 500 MB*</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            {/* Overall DB Progress */}
+                            <div className="space-y-2">
+                                <div className="h-2 w-full bg-neutral-800 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-ai-secondary rounded-full transition-all duration-500"
+                                        style={{
+                                            width: `${Math.min((storageStats.filter(s => s.category !== 'storage').reduce((acc, curr) => acc + curr.size_bytes, 0) / (500 * 1024 * 1024)) * 100, 100)}%`
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* System Data */}
+                                <div className="space-y-3">
+                                    <h4 className="text-sm font-bold text-neutral-400 font-boldonse uppercase tracking-wider">{t('storage.system')}</h4>
+                                    <div className="space-y-2">
+                                        {storageStats.filter(s => s.category === 'system').map((item, idx) => (
+                                            <div key={idx} className="flex justify-between items-center text-sm">
+                                                <span className="text-neutral-300 font-courier">{t(`storage.${item.label}`)}</span>
+                                                <span className="text-neutral-500 font-mono">{formatBytes(item.size_bytes)}</span>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                                <div className="pt-3 border-t border-neutral-800 flex justify-between items-center">
-                                    <span className="text-neutral-300 text-sm font-bold font-courier">Total</span>
-                                    <span className="text-ai-secondary font-mono text-sm font-bold">
-                                        {formatBytes(items.reduce((acc, curr) => acc + curr.size_bytes, 0))}
-                                    </span>
+                                </div>
+
+                                {/* User Data */}
+                                <div className="space-y-3">
+                                    <h4 className="text-sm font-bold text-neutral-400 font-boldonse uppercase tracking-wider">{t('storage.user')}</h4>
+                                    <div className="space-y-2">
+                                        {storageStats.filter(s => s.category === 'user').map((item, idx) => (
+                                            <div key={idx} className="flex justify-between items-center text-sm">
+                                                <span className="text-neutral-300 font-courier">{t(`storage.${item.label}`)}</span>
+                                                <span className="text-neutral-500 font-mono">{formatBytes(item.size_bytes)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    ))}
+                    </div>
+
+                    {/* File Storage Section */}
+                    <div className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
+                        <div className="px-6 py-4 border-b border-neutral-800 bg-neutral-950/50 flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="h-5 w-5 rounded border-2 border-yellow-500/50 flex items-center justify-center">
+                                    <div className="h-2 w-2 bg-yellow-500 rounded-sm" />
+                                </div>
+                                <div>
+                                    <h3 className="text-md font-bold text-white font-boldonse">{t('storage.files')}</h3>
+                                    <p className="text-xs text-neutral-500 font-courier">{t('storage.filesDesc')}</p>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <span className="text-sm font-mono text-white block">
+                                    {formatBytes(storageStats.filter(s => s.category === 'storage').reduce((acc, curr) => acc + curr.size_bytes, 0))}
+                                    <span className="text-neutral-500"> / 1 GB*</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="p-6">
+                            {/* Overall Storage Progress */}
+                            <div className="space-y-2 mb-6">
+                                <div className="h-2 w-full bg-neutral-800 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-yellow-500 rounded-full transition-all duration-500"
+                                        style={{
+                                            width: `${Math.min((storageStats.filter(s => s.category === 'storage').reduce((acc, curr) => acc + curr.size_bytes, 0) / (1024 * 1024 * 1024)) * 100, 100)}%`
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                {storageStats.filter(s => s.category === 'storage').map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center text-sm">
+                                        <span className="text-neutral-300 font-courier">{t(`storage.${item.label}`)}</span>
+                                        <span className="text-neutral-500 font-mono">{formatBytes(item.size_bytes)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Disclaimer */}
+                    <div className="bg-blue-900/10 border border-blue-500/20 rounded-lg p-4 flex gap-3 items-start">
+                        <div className="mt-0.5">
+                            <div className="h-4 w-4 rounded-full border border-blue-400 flex items-center justify-center text-[10px] text-blue-400 font-mono">i</div>
+                        </div>
+                        <p className="text-xs text-blue-200/80 leading-relaxed font-courier">
+                            {t('storage.disclaimer')}
+                        </p>
+                    </div>
                 </div>
             )}
+
         </div>
     )
 }
+

@@ -30,7 +30,9 @@ Skopiuj poniższy kod i wklej go w ustawieniach Supabase Auth -> Email Templates
               <h2 style="color: #ededed; margin-top: 0; margin-bottom: 20px; font-size: 24px;">Confirm your signup</h2>
               
               <p style="color: #a1a1aa; font-size: 16px; line-height: 1.5; margin-bottom: 30px;">
-                Follow this link to confirm your user account and get started with Rekwizytor.
+                Follow this link to confirm your user account.
+                <br><br>
+                <strong>Note:</strong> After confirming your email, your account will be placed in a <strong>pending queue</strong> until an administrator approves it. You will not be able to access the application immediately.
               </p>
 
               <!-- Button -->

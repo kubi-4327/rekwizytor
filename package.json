@@ -36,12 +36,14 @@
     "react": "19.2.0",
     "react-datepicker": "^8.9.0",
     "react-dom": "19.2.0",
+    "react-to-print": "^3.2.0",
     "tailwind-merge": "^3.4.0",
     "tippy.js": "^6.3.7",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.19",
     "@types/colorthief": "^2.6.0",
     "@types/node": "^20",
     "@types/react": "^19",

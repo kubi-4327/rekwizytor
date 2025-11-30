@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import NoteEditor, { NoteEditorRef } from '@/components/notes/NoteEditor'
-import { ArrowLeft, Share, Copy, Download } from 'lucide-react'
+import { ArrowLeft, Share, Copy, Download, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { extractMentions } from '@/components/notes/utils'
 
@@ -20,20 +20,62 @@ export default function NoteDetailPage() {
     const router = useRouter()
     const editorRef = useRef<NoteEditorRef>(null)
 
-    useEffect(() => {
-        if (id) fetchNote()
-        fetchPerformances()
-    }, [id])
-
     if (!id) return <div>Invalid ID</div>
 
     const fetchNote = async () => {
-        const { data } = await supabase.from('notes').select('*').eq('id', id).single()
-        if (data) {
-            setNote(data)
-            setTitle(data.title)
+        const { data: serverData } = await supabase.from('notes').select('*').eq('id', id).single()
+        if (!serverData) return
+
+        // Always use server version as source of truth
+        // Check localStorage only if server is empty (new note)
+        const content = serverData.content as any
+        const isServerEmpty = !content ||
+            !content.content ||
+            content.content.length === 0 ||
+            (content.content.length === 1 && !content.content[0].content)
+
+        if (isServerEmpty) {
+            const key = `rekwizytor_note_draft_${id}`
+            const savedDraft = localStorage.getItem(key)
+            if (savedDraft) {
+                try {
+                    const { content: localContent } = JSON.parse(savedDraft)
+                    console.log('Server empty, using localStorage backup')
+                    setNote({ ...serverData, content: localContent })
+                    setTitle(serverData.title)
+                    return
+                } catch (e) {
+                    console.error('Failed to parse local draft', e)
+                }
+            }
         }
+
+        // Use server data
+        setNote(serverData)
+        setTitle(serverData.title)
     }
+
+    useEffect(() => {
+        if (id) fetchNote()
+        fetchPerformances()
+
+        // Save on browser close/tab close
+        const handleBeforeUnload = () => {
+            if (editorRef.current) {
+                const content = editorRef.current.getJSON()
+                // Synchronous save on unload - use localStorage as backup
+                // Server save will happen via onBlur which triggers before this
+                const key = `rekwizytor_note_draft_${id}`
+                localStorage.setItem(key, JSON.stringify({
+                    content,
+                    timestamp: new Date().toISOString()
+                }))
+            }
+        }
+
+        window.addEventListener('beforeunload', handleBeforeUnload)
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+    }, [id])
 
     const fetchPerformances = async () => {
         const { data } = await supabase.from('performances').select('id, title').order('title')
@@ -81,6 +123,9 @@ export default function NoteDetailPage() {
                 await supabase.from('note_mentions').insert(validMentions)
             }
         }
+
+        // Update local state to reflect saved content, preventing "revert" logic in editor
+        setNote((prev: any) => ({ ...prev, content, updated_at: new Date().toISOString() }))
 
         setSaving(false)
     }, [id, supabase])
@@ -151,74 +196,84 @@ export default function NoteDetailPage() {
 
     return (
         <div className="p-6 w-full">
-            <div className="flex items-center gap-4 mb-6">
-                <button
-                    onClick={async () => {
-                        // Force save before navigation
-                        if (editorRef.current) {
-                            const content = editorRef.current.getJSON()
-                            await saveNote(content)
-                        }
-                        router.push('/notes')
-                    }}
-                    className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
-                >
-                    <ArrowLeft size={20} />
-                </button>
+            <div className="max-w-3xl mx-auto mb-8">
+                <div className="flex items-center gap-4 mb-4">
+                    <button
+                        onClick={async () => {
+                            // Force save before navigation
+                            if (editorRef.current) {
+                                const content = editorRef.current.getJSON()
+                                await saveNote(content)
+                            }
+                            router.push('/notes')
+                        }}
+                        className="p-2 -ml-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-full transition-colors"
+                    >
+                        <ArrowLeft size={20} />
+                    </button>
+
+                    <div className="flex-1"></div>
+
+                    <div className="flex items-center gap-2">
+                        <div className="relative group">
+                            <select
+                                value={note.performance_id || ''}
+                                onChange={async (e) => {
+                                    const val = e.target.value || null
+                                    setNote({ ...note, performance_id: val })
+                                    await supabase.from('notes').update({ performance_id: val }).eq('id', id)
+                                }}
+                                className="appearance-none bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-full px-4 py-1.5 text-xs font-medium text-neutral-400 hover:text-white transition-colors cursor-pointer pr-8 focus:outline-none focus:ring-2 focus:ring-neutral-700"
+                            >
+                                <option value="">Private Note</option>
+                                {performances.map(p => (
+                                    <option key={p.id} value={p.id}>{p.title}</option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-500 pointer-events-none" />
+                        </div>
+
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowExportMenu(!showExportMenu)}
+                                className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-full transition-colors"
+                                title="Export"
+                            >
+                                <Share size={18} />
+                            </button>
+
+                            {showExportMenu && (
+                                <div className="absolute right-0 top-full mt-2 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1.5 min-w-[220px] z-50 flex flex-col gap-0.5">
+                                    <button onClick={copyToClipboard} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
+                                        <Copy size={16} />
+                                        Copy content
+                                    </button>
+                                    <div className="h-px bg-neutral-800 my-1 mx-2" />
+                                    <button onClick={exportNoteMd} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
+                                        <Download size={16} />
+                                        Export as Markdown
+                                    </button>
+                                    <button onClick={exportNoteTxt} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
+                                        <Download size={16} />
+                                        Export as TXT
+                                    </button>
+                                    <button onClick={exportNoteJson} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
+                                        <Download size={16} />
+                                        Export as JSON
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
                 <input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     onBlur={updateTitle}
-                    className="text-3xl font-bold bg-transparent border-none focus:outline-none w-full"
+                    placeholder="Untitled Note"
+                    className="text-4xl font-bold bg-transparent border-none focus:outline-none w-full placeholder:text-neutral-700 text-white"
                 />
-                <div className="flex items-center gap-2">
-
-                    <select
-                        value={note.performance_id || ''}
-                        onChange={async (e) => {
-                            const val = e.target.value || null
-                            setNote({ ...note, performance_id: val })
-                            await supabase.from('notes').update({ performance_id: val }).eq('id', id)
-                        }}
-                        className="bg-transparent border border-zinc-200 dark:border-zinc-800 rounded px-2 py-1 text-sm max-w-[150px]"
-                    >
-                        <option value="">Private Note</option>
-                        {performances.map(p => (
-                            <option key={p.id} value={p.id}>{p.title}</option>
-                        ))}
-                    </select>
-
-                    <div className="relative">
-                        <button
-                            onClick={() => setShowExportMenu(!showExportMenu)}
-                            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
-                            title="Export"
-                        >
-                            <Share size={20} />
-                        </button>
-
-                        {showExportMenu && (
-                            <div className="absolute right-0 top-full mt-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-2 min-w-[200px] z-50 flex flex-col gap-1">
-                                <button onClick={copyToClipboard} className="flex items-center gap-2 p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded text-left text-sm">
-                                    <Copy size={16} />
-                                    Copy for Apps (Notion, etc)
-                                </button>
-                                <button onClick={exportNoteMd} className="flex items-center gap-2 p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded text-left text-sm">
-                                    <Download size={16} />
-                                    Export as Markdown
-                                </button>
-                                <button onClick={exportNoteTxt} className="flex items-center gap-2 p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded text-left text-sm">
-                                    <Download size={16} />
-                                    Export as TXT
-                                </button>
-                                <button onClick={exportNoteJson} className="flex items-center gap-2 p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded text-left text-sm">
-                                    <Download size={16} />
-                                    Export as JSON
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
             </div>
 
             <NoteEditor
@@ -226,7 +281,7 @@ export default function NoteDetailPage() {
                 initialContent={note.content}
                 noteId={note.id}
                 serverUpdatedAt={note.updated_at}
-                onSave={(content) => saveNote(content)}
+                onSave={saveNote}
             />
         </div>
     )

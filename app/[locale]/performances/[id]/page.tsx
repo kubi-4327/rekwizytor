@@ -1,5 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
-import { Calendar, Box, ArrowLeft } from 'lucide-react'
+import { Calendar, Box, ArrowLeft, Settings } from 'lucide-react'
 import { ScheduledShowsList } from '@/components/performances/ScheduledShowsList'
 import { PerformanceContent } from '@/components/performances/PerformanceContent'
 import Link from 'next/link'
@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation'
 import { Fragment } from 'react'
 import { Database } from '@/types/supabase'
 import { getTranslations } from 'next-intl/server'
+import { ExportPerformanceButton } from '@/components/performances/ExportPerformanceButton'
 
 type Props = {
     params: Promise<{ id: string }>
@@ -25,6 +26,14 @@ export default async function ProductionDetailsPage({ params }: Props) {
     const { id } = await params
     const supabase = await createClient()
     const t = await getTranslations('ProductionDetails')
+
+    const { data: { user: supabaseUser } } = await supabase.auth.getUser()
+
+    // Map Supabase user to the shape expected by ExportPerformanceButton
+    const user = supabaseUser ? {
+        full_name: supabaseUser.user_metadata?.full_name || null,
+        email: supabaseUser.email
+    } : null
 
     const { data: production } = await supabase
         .from('performances')
@@ -79,8 +88,6 @@ export default async function ProductionDetailsPage({ params }: Props) {
         if (!propsByAct[actNum]) propsByAct[actNum] = []
         propsByAct[actNum].push(prop)
     })
-
-
 
     return (
         <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
@@ -145,24 +152,46 @@ export default async function ProductionDetailsPage({ params }: Props) {
 
                             <div className="flex flex-col sm:flex-row gap-2 shrink-0">
                                 <Link
-                                    href={`/performances/${id}/scenes`}
-                                    className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white border border-neutral-800 rounded-md hover:bg-neutral-900 transition-colors text-center"
-                                >
-                                    {t('manageScenes')}
-                                </Link>
-                                <Link
-                                    href={`/performances/${id}/edit`}
-                                    className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white border border-neutral-800 rounded-md hover:bg-neutral-900 transition-colors text-center"
-                                >
-                                    {t('editDetails')}
-                                </Link>
-                                <Link
                                     href={`/performances/${id}/live`}
                                     className="px-4 py-2 text-sm font-medium text-red-400 hover:text-red-300 border border-red-900/30 bg-red-900/10 rounded-md hover:bg-red-900/20 transition-colors text-center flex items-center gap-2"
                                 >
                                     <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                                     {t('liveView')}
                                 </Link>
+
+                                {/* Actions Menu */}
+                                <div className="relative group">
+                                    <button className="px-3 py-2 text-sm font-medium text-neutral-400 hover:text-white border border-neutral-800 rounded-md hover:bg-neutral-900 transition-colors flex items-center gap-2">
+                                        <Settings className="w-4 h-4" />
+                                        <span className="hidden sm:inline">{t('actions')}</span>
+                                    </button>
+
+                                    {/* Invisible bridge to prevent menu closing */}
+                                    <div className="absolute left-0 right-0 top-full h-2 bg-transparent" />
+
+                                    <div className="absolute right-0 top-[calc(100%+8px)] w-48 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl overflow-hidden z-50 hidden group-hover:block">
+                                        <Link
+                                            href={`/performances/${id}/edit`}
+                                            className="block px-4 py-2.5 text-sm text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors"
+                                        >
+                                            {t('editDetails')}
+                                        </Link>
+                                        <Link
+                                            href={`/performances/${id}/scenes`}
+                                            className="block px-4 py-2.5 text-sm text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors border-t border-neutral-800"
+                                        >
+                                            {t('manageScenes')}
+                                        </Link>
+                                        <div className="border-t border-neutral-800">
+                                            <ExportPerformanceButton
+                                                production={production}
+                                                items={assignedProps || []}
+                                                user={user}
+                                                variant="menu"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -189,6 +218,6 @@ export default async function ProductionDetailsPage({ params }: Props) {
                     />
                 </div>
             </div>
-        </div >
+        </div>
     )
 }

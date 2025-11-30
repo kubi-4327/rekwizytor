@@ -83,6 +83,7 @@ const SlashMention = Mention.extend({
 
 export interface NoteEditorRef {
     getJSON: () => any
+    setExternalContent: (content: any) => void
 }
 
 const NoteEditor = forwardRef<NoteEditorRef, {
@@ -214,7 +215,7 @@ const NoteEditor = forwardRef<NoteEditorRef, {
         },
         editorProps: {
             attributes: {
-                class: 'prose dark:prose-invert focus:outline-none max-w-none min-h-[200px] p-4',
+                class: 'prose dark:prose-invert focus:outline-none max-w-3xl mx-auto min-h-[500px] py-4 prose-hr:opacity-10 dark:prose-hr:opacity-10 prose-hr:my-4 prose-p:leading-relaxed',
             },
         },
         onBlur: ({ editor }) => {
@@ -228,7 +229,15 @@ const NoteEditor = forwardRef<NoteEditorRef, {
     })
 
     useImperativeHandle(ref, () => ({
-        getJSON: () => editor?.getJSON()
+        getJSON: () => editor?.getJSON(),
+        setExternalContent: (newContent: any) => {
+            if (editor) {
+                console.log('Setting external content via imperative handle')
+                editor.commands.setContent(newContent)
+                setContent(newContent)
+                setSaveStatus('saved')
+            }
+        }
     }))
 
     // Debounce saving
@@ -250,7 +259,6 @@ const NoteEditor = forwardRef<NoteEditorRef, {
                 const draftTime = new Date(timestamp).getTime()
 
                 // Check if server content is effectively empty
-                // Tiptap empty doc is usually { type: 'doc', content: [] } or just null/undefined
                 const isServerEmpty = !initialContent ||
                     !initialContent.content ||
                     initialContent.content.length === 0 ||
@@ -258,7 +266,8 @@ const NoteEditor = forwardRef<NoteEditorRef, {
 
                 console.log('Checking draft:', { draftTime, serverTime, isServerEmpty })
 
-                if (draftTime > serverTime || isServerEmpty) {
+                // Tolerance of 2 seconds to avoid minor clock diffs causing issues
+                if (draftTime > serverTime + 2000 || isServerEmpty) {
                     console.log('Restoring draft from LocalStorage (newer or server empty)')
                     setContent(draftContent)
                     // If editor is already initialized, set its content
@@ -267,33 +276,45 @@ const NoteEditor = forwardRef<NoteEditorRef, {
                     }
                     setSaveStatus('local')
                 } else {
-                    console.log('Server is newer, but keeping draft available for manual restore')
-                    setHasLocalDraft(true)
-                    setLocalDraftContent(draftContent)
+                    // Server is newer or equal. The local draft is stale.
+                    // We should discard the stale draft to prevent "Restore Backup" prompts for old data.
+                    console.log('Server is newer. Discarding stale local draft.')
+                    localStorage.removeItem(key)
+                    setHasLocalDraft(false)
                 }
             } catch (e) {
                 console.error('Failed to parse draft', e)
             }
         }
-    }, [noteId, serverUpdatedAt, editor]) // Add editor dependency to ensure content is set if editor loads after effect
+    }, [noteId, serverUpdatedAt, editor]) // Removed initialContent from dependency to avoid re-running on prop change
 
     // Update local state when editor content changes
     useEffect(() => {
         if (!editor) return
 
+        let typingTimeout: NodeJS.Timeout
+
         const handleUpdate = () => {
             const newContent = editor.getJSON()
             setContent(newContent)
-            setSaveStatus('unsaved')
 
-            // Immediate LocalStorage save (or very short debounce could be used here)
+            // Clear previous timeout
+            clearTimeout(typingTimeout)
+
+            // Don't show any status while actively typing
+            // After 2s of no typing, show "Zapisywanie..."
+            typingTimeout = setTimeout(() => {
+                setSaveStatus('unsaved')
+            }, 2000)
+
+            // Immediate LocalStorage save as backup (silent, don't change status)
             if (noteId) {
                 const key = `rekwizytor_note_draft_${noteId}`
                 localStorage.setItem(key, JSON.stringify({
                     content: newContent,
                     timestamp: new Date().toISOString()
                 }))
-                setSaveStatus('local')
+                // Don't change status - we only care about server saves
             }
         }
 
@@ -301,11 +322,12 @@ const NoteEditor = forwardRef<NoteEditorRef, {
 
         return () => {
             editor.off('update', handleUpdate)
+            clearTimeout(typingTimeout)
         }
     }, [editor, noteId])
 
-    // Debounce the content value for SERVER save - 30 seconds
-    const debouncedContent = useDebounce(content, 30000)
+    // Debounce the content value for SERVER save - 10 seconds
+    const debouncedContent = useDebounce(content, 10000)
 
     // Trigger save when debounced content changes
     useEffect(() => {
@@ -322,7 +344,10 @@ const NoteEditor = forwardRef<NoteEditorRef, {
             // We'll set status to saved after a short delay to simulate completion or just assume success.
             // Better: The parent component handles the "Saving..." UI based on its own state, 
             // but we want a local indicator too.
-            setTimeout(() => setSaveStatus('saved'), 1000)
+            // Only set to saved if we are still in 'saving' state (user hasn't typed more)
+            setTimeout(() => {
+                setSaveStatus(prev => prev === 'saving' ? 'saved' : prev)
+            }, 1000)
         }
     }, [debouncedContent, onSave, readOnly])
 
@@ -370,9 +395,9 @@ const NoteEditor = forwardRef<NoteEditorRef, {
     }, [editor, readOnly])
 
     return (
-        <div className={`border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-950 ${readOnly ? 'border-transparent bg-transparent' : ''} relative`}>
+        <div className={`relative w-full h-full min-h-[calc(100vh-200px)] ${readOnly ? '' : ''}`}>
             {!readOnly && (
-                <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1 pointer-events-none">
+                <div className="absolute top-0 right-0 z-10 flex flex-col items-end gap-2 pointer-events-none">
                     {hasLocalDraft && (
                         <button
                             onClick={() => {
@@ -388,15 +413,14 @@ const NoteEditor = forwardRef<NoteEditorRef, {
                             Restore Backup
                         </button>
                     )}
-                    <div className="text-[10px] uppercase tracking-wider font-medium text-zinc-400 bg-white/50 dark:bg-zinc-950/50 px-2 py-1 rounded backdrop-blur-md border border-zinc-100 dark:border-zinc-800/50 shadow-sm">
-                        {saveStatus === 'saved' && 'Saved'}
-                        {saveStatus === 'saving' && 'Syncing...'}
-                        {saveStatus === 'local' && 'Local'}
-                        {saveStatus === 'unsaved' && 'Unsaved'}
+                    <div className="text-[10px] uppercase tracking-wider font-medium text-zinc-400 px-2 py-1 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm rounded-md border border-zinc-100 dark:border-zinc-800 shadow-sm">
+                        {saveStatus === 'saved' && <span className="opacity-50">Saved</span>}
+                        {saveStatus === 'saving' && <span className="animate-pulse">Saving...</span>}
+                        {saveStatus === 'unsaved' && <span className="text-amber-500">Saving...</span>}
                     </div>
                 </div>
             )}
-            <EditorContent editor={editor} />
+            <EditorContent editor={editor} className="h-full" />
         </div>
     )
 })

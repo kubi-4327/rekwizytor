@@ -147,7 +147,7 @@ export function ExportButton({ items }: ExportButtonProps) {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 disabled={isExporting}
-                className="inline-flex items-center justify-center rounded-md border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-md border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50 sm:min-w-[140px]"
             >
                 {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                 <span className="hidden sm:inline">{t('export')}</span>

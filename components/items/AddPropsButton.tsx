@@ -27,7 +27,7 @@ export function AddPropsButton() {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="inline-flex items-center justify-center rounded-md bg-action-primary px-4 py-2 text-sm font-medium text-white hover:bg-action-hover focus:outline-none focus:ring-2 focus:ring-action-primary focus:ring-offset-2 focus:ring-offset-neutral-900 transition-colors"
+                className="inline-flex items-center justify-center rounded-md bg-action-primary px-4 py-2 text-sm font-medium text-white hover:bg-action-hover focus:outline-none focus:ring-2 focus:ring-action-primary focus:ring-offset-2 focus:ring-offset-neutral-900 transition-colors sm:min-w-[140px] border border-transparent"
             >
                 <Plus className="mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">{t('addItem')}</span>

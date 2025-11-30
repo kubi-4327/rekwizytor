@@ -12,7 +12,7 @@ interface Profile {
     role: 'admin' | 'user' | 'manager'
     status: 'pending' | 'approved' | 'rejected'
     created_at?: string
-    email?: string // We might not have email in profile, but let's see if we can get it or just use name
+    email?: string | null
 }
 
 interface UsersListProps {
@@ -35,6 +35,7 @@ export function UsersList({ initialProfiles }: UsersListProps) {
 
         if (!error) {
             setProfiles(profiles.map(p => p.id === id ? { ...p, status: newStatus } : p))
+
             router.refresh()
         }
         setLoading(null)

@@ -42,10 +42,10 @@ export default async function PerformancesPage() {
                     <ExportAllScheduleButton scheduledShows={allScheduledShows || []} />
                     <Link
                         href="/performances/new"
-                        className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-neutral-900 w-full sm:w-auto"
+                        className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-neutral-900 sm:w-auto sm:min-w-[140px] border border-transparent"
                     >
                         <Plus className="mr-2 h-4 w-4" />
-                        {t('addProduction')}
+                        <span className="hidden sm:inline">{t('addProduction')}</span>
                     </Link>
                 </div>
             </div>

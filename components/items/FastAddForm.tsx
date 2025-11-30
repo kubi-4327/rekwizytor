@@ -86,6 +86,9 @@ export function FastAddForm({ locations, performances }: Props) {
         })
     }
 
+    const [processedCount, setProcessedCount] = useState(0)
+    const [failedCount, setFailedCount] = useState(0)
+
     const handleSubmit = async () => {
         if (processedImages.length === 0) return
 
@@ -99,26 +102,55 @@ export function FastAddForm({ locations, performances }: Props) {
         }
 
         setIsProcessing(true)
+        setProcessedCount(0)
+        setFailedCount(0)
+
+        const imagesToProcess = [...processedImages]
+        const successfulIndices: number[] = []
+        let currentFailures = 0
+
         try {
-            const formData = new FormData()
-            processedImages.forEach(({ file, thumbnail }) => {
+            for (let i = 0; i < imagesToProcess.length; i++) {
+                const { file, thumbnail } = imagesToProcess[i]
+                const formData = new FormData()
                 formData.append('images', file)
                 formData.append('thumbnails', thumbnail)
-            })
 
-            if (assignmentType === 'location') {
-                formData.append('locationId', locationId)
-            } else {
-                formData.append('performanceId', performanceId)
+                if (assignmentType === 'location') {
+                    formData.append('locationId', locationId)
+                } else {
+                    formData.append('performanceId', performanceId)
+                }
+
+                try {
+                    const result = await uploadAndAnalyzeImages(formData)
+                    if (result && result.count > 0) {
+                        successfulIndices.push(i)
+                    } else {
+                        throw new Error('No items created')
+                    }
+                } catch (error) {
+                    console.error('Error processing image:', i, error)
+                    currentFailures++
+                }
+
+                setProcessedCount(prev => prev + 1)
+                setFailedCount(currentFailures)
             }
 
-            await uploadAndAnalyzeImages(formData)
+            // Remove successful images from the list
+            setProcessedImages(prev => prev.filter((_, index) => !successfulIndices.includes(index)))
 
-            router.push('/items/review')
+            if (currentFailures > 0) {
+                alert(`Processed ${successfulIndices.length} images. Failed to process ${currentFailures} images. Please try the remaining ones again.`)
+                setIsProcessing(false)
+            } else {
+                router.push('/items/review')
+            }
+
         } catch (error) {
-            console.error('Error processing images:', error)
-            alert('Failed to process images. Please try again.')
-        } finally {
+            console.error('Critical error in submission:', error)
+            alert('A critical error occurred. Please try again.')
             setIsProcessing(false)
         }
     }
@@ -264,7 +296,7 @@ export function FastAddForm({ locations, performances }: Props) {
             )}
 
             {/* Action Button */}
-            <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 p-4 bg-neutral-950 border-t border-neutral-900 md:static md:bg-transparent md:border-0 md:p-0 z-40">
+            <div className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-0 right-0 p-4 bg-neutral-950 border-t border-neutral-900 md:static md:bg-transparent md:border-0 md:p-0 z-30">
                 <button
                     onClick={handleSubmit}
                     disabled={isProcessing || processedImages.length === 0 || (!locationId && !performanceId)}
@@ -273,7 +305,7 @@ export function FastAddForm({ locations, performances }: Props) {
                     {isProcessing ? (
                         <>
                             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                            Processing {processedImages.length} items...
+                            Processing {Math.min(processedCount + 1, processedImages.length)}/{processedImages.length}...
                         </>
                     ) : (
                         `Process ${processedImages.length > 0 ? processedImages.length : ''} Items`
@@ -282,13 +314,15 @@ export function FastAddForm({ locations, performances }: Props) {
             </div>
 
             {/* Spacer for fixed bottom button on mobile */}
-            <div className="h-24 md:hidden" />
+            <div className="h-32 md:hidden" />
 
             {isCameraOpen && (
-                <CameraCapture
-                    onCapture={(file) => processFiles([file])}
-                    onClose={() => setIsCameraOpen(false)}
-                />
+                <div className="relative z-[100]">
+                    <CameraCapture
+                        onCapture={(file) => processFiles([file])}
+                        onClose={() => setIsCameraOpen(false)}
+                    />
+                </div>
             )}
         </div>
     )
