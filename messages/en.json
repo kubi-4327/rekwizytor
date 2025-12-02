@@ -1,25 +1,54 @@
 {
     "Settings": {
         "title": "Settings",
-        "description": "Manage your account and application preferences",
+        "description": "Manage your account and application preferences.",
         "language": "Language",
-        "theme": "Theme"
+        "structureTitle": "Structure Management",
+        "structureDescription": "Manage locations and item groups",
+        "manageStructure": "Manage structure",
+        "statsTitle": "AI Statistics",
+        "statsDescription": "Monitor token usage and costs",
+        "viewStats": "View statistics",
+        "UserApproval": {
+            "title": "Pending Users",
+            "unknownUser": "Unknown User",
+            "approve": "Approve",
+            "reject": "Reject",
+            "errorUpdating": "An error occurred while updating status.",
+            "confirmApproveTitle": "Approve User",
+            "confirmRejectTitle": "Reject User",
+            "confirmApproveDesc": "Are you sure you want to approve {name}? They will have full access to the application.",
+            "confirmRejectDesc": "Are you sure you want to reject {name}? Their account will be permanently deleted.",
+            "securityWarningTitle": "Security Warning",
+            "securityWarningDesc": "If you are not 100% sure who this is, ABSOLUTELY DO NOT APPROVE this user.",
+            "accessGrant": "User will get access to",
+            "accessInventory": "View and edit inventory",
+            "accessPerformances": "Manage performances",
+            "accessChecklists": "Checklists",
+            "rejectWarning": "This action is irreversible. The user account will be deleted.",
+            "confirm": "Confirm",
+            "cancel": "Cancel"
+        }
     },
     "Common": {
         "save": "Save",
         "cancel": "Cancel"
     },
     "Dashboard": {
-        "welcome": "Welcome back, {name}",
-        "subtitle": "Manage your theater props, performances, and checklists.",
+        "title": "Dashboard",
+        "subtitle": "Welcome to Rekwizytor. What would you like to do today?",
         "propsInventory": "Props Inventory",
-        "propsInventoryDesc": "Browse, add, and organize your theater props collection.",
+        "propsInventoryDesc": "Browse, add, and manage your entire collection of props.",
         "productions": "Productions",
-        "productionsDesc": "Manage shows, assign props, and track history.",
+        "productionsDesc": "Manage prop lists for specific productions and shows.",
         "checklists": "Checklists",
-        "checklistsDesc": "Live tracking for active shows and rehearsals.",
+        "checklistsDesc": "Track prop preparation for upcoming events.",
         "recentActivity": "Recent Activity",
-        "noActivity": "No recent activity found."
+        "noActivity": "No recent activity to show.",
+        "PendingAlert": {
+            "title": "Pending Users",
+            "message": "{count, plural, one {One user is waiting for approval.} other {# users are waiting for approval.}}"
+        }
     },
     "Navigation": {
         "items": "Items",
@@ -31,6 +60,7 @@
         "signOut": "Sign out",
         "lists": "Lists",
         "notes": "Notes",
+        "groups": "Groups",
         "more": "More"
     },
     "Groups": {
@@ -294,7 +324,17 @@
         "dontHaveAccount": "Don't have an account? Sign up",
         "checkEmail": "Check your email for the confirmation link.",
         "name": "Name",
-        "passwordTooWeak": "Password is too weak. It must be at least 8 characters long and contain uppercase letters, numbers, and special characters."
+        "passwordTooWeak": "Password is too weak. It must be at least 8 characters long and contain uppercase letters, numbers, and special characters.",
+        "forgotPassword": "Forgot password?",
+        "resetPassword": "Reset Password",
+        "sendResetLink": "Send Reset Link",
+        "backToLogin": "Back to Login",
+        "emailSent": "Check your email for the reset link.",
+        "updatePassword": "Update Password",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm Password",
+        "passwordUpdated": "Password updated successfully.",
+        "passwordsDoNotMatch": "Passwords do not match."
     },
     "ItemsList": {
         "searchPlaceholderSmart": "Describe what you need (e.g. 'vintage suitcase')...",
@@ -514,11 +554,12 @@
         "security": "Security & Session",
         "signOut": "Sign Out",
         "signOutDescription": "End your current session",
-        "signingOut": "Signing out..."
+        "signingOut": "Signing out...",
+        "changePassword": "Change Password"
     },
     "Waiting": {
         "title": "Account Pending Approval",
-        "description": "Your account has been created and is waiting for administrator approval. You will be notified once your access is granted.",
+        "description": "Your account is waiting for approval.",
         "signOut": "Sign Out"
     },
     "Rejected": {
@@ -554,6 +595,85 @@
             "pending": "Pending",
             "approved": "Approved",
             "rejected": "Rejected"
+        }
+    },
+    "CreateItemForm": {
+        "itemName": "Item Name",
+        "itemNamePlaceholder": "e.g. Vintage Lamp",
+        "group": "Group",
+        "selectGroup": "Select a group...",
+        "location": "Location",
+        "selectLocation": "Select a location...",
+        "notes": "Notes",
+        "notesPlaceholder": "Any specific details about the item...",
+        "image": "Image",
+        "imageHelp": "JPG, PNG, GIF up to 5MB",
+        "saveAsDraft": "Save as Draft",
+        "skipsAI": "Skips AI generation",
+        "cancel": "Cancel",
+        "saveItem": "Save Item",
+        "unknownError": "An unknown error occurred"
+    },
+    "NotesList": {
+        "title": "Notes",
+        "subtitle": "Manage your personal and performance-related notes",
+        "newNote": "New Note",
+        "searchPlaceholder": "Search notes...",
+        "loading": "Loading notes...",
+        "noNotes": "No notes yet.",
+        "generalNotes": "General Notes",
+        "master": "Master",
+        "noContent": "No content",
+        "deleteConfirm": "Are you sure you want to delete this note?"
+    },
+    "NoteDetail": {
+        "invalidId": "Invalid ID",
+        "privateNote": "Private Note",
+        "untitledNote": "Untitled Note",
+        "copyContent": "Copy content",
+        "exportMarkdown": "Export as Markdown",
+        "exportTxt": "Export as TXT",
+        "exportJson": "Export as JSON",
+        "copied": "Copied to clipboard! You can now paste into Notion, Evernote, etc.",
+        "loading": "Loading..."
+    },
+    "FastAddForm": {
+        "sessionSettings": "Session Settings",
+        "location": "Location",
+        "performance": "Performance",
+        "defaultLocation": "Default Location",
+        "selectLocation": "Select Location...",
+        "selectPerformance": "Select Performance...",
+        "takePhotos": "Take Photos",
+        "useCamera": "Use Camera",
+        "uploadFiles": "Upload Files",
+        "fromDevice": "From Device",
+        "processItems": "Process {count} Items",
+        "processing": "Processing {current}/{total}..."
+    },
+    "Structure": {
+        "title": "Manage Structure",
+        "subtitle": "Organize locations and groups with drag and drop.",
+        "backToItems": "Back to Inventory",
+        "locations": "Locations",
+        "groups": "Groups",
+        "addLocation": "Add Location",
+        "addGroup": "Add Group",
+        "edit": "Edit",
+        "delete": "Delete",
+        "deleteConfirm": "Are you sure you want to delete this item?",
+        "unassigned": "Unassigned",
+        "name": "Name",
+        "namePlaceholder": "Enter name...",
+        "type": "Type",
+        "create": "Create",
+        "cancel": "Cancel",
+        "dropHere": "Drop here",
+        "types": {
+            "main_storage": "Main Storage",
+            "backstage": "Backstage",
+            "stage": "Stage",
+            "other": "Other"
         }
     }
 }

@@ -5,6 +5,8 @@ import { getTranslations } from 'next-intl/server'
 
 import { Greeting } from '@/components/dashboard/Greeting'
 
+import { PendingUsersAlert } from '@/components/dashboard/PendingUsersAlert'
+
 export default async function Home() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -24,6 +26,7 @@ export default async function Home() {
 
   return (
     <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
+      <PendingUsersAlert />
       <div className="space-y-2">
         <Greeting name={displayName} />
         <p className="text-neutral-400">

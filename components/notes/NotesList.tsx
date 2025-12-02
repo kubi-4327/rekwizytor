@@ -8,8 +8,10 @@ import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import { SearchInput } from '@/components/ui/SearchInput'
 import { extractTextFromContent } from './utils'
+import { useTranslations } from 'next-intl'
 
 export default function NotesList({ performanceId }: { performanceId?: string }) {
+    const t = useTranslations('NotesList')
     const [notes, setNotes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
@@ -70,7 +72,7 @@ export default function NotesList({ performanceId }: { performanceId?: string })
     }
 
     const deleteNote = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this note?')) return
+        if (!confirm(t('deleteConfirm'))) return
         await supabase.from('notes').delete().eq('id', id)
         setNotes(notes.filter(n => n.id !== id))
     }
@@ -94,7 +96,7 @@ export default function NotesList({ performanceId }: { performanceId?: string })
         if (!acc[key]) {
             acc[key] = {
                 id: key,
-                title: note.performances?.title || 'General Notes',
+                title: note.performances?.title || t('generalNotes'),
                 notes: []
             }
         }
@@ -123,22 +125,22 @@ export default function NotesList({ performanceId }: { performanceId?: string })
             {/* Header */}
             <div className="flex justify-between items-start">
                 <div>
-                    <h1 className="text-xl font-bold text-white">Notes</h1>
-                    <p className="text-neutral-400 text-xs sm:text-sm mt-1">Manage your personal and performance-related notes</p>
+                    <h1 className="text-xl font-bold text-white">{t('title')}</h1>
+                    <p className="text-neutral-400 text-xs sm:text-sm mt-1">{t('subtitle')}</p>
                 </div>
                 <button
                     onClick={createNote}
                     className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-md hover:bg-neutral-200 transition-colors font-medium text-sm sm:min-w-[140px] border border-transparent justify-center"
                 >
                     <Plus size={16} />
-                    <span className="hidden sm:inline">New Note</span>
+                    <span className="hidden sm:inline">{t('newNote')}</span>
                 </button>
             </div>
 
             {/* Search Section */}
             <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-2 sm:p-4 max-w-full overflow-hidden">
                 <SearchInput
-                    placeholder="Search notes..."
+                    placeholder={t('searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="bg-neutral-900 border-neutral-700 w-full"
@@ -146,9 +148,9 @@ export default function NotesList({ performanceId }: { performanceId?: string })
             </div>
 
             {loading ? (
-                <div className="text-center py-10 text-zinc-500">Loading notes...</div>
+                <div className="text-center py-10 text-zinc-500">{t('loading')}</div>
             ) : notes.length === 0 ? (
-                <div className="text-center py-10 text-zinc-500">No notes yet.</div>
+                <div className="text-center py-10 text-zinc-500">{t('noNotes')}</div>
             ) : (
                 <div className="space-y-6">
                     {sortedGroups.map((group: any) => (
@@ -199,12 +201,12 @@ export default function NotesList({ performanceId }: { performanceId?: string })
                                                                     color: perfColor,
                                                                 } : undefined}
                                                             >
-                                                                Master
+                                                                {t('master')}
                                                             </span>
                                                         )}
                                                     </div>
                                                     <p className="text-sm text-neutral-400 line-clamp-2 leading-relaxed break-words w-full">
-                                                        {extractTextFromContent(note.content) || <span className="italic opacity-30">No content</span>}
+                                                        {extractTextFromContent(note.content) || <span className="italic opacity-30">{t('noContent')}</span>}
                                                     </p>
                                                     <p className="text-xs text-neutral-600 mt-3 font-medium">
                                                         {format(new Date(note.created_at), 'MMM d, yyyy • HH:mm')}

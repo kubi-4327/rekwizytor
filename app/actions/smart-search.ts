@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { generateEmbedding } from '@/utils/embeddings'
 import { geminiFlash } from '@/utils/gemini'
 import { TaskType } from '@google/generative-ai'
+import { sanitizeAIInput, validateAIResponse, SmartSearchResultSchema, sanitizeAIOutput } from '@/utils/ai-security'
 
 type AIResultItem = {
     id: string
@@ -15,8 +16,11 @@ type AIResultItem = {
 export async function smartSearch(query: string) {
     const supabase = await createClient()
 
+    // 1. SANITIZE INPUT
+    const sanitizedQuery = sanitizeAIInput(query, 500)
+
     // 1. Generate embedding for the query
-    const queryEmbedding = await generateEmbedding(query, TaskType.RETRIEVAL_QUERY)
+    const queryEmbedding = await generateEmbedding(sanitizedQuery, TaskType.RETRIEVAL_QUERY)
 
     // 1.5 Find matching groups
     const { data: groups } = await supabase
@@ -25,8 +29,8 @@ export async function smartSearch(query: string) {
 
     // Simple string match for UI chips
     const matchedGroups = groups?.filter(g =>
-        g.name.toLowerCase().includes(query.toLowerCase()) ||
-        query.toLowerCase().includes(g.name.toLowerCase())
+        g.name.toLowerCase().includes(sanitizedQuery.toLowerCase()) ||
+        sanitizedQuery.toLowerCase().includes(g.name.toLowerCase())
     ).slice(0, 3) || []
 
     // We pass ALL groups to the AI so it can semantically match (e.g. "syringe" -> "Medical")
@@ -45,7 +49,7 @@ export async function smartSearch(query: string) {
         return { error: 'Search failed' }
     }
 
-    console.log(`Found ${matches?.length || 0} matches for query: "${query}"`)
+    console.log(`Found ${matches?.length || 0} matches for query: "${sanitizedQuery}"`)
 
     if ((!matches || matches.length === 0) && availableGroups.length === 0) {
         return { message: "Nie znaleziono pasujących przedmiotów ani grup." }
@@ -69,7 +73,7 @@ export async function smartSearch(query: string) {
     // 3. Use AI Agent to refine and explain results
     // Use ai_description if available, otherwise fallback to notes/name
     const prompt = `
-    Użytkownik szuka: "${query}"
+    Użytkownik szuka: "${sanitizedQuery}"
 
     Znaleziono te potencjalne pasujące przedmioty w magazynie:
     ${richMatches.map((m) => `- [ID: ${m.id}] ${m.name} | Cechy: ${m.ai_description || m.notes || ''} (Podobieństwo: ${(m.similarity * 100).toFixed(0)}%)`).join('\n') || 'Brak przedmiotów'}
@@ -98,7 +102,7 @@ export async function smartSearch(query: string) {
     Output ONLY the JSON object.
     `
 
-    let enrichedResults = []
+    let enrichedResults: any[] = []
     let suggestion = null
 
     if (richMatches.length > 0) {
@@ -116,22 +120,25 @@ export async function smartSearch(query: string) {
                     tokens_output: usage.candidatesTokenCount,
                     total_tokens: usage.totalTokenCount,
                     model_name: 'gemini-2.0-flash',
-                    details: { query }
+                    details: { query: sanitizedQuery }
                 })
             }
 
             const jsonString = responseText.replace(/```json\n?|\n?```/g, '').trim()
-            const aiResponse = JSON.parse(jsonString)
+            const rawResponse = JSON.parse(jsonString)
 
-            suggestion = aiResponse.suggestion
+            // 2. VALIDATE OUTPUT
+            const aiResponse = validateAIResponse(rawResponse, SmartSearchResultSchema)
+
+            suggestion = aiResponse.suggestion ? sanitizeAIOutput(aiResponse.suggestion) : null
 
             // Merge AI explanation with original item data
-            enrichedResults = aiResponse.results.map((aiItem: AIResultItem) => {
+            enrichedResults = aiResponse.results.map((aiItem) => {
                 const originalItem = richMatches.find((m) => m.id === aiItem.id)
                 if (!originalItem) return null
                 return {
                     ...originalItem,
-                    explanation: aiItem.explanation,
+                    explanation: sanitizeAIOutput(aiItem.explanation), // 3. SANITIZE OUTPUT TEXT
                     matchType: aiItem.matchType
                 }
             }).filter(Boolean)

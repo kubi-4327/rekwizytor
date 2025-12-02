@@ -68,28 +68,36 @@ export async function updateSession(request: NextRequest, response?: NextRespons
 
     if (user && !isAuthPage) {
         // Check user status
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
             .from('profiles')
             .select('status')
             .eq('id', user.id)
             .single()
 
+        console.log('[Middleware Debug] User ID:', user.id)
+        console.log('[Middleware Debug] Profile fetch result:', profile)
+        console.log('[Middleware Debug] Profile fetch error:', error)
+
         const isWaitingPage = path.includes('/waiting')
         const isRejectedPage = path.includes('/rejected')
 
-        if (profile?.status === 'pending' && !isWaitingPage) {
+        // If no profile found, treat as pending (safe default)
+        const status = profile?.status || 'pending'
+        console.log('[Middleware Debug] Determined status:', status)
+
+        if (status === 'pending' && !isWaitingPage) {
             const url = request.nextUrl.clone()
             url.pathname = '/waiting'
             return NextResponse.redirect(url)
         }
 
-        if (profile?.status === 'rejected' && !isRejectedPage) {
+        if (status === 'rejected' && !isRejectedPage) {
             const url = request.nextUrl.clone()
             url.pathname = '/rejected'
             return NextResponse.redirect(url)
         }
 
-        if (profile?.status === 'approved' && (isWaitingPage || isRejectedPage)) {
+        if (status === 'approved' && (isWaitingPage || isRejectedPage)) {
             const url = request.nextUrl.clone()
             url.pathname = '/'
             return NextResponse.redirect(url)

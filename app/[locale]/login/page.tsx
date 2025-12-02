@@ -161,6 +161,11 @@ export default function LoginPage() {
                             >
                                 {t('password')}
                             </label>
+                            <div className="flex justify-end">
+                                <a href="/forgot-password" className="text-xs text-neutral-400 hover:text-white transition-colors">
+                                    {t('forgotPassword')}
+                                </a>
+                            </div>
                             <input
                                 id="password"
                                 name="password"

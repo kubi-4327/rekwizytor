@@ -271,13 +271,7 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                 .insert(newAssignmentsData)
                 .select(`
           *,
-          items (
-            id,
-            name,
-            image_url,
-            notes,
-            performance_status
-          )
+          items (*)
         `)
 
             if (error) throw error
@@ -673,7 +667,7 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                 />
 
                 <ItemDetailsDialog
-                    item={selectedDetailItem}
+                    item={selectedDetailItem as Database['public']['Tables']['items']['Row'] | null}
                     isOpen={isDetailsOpen}
                     onClose={() => setIsDetailsOpen(false)}
                     onEdit={() => { }} // Read-only or implement edit if needed

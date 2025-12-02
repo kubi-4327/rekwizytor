@@ -1,8 +1,8 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { SettingsForm } from '@/components/settings/SettingsForm'
-import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { getTranslations } from 'next-intl/server';
+import { UserApprovalList } from '@/components/settings/UserApprovalList'
 
 export default async function SettingsPage() {
     const supabase = await createClient()
@@ -31,12 +31,9 @@ export default async function SettingsPage() {
                 </p>
             </div>
 
-            <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-6">
-                <h2 className="text-lg font-medium text-white mb-4">{t('language')}</h2>
-                <LanguageSwitcher />
-            </div>
+            <UserApprovalList />
 
-            <SettingsForm user={{ email: user.email, ...profile }} />
+            <SettingsForm user={{ ...profile, email: user.email || undefined }} />
         </div>
     )
 }

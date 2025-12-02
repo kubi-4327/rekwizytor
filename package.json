@@ -26,7 +26,9 @@
     "clsx": "^2.1.1",
     "colorthief": "^2.6.0",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
     "framer-motion": "^12.23.24",
+    "isomorphic-dompurify": "^2.33.0",
     "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.554.0",
@@ -39,7 +41,8 @@
     "react-to-print": "^3.2.0",
     "tailwind-merge": "^3.4.0",
     "tippy.js": "^6.3.7",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

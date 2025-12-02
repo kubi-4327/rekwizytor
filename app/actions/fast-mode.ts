@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 import { geminiFlash } from '@/utils/gemini'
+import { sanitizeAIInput, validateAIResponse, FastModeSchema, sanitizeAIOutput } from '@/utils/ai-security'
 import { generateEmbedding } from '@/utils/embeddings'
 import { TaskType } from '@google/generative-ai'
 import { Database } from '@/types/supabase'
@@ -67,11 +68,15 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
             const arrayBuffer = await image.arrayBuffer()
             const base64Data = Buffer.from(arrayBuffer).toString('base64')
 
+            // 1. SANITIZE INPUTS
+            // fileName is used in logging, safe to keep as is or sanitize if displayed
+            const safeGroups = sanitizeAIInput(groupsList, 1000)
+
             const prompt = `
             Przeanalizuj to zdjęcie rekwizytu teatralnego.
             Zidentyfikuj główny obiekt. Zignoruj tło, jeśli to możliwe.
             
-            Dostępne kategorie (grupy): ${groupsList}
+            Dostępne kategorie (grupy): ${safeGroups}
 
             Zwróć obiekt JSON z następującymi polami:
             - name: Krótka, opisowa nazwa po polsku (np. "Stara brązowa walizka")
@@ -111,7 +116,21 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
             const responseText = result.response.text()
             // Clean up code blocks if present
             const jsonString = responseText.replace(/```json\n?|\n?```/g, '').trim()
-            const analysis = JSON.parse(jsonString)
+            const rawAnalysis = JSON.parse(jsonString)
+
+            // 2. VALIDATE OUTPUT
+            const validatedAnalysis = validateAIResponse(rawAnalysis, FastModeSchema)
+
+            // 3. SANITIZE OUTPUT TEXT
+            const analysis = {
+                ...validatedAnalysis,
+                name: sanitizeAIOutput(validatedAnalysis.name),
+                description: sanitizeAIOutput(validatedAnalysis.description),
+                ai_description: sanitizeAIOutput(validatedAnalysis.ai_description),
+                category: validatedAnalysis.category ? sanitizeAIOutput(validatedAnalysis.category) : undefined,
+                tags: validatedAnalysis.tags.map(t => sanitizeAIOutput(t)),
+                // attributes are JSON
+            }
 
             if (analysis.confidence < 0.6) {
                 console.warn(`Low confidence (${analysis.confidence}) for image: ${fileName}`)
@@ -120,14 +139,27 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
             // Find matching group
             let matchedGroupId = groupId
             if (!matchedGroupId && analysis.category && groups) {
-                const exactMatch = groups.find(g => g.name.toLowerCase() === analysis.category.toLowerCase())
-                if (exactMatch) {
-                    matchedGroupId = exactMatch.id
+                let matchedGroup = groups.find(g => g.name.toLowerCase() === (analysis.category?.toLowerCase() || ''))
+                if (matchedGroup) {
+                    matchedGroupId = matchedGroup.id
                 } else {
                     // Simple fuzzy match (case insensitive contains)
-                    const fuzzyMatch = groups.find(g => g.name.toLowerCase().includes(analysis.category.toLowerCase()) || analysis.category.toLowerCase().includes(g.name.toLowerCase()))
+                    const fuzzyMatch = groups.find(g => g.name.toLowerCase().includes(analysis.category?.toLowerCase() || '') || (analysis.category?.toLowerCase() || '').includes(g.name.toLowerCase()))
                     if (fuzzyMatch) {
                         matchedGroupId = fuzzyMatch.id
+                        matchedGroup = fuzzyMatch // Assign fuzzy match to matchedGroup for later use
+                    }
+                }
+
+                // If no group was found, create a new one
+                if (!matchedGroup && analysis.category) {
+                    const { data: newGroup } = await supabase
+                        .from('groups')
+                        .insert({ name: analysis.category })
+                        .select()
+                        .single()
+                    if (newGroup) {
+                        matchedGroupId = newGroup.id
                     }
                 }
             }
@@ -149,7 +181,7 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
                     status: 'draft' as Database['public']['Enums']['item_status_enum'],
                     notes: analysis.description,
                     ai_description: analysis.ai_description,
-                    attributes: analysis.attributes || {},
+                    attributes: analysis.attributes as any || {},
                     embedding: JSON.stringify(embedding),
                     performance_status: performanceId ? 'active' : 'unassigned'
                 })

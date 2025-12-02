@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Camera, Upload, X, Loader2, MapPin, Sparkles } from 'lucide-react'
+import { Camera, Upload, X, Loader2, MapPin, Layers } from 'lucide-react'
 import NextImage from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { uploadAndAnalyzeImages } from '@/app/actions/fast-mode'
 import { compressImage, createThumbnail } from '@/utils/image-processing'
 import { CameraCapture } from './CameraCapture'
+import { useTranslations } from 'next-intl'
 
 type Location = {
     id: string
@@ -30,6 +31,7 @@ type Props = {
 }
 
 export function FastAddForm({ locations, performances }: Props) {
+    const t = useTranslations('FastAddForm')
     const searchParams = useSearchParams()
     const initialPerformanceId = searchParams.get('performanceId') || ''
 
@@ -93,11 +95,11 @@ export function FastAddForm({ locations, performances }: Props) {
         if (processedImages.length === 0) return
 
         if (assignmentType === 'location' && !locationId) {
-            alert('Please select a location')
+            alert(t('selectLocation'))
             return
         }
         if (assignmentType === 'performance' && !performanceId) {
-            alert('Please select a performance')
+            alert(t('selectPerformance'))
             return
         }
 
@@ -159,7 +161,7 @@ export function FastAddForm({ locations, performances }: Props) {
         <div className="space-y-6">
             {/* Session Settings */}
             <div className="bg-neutral-900/50 p-4 rounded-xl border border-neutral-800 space-y-4">
-                <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">Session Settings</h2>
+                <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">{t('sessionSettings')}</h2>
 
                 <div className="space-y-4">
                     <div className="flex gap-4 p-1 bg-neutral-950 rounded-lg border border-neutral-800">
@@ -171,7 +173,7 @@ export function FastAddForm({ locations, performances }: Props) {
                                 : 'text-neutral-400 hover:text-white'
                                 }`}
                         >
-                            Location
+                            {t('location')}
                         </button>
                         <button
                             type="button"
@@ -181,7 +183,7 @@ export function FastAddForm({ locations, performances }: Props) {
                                 : 'text-neutral-400 hover:text-white'
                                 }`}
                         >
-                            Performance
+                            {t('performance')}
                         </button>
                     </div>
 
@@ -189,14 +191,14 @@ export function FastAddForm({ locations, performances }: Props) {
                         <div>
                             <label className="block text-sm font-medium text-white mb-2 flex items-center">
                                 <MapPin className="w-4 h-4 mr-2 text-burgundy-light" />
-                                Default Location <span className="text-red-400">*</span>
+                                {t('defaultLocation')} <span className="text-red-400">*</span>
                             </label>
                             <select
                                 value={locationId}
                                 onChange={(e) => setLocationId(e.target.value)}
                                 className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-3 text-white focus:border-burgundy-main focus:outline-none"
                             >
-                                <option value="">Select Location...</option>
+                                <option value="">{t('selectLocation')}</option>
                                 {locations.map(loc => (
                                     <option key={loc.id} value={loc.id}>{loc.name}</option>
                                 ))}
@@ -205,15 +207,15 @@ export function FastAddForm({ locations, performances }: Props) {
                     ) : (
                         <div>
                             <label className="block text-sm font-medium text-white mb-2 flex items-center">
-                                <Sparkles className="w-4 h-4 mr-2 text-purple-400" />
-                                Performance <span className="text-red-400">*</span>
+                                <Layers className="w-4 h-4 mr-2 text-purple-400" />
+                                {t('performance')} <span className="text-red-400">*</span>
                             </label>
                             <select
                                 value={performanceId}
                                 onChange={(e) => setPerformanceId(e.target.value)}
                                 className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-3 text-white focus:border-burgundy-main focus:outline-none"
                             >
-                                <option value="">Select Performance...</option>
+                                <option value="">{t('selectPerformance')}</option>
                                 {performances.map(perf => (
                                     <option key={perf.id} value={perf.id}>{perf.title}</option>
                                 ))}
@@ -233,8 +235,8 @@ export function FastAddForm({ locations, performances }: Props) {
                         <div className="p-3 bg-neutral-700 rounded-full mb-3 group-hover:bg-neutral-600 transition-colors">
                             <Camera className="w-6 h-6 text-white" />
                         </div>
-                        <span className="text-sm text-neutral-300 font-medium">Take Photos</span>
-                        <span className="text-xs text-neutral-500 mt-1">Use Camera</span>
+                        <span className="text-sm text-neutral-300 font-medium">{t('takePhotos')}</span>
+                        <span className="text-xs text-neutral-500 mt-1">{t('useCamera')}</span>
                     </button>
                     <button
                         onClick={() => fileInputRef.current?.click()}
@@ -243,8 +245,8 @@ export function FastAddForm({ locations, performances }: Props) {
                         <div className="p-3 bg-neutral-700 rounded-full mb-3 group-hover:bg-neutral-600 transition-colors">
                             <Upload className="w-6 h-6 text-white" />
                         </div>
-                        <span className="text-sm text-neutral-300 font-medium">Upload Files</span>
-                        <span className="text-xs text-neutral-500 mt-1">From Device</span>
+                        <span className="text-sm text-neutral-300 font-medium">{t('uploadFiles')}</span>
+                        <span className="text-xs text-neutral-500 mt-1">{t('fromDevice')}</span>
                     </button>
                 </div>
 
@@ -305,10 +307,10 @@ export function FastAddForm({ locations, performances }: Props) {
                     {isProcessing ? (
                         <>
                             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                            Processing {Math.min(processedCount + 1, processedImages.length)}/{processedImages.length}...
+                            {t('processing', { current: processedCount + 1, total: processedImages.length })}
                         </>
                     ) : (
-                        `Process ${processedImages.length > 0 ? processedImages.length : ''} Items`
+                        t('processItems', { count: processedImages.length > 0 ? processedImages.length : '' })
                     )}
                 </button>
             </div>

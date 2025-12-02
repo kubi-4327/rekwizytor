@@ -3,9 +3,11 @@
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { LogOut, User, Moon, Bell, Shield, Monitor, Clock } from 'lucide-react'
+import { LogOut, User, Globe, Shield, LayoutGrid, BarChart, Settings as SettingsIcon, Clock } from 'lucide-react'
 import { useTimeFormat } from '@/hooks/useTimeFormat'
 import { useTranslations } from 'next-intl'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
+import Link from 'next/link'
 
 type UserData = {
     email: string | undefined
@@ -15,6 +17,7 @@ type UserData = {
 
 export function SettingsForm({ user }: { user: UserData }) {
     const t = useTranslations('SettingsForm')
+    const tSettings = useTranslations('Settings')
     const router = useRouter()
     const supabase = createClient()
     const [loading, setLoading] = useState(false)
@@ -90,74 +93,86 @@ export function SettingsForm({ user }: { user: UserData }) {
                 </div>
             </section>
 
-            {/* Appearance Section */}
+            {/* Preferences Section */}
             <section className="space-y-4">
                 <h2 className="text-lg font-medium text-white flex items-center">
-                    <Monitor className="mr-2 h-5 w-5 text-ai-secondary" />
+                    <Globe className="mr-2 h-5 w-5 text-blue-400" />
                     {t('appearance')}
                 </h2>
-                <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6">
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-800">
-                                    <Moon className="h-5 w-5 text-neutral-400" />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-white">{t('darkMode')}</p>
-                                    <p className="text-sm text-neutral-500">{t('alwaysOn')}</p>
-                                </div>
+                <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 space-y-6">
+                    {/* Language */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-800">
+                                <Globe className="h-5 w-5 text-neutral-400" />
                             </div>
-                            <div className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-not-allowed rounded-full border-2 border-transparent bg-neutral-700 transition-colors duration-200 ease-in-out">
-                                <span className="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" />
+                            <div>
+                                <p className="font-medium text-white">{tSettings('language')}</p>
+                                <p className="text-sm text-neutral-500">Select your preferred language</p>
                             </div>
                         </div>
+                        <div className="w-40">
+                            <LanguageSwitcher />
+                        </div>
+                    </div>
 
-                        {/* Time Format Toggle */}
-                        <div className="flex items-center justify-between pt-4 border-t border-neutral-800">
-                            <div className="flex items-center space-x-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-800">
-                                    <Clock className="h-5 w-5 text-neutral-400" />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-white">{t('timeFormat')}</p>
-                                    <p className="text-sm text-neutral-500">{t('timeFormatDescription')}</p>
-                                </div>
+                    {/* Time Format */}
+                    <div className="flex items-center justify-between pt-6 border-t border-neutral-800">
+                        <div className="flex items-center space-x-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-800">
+                                <Clock className="h-5 w-5 text-neutral-400" />
                             </div>
-                            <button
-                                onClick={toggleFormat}
-                                disabled={!mounted}
-                                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ai-primary focus:ring-offset-2 focus:ring-offset-neutral-900 ${is24Hour ? 'bg-ai-primary' : 'bg-neutral-700'}`}
-                            >
-                                <span
-                                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${is24Hour ? 'translate-x-5' : 'translate-x-0'}`}
-                                />
-                            </button>
+                            <div>
+                                <p className="font-medium text-white">{t('timeFormat')}</p>
+                                <p className="text-sm text-neutral-500">{t('timeFormatDescription')}</p>
+                            </div>
                         </div>
+                        <button
+                            onClick={toggleFormat}
+                            disabled={!mounted}
+                            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ai-primary focus:ring-offset-2 focus:ring-offset-neutral-900 ${is24Hour ? 'bg-ai-primary' : 'bg-neutral-700'}`}
+                        >
+                            <span
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${is24Hour ? 'translate-x-5' : 'translate-x-0'}`}
+                            />
+                        </button>
                     </div>
                 </div>
             </section>
 
-            {/* Notifications Section (Placeholder) */}
+            {/* Workspace Management Section */}
             <section className="space-y-4">
                 <h2 className="text-lg font-medium text-white flex items-center">
-                    <Bell className="mr-2 h-5 w-5 text-yellow-400" />
-                    {t('notifications')}
+                    <LayoutGrid className="mr-2 h-5 w-5 text-purple-400" />
+                    Management
                 </h2>
-                <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6">
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between opacity-50 pointer-events-none">
-                            <div>
-                                <p className="font-medium text-white">{t('emailNotifications')}</p>
-                                <p className="text-sm text-neutral-500">{t('emailNotificationsDescription')}</p>
-                            </div>
-                            <div className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-neutral-800 transition-colors duration-200 ease-in-out">
-                                <span className="translate-x-0 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" />
-                            </div>
+                <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-base font-medium text-white">{tSettings('structureTitle')}</h3>
+                            <p className="text-sm text-neutral-400 mt-1">{tSettings('structureDescription')}</p>
                         </div>
-                        <p className="text-xs text-neutral-500 pt-2 border-t border-neutral-800">
-                            {t('notificationsComingSoon')}
-                        </p>
+                        <Link
+                            href="/items/structure"
+                            className="flex items-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors font-medium text-sm border border-neutral-700"
+                        >
+                            <SettingsIcon className="w-4 h-4" />
+                            {tSettings('manageStructure')}
+                        </Link>
+                    </div>
+
+                    <div className="border-t border-neutral-800 pt-4 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-base font-medium text-white">{tSettings('statsTitle')}</h3>
+                            <p className="text-sm text-neutral-400 mt-1">{tSettings('statsDescription')}</p>
+                        </div>
+                        <Link
+                            href="/ai-stats"
+                            className="flex items-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors font-medium text-sm border border-neutral-700"
+                        >
+                            <BarChart className="w-4 h-4" />
+                            {tSettings('viewStats')}
+                        </Link>
                     </div>
                 </div>
             </section>
@@ -168,8 +183,22 @@ export function SettingsForm({ user }: { user: UserData }) {
                     <Shield className="mr-2 h-5 w-5 text-red-400" />
                     {t('security')}
                 </h2>
-                <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6">
+                <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 space-y-4">
                     <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-base font-medium text-white">{t('changePassword')}</h3>
+                            <p className="text-sm text-neutral-500">Update your password to keep your account secure</p>
+                        </div>
+                        <Link
+                            href="/settings/password"
+                            className="flex items-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors font-medium text-sm border border-neutral-700"
+                        >
+                            <Shield className="w-4 h-4" />
+                            {t('changePassword')}
+                        </Link>
+                    </div>
+
+                    <div className="border-t border-neutral-800 pt-4 flex items-center justify-between">
                         <div>
                             <p className="font-medium text-white">{t('signOut')}</p>
                             <p className="text-sm text-neutral-500">{t('signOutDescription')}</p>

@@ -7,8 +7,10 @@ import NoteEditor, { NoteEditorRef } from '@/components/notes/NoteEditor'
 import { ArrowLeft, Share, Copy, Download, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { extractMentions } from '@/components/notes/utils'
+import { useTranslations } from 'next-intl'
 
 export default function NoteDetailPage() {
+    const t = useTranslations('NoteDetail')
     const params = useParams()
     const id = Array.isArray(params.id) ? params.id[0] : params.id
     const [note, setNote] = useState<any>(null)
@@ -20,7 +22,7 @@ export default function NoteDetailPage() {
     const router = useRouter()
     const editorRef = useRef<NoteEditorRef>(null)
 
-    if (!id) return <div>Invalid ID</div>
+    if (!id) return <div>{t('invalidId')}</div>
 
     const fetchNote = async () => {
         const { data: serverData } = await supabase.from('notes').select('*').eq('id', id).single()
@@ -189,10 +191,10 @@ export default function NoteDetailPage() {
         const text = getNoteText()
         navigator.clipboard.writeText(text)
         setShowExportMenu(false)
-        alert('Copied to clipboard! You can now paste into Notion, Evernote, etc.')
+        alert(t('copied'))
     }
 
-    if (!note) return <div className="p-6">Loading...</div>
+    if (!note) return <div className="p-6">{t('loading')}</div>
 
     return (
         <div className="p-6 w-full">
@@ -225,7 +227,7 @@ export default function NoteDetailPage() {
                                 }}
                                 className="appearance-none bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-full px-4 py-1.5 text-xs font-medium text-neutral-400 hover:text-white transition-colors cursor-pointer pr-8 focus:outline-none focus:ring-2 focus:ring-neutral-700"
                             >
-                                <option value="">Private Note</option>
+                                <option value="">{t('privateNote')}</option>
                                 {performances.map(p => (
                                     <option key={p.id} value={p.id}>{p.title}</option>
                                 ))}
@@ -246,20 +248,20 @@ export default function NoteDetailPage() {
                                 <div className="absolute right-0 top-full mt-2 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1.5 min-w-[220px] z-50 flex flex-col gap-0.5">
                                     <button onClick={copyToClipboard} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
                                         <Copy size={16} />
-                                        Copy content
+                                        {t('copyContent')}
                                     </button>
                                     <div className="h-px bg-neutral-800 my-1 mx-2" />
                                     <button onClick={exportNoteMd} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
                                         <Download size={16} />
-                                        Export as Markdown
+                                        {t('exportMarkdown')}
                                     </button>
                                     <button onClick={exportNoteTxt} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
                                         <Download size={16} />
-                                        Export as TXT
+                                        {t('exportTxt')}
                                     </button>
                                     <button onClick={exportNoteJson} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
                                         <Download size={16} />
-                                        Export as JSON
+                                        {t('exportJson')}
                                     </button>
                                 </div>
                             )}
@@ -271,7 +273,7 @@ export default function NoteDetailPage() {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     onBlur={updateTitle}
-                    placeholder="Untitled Note"
+                    placeholder={t('untitledNote')}
                     className="text-4xl font-bold bg-transparent border-none focus:outline-none w-full placeholder:text-neutral-700 text-white"
                 />
             </div>

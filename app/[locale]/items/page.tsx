@@ -45,6 +45,8 @@ export default async function ItemsPage({ searchParams }: Props) {
                 <div className="flex gap-2 ml-auto">
                     <ExportButton items={items || []} />
 
+
+
                     <AddPropsButton />
                 </div>
             </div>
@@ -59,4 +61,3 @@ export default async function ItemsPage({ searchParams }: Props) {
         </div>
     )
 }
-

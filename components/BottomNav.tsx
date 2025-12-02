@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Box, Layers, ClipboardList, Menu } from 'lucide-react'
+import { Box, Layers, ClipboardList, Menu, Tag, Notebook } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useState } from 'react'
 import { MobileMenu } from './layout/MobileMenu'
@@ -13,9 +13,10 @@ export function BottomNav() {
     const t = useTranslations('Navigation')
 
     const navigation = [
-        { name: t('items'), href: '/items', icon: Box },
         { name: t('productions'), href: '/performances', icon: Layers },
-        { name: t('lists'), href: '/checklists', icon: ClipboardList },
+        { name: t('groups'), href: '/groups', icon: Tag },
+        { name: t('notes'), href: '/notes', icon: Notebook },
+        { name: t('checklists'), href: '/checklists', icon: ClipboardList },
         { name: t('more'), href: '/settings', icon: Menu },
     ]
 
@@ -54,14 +55,14 @@ export function BottomNav() {
                                 key={item.name}
                                 href={item.href}
                                 className={clsx(
-                                    isActive ? 'text-white' : 'text-neutral-500',
-                                    'flex flex-col items-center justify-center w-full h-full py-1'
+                                    isActive ? 'text-burgundy-main' : 'text-neutral-500',
+                                    'flex flex-col items-center justify-center w-full h-full py-1 transition-colors duration-200'
                                 )}
                             >
                                 <item.icon
                                     className={clsx(
-                                        isActive ? 'text-white' : 'text-neutral-500',
-                                        'h-6 w-6 mb-1'
+                                        isActive ? 'text-burgundy-main' : 'text-neutral-500',
+                                        'h-6 w-6 mb-1 transition-colors duration-200'
                                     )}
                                 />
                                 <span className="text-[10px] font-medium">{item.name}</span>

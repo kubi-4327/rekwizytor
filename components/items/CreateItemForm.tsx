@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Loader2, Upload, Save, X, Sparkles } from 'lucide-react'
 import Image from 'next/image'
 import { SearchableSelect } from '@/components/ui/SearchableSelect'
+import { useTranslations } from 'next-intl'
 
 type Props = {
     groups: { id: string; name: string }[]
@@ -13,6 +14,7 @@ type Props = {
 }
 
 export function CreateItemForm({ groups, locations }: Props) {
+    const t = useTranslations('CreateItemForm')
     const [name, setName] = useState('')
     const [notes, setNotes] = useState('')
     const [groupId, setGroupId] = useState<string>('')
@@ -62,7 +64,7 @@ export function CreateItemForm({ groups, locations }: Props) {
             if (err instanceof Error) {
                 setError(err.message)
             } else {
-                setError('An unknown error occurred')
+                setError(t('unknownError'))
             }
         } finally {
             setLoading(false)
@@ -74,7 +76,7 @@ export function CreateItemForm({ groups, locations }: Props) {
             <div className="space-y-6 bg-neutral-900/50 p-6 rounded-xl border border-neutral-800">
                 <div>
                     <label htmlFor="name" className="block text-sm font-medium text-neutral-300">
-                        Item Name <span className="text-red-500">*</span>
+                        {t('itemName')} <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="text"
@@ -83,35 +85,35 @@ export function CreateItemForm({ groups, locations }: Props) {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="mt-2 block w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
-                        placeholder="e.g. Vintage Lamp"
+                        placeholder={t('itemNamePlaceholder')}
                     />
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div>
                         <SearchableSelect
-                            label="Group"
+                            label={t('group')}
                             options={groups}
                             value={groupId}
                             onChange={setGroupId}
-                            placeholder="Select a group..."
+                            placeholder={t('selectGroup')}
                         />
                     </div>
 
                     <div>
                         <SearchableSelect
-                            label="Location"
+                            label={t('location')}
                             options={locations}
                             value={locationId}
                             onChange={setLocationId}
-                            placeholder="Select a location..."
+                            placeholder={t('selectLocation')}
                         />
                     </div>
                 </div>
 
                 <div>
                     <label htmlFor="notes" className="block text-sm font-medium text-neutral-300">
-                        Notes
+                        {t('notes')}
                     </label>
                     <textarea
                         id="notes"
@@ -119,13 +121,13 @@ export function CreateItemForm({ groups, locations }: Props) {
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         className="mt-2 block w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
-                        placeholder="Any specific details about the item..."
+                        placeholder={t('notesPlaceholder')}
                     />
                 </div>
 
                 <div>
                     <label className="block text-sm font-medium text-neutral-300">
-                        Image
+                        {t('image')}
                     </label>
                     <div className="mt-2 flex items-center gap-4">
                         <div className="relative h-32 w-32 overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950">
@@ -164,7 +166,7 @@ export function CreateItemForm({ groups, locations }: Props) {
                                 className="block w-full text-sm text-neutral-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-neutral-800 file:text-white hover:file:bg-neutral-700"
                             />
                             <p className="mt-2 text-xs text-neutral-500">
-                                JPG, PNG, GIF up to 5MB
+                                {t('imageHelp')}
                             </p>
                         </div>
                     </div>
@@ -178,10 +180,10 @@ export function CreateItemForm({ groups, locations }: Props) {
                             className="h-4 w-4 rounded border-neutral-800 bg-neutral-950 text-white focus:ring-neutral-500"
                         />
                         <label htmlFor="draft" className="text-sm font-medium text-neutral-300 flex items-center gap-2">
-                            Save as Draft
+                            {t('saveAsDraft')}
                             <span className="text-xs text-neutral-500 flex items-center gap-1 bg-neutral-900 px-2 py-0.5 rounded-full border border-neutral-800">
                                 <Sparkles className="w-3 h-3 text-neutral-500" />
-                                Skips AI generation
+                                {t('skipsAI')}
                             </span>
                         </label>
                     </div>
@@ -200,7 +202,7 @@ export function CreateItemForm({ groups, locations }: Props) {
                     onClick={() => router.back()}
                     className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white"
                 >
-                    Cancel
+                    {t('cancel')}
                 </button>
                 <button
                     type="submit"
@@ -212,7 +214,7 @@ export function CreateItemForm({ groups, locations }: Props) {
                     ) : (
                         <Save className="mr-2 h-4 w-4" />
                     )}
-                    Save Item
+                    {t('saveItem')}
                 </button>
             </div>
         </form>

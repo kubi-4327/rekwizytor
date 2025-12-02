@@ -2,7 +2,7 @@
 
 import { Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { X, Tag, Notebook, Sparkles, BarChart, Settings, LogOut, CheckCircle2 } from 'lucide-react'
+import { X, Box, BarChart, Settings, LogOut, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/utils/supabase/client'
@@ -19,8 +19,7 @@ export function MobileMenu({ isOpen, onClose }: Props) {
     const supabase = createClient()
 
     const menuItems = [
-        { name: 'Groups', href: '/groups', icon: Tag },
-        { name: t('notes'), href: '/notes', icon: Notebook },
+        { name: t('items'), href: '/items', icon: Box },
         { name: t('reviewDrafts'), href: '/items/review', icon: CheckCircle2 },
         { name: t('aiStats'), href: '/ai-stats', icon: BarChart },
         { name: t('settings'), href: '/settings', icon: Settings },

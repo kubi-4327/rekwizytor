@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server'
 import { XCircle } from 'lucide-react'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
+import { signOut } from '@/app/actions/auth'
 
 export default async function RejectedPage() {
     const t = await getTranslations('Rejected')
@@ -46,7 +47,7 @@ export default async function RejectedPage() {
                 </p>
 
                 <div className="pt-4">
-                    <form action="/auth/signout" method="post">
+                    <form action={signOut}>
                         <button
                             className="text-sm text-neutral-500 hover:text-white underline underline-offset-4 cursor-pointer"
                             type="submit"

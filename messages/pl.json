@@ -1,25 +1,54 @@
 {
     "Settings": {
         "title": "Ustawienia",
-        "description": "Zarządzaj swoim kontem i preferencjami aplikacji",
+        "description": "Zarządzaj preferencjami konta i aplikacji.",
         "language": "Język",
-        "theme": "Motyw"
+        "structureTitle": "Zarządzanie Strukturą",
+        "structureDescription": "Zarządzaj lokalizacjami i grupami przedmiotów",
+        "manageStructure": "Zarządzaj strukturą",
+        "statsTitle": "Statystyki AI",
+        "statsDescription": "Monitoruj zużycie tokenów i koszty",
+        "viewStats": "Zobacz statystyki",
+        "UserApproval": {
+            "confirmApproveTitle": "Zatwierdź Użytkownika",
+            "confirmRejectTitle": "Odrzuć Użytkownika",
+            "confirmApproveDesc": "Czy na pewno chcesz zatwierdzić użytkownika {name}? Będzie on miał pełny dostęp do aplikacji.",
+            "confirmRejectDesc": "Czy na pewno chcesz odrzucić użytkownika {name}? Jego konto zostanie trwale usunięte.",
+            "securityWarningTitle": "Ostrzeżenie Bezpieczeństwa",
+            "securityWarningDesc": "Jeśli nie masz 100% pewności kto to jest, ABSOLUTNIE NIE ZATWIERDZAJ tego użytkownika.",
+            "accessGrant": "Użytkownik otrzyma dostęp do",
+            "accessInventory": "Przeglądania i edycji magazynu",
+            "accessPerformances": "Zarządzania spektaklami",
+            "accessChecklists": "List kontrolnych",
+            "rejectWarning": "Ta operacja jest nieodwracalna. Konto użytkownika zostanie usunięte.",
+            "confirm": "Potwierdź",
+            "cancel": "Anuluj",
+            "title": "Oczekujący Użytkownicy",
+            "unknownUser": "Nieznany Użytkownik",
+            "approve": "Zatwierdź",
+            "reject": "Odrzuć",
+            "errorUpdating": "Wystąpił błąd podczas aktualizacji statusu."
+        }
     },
     "Common": {
         "save": "Zapisz",
         "cancel": "Anuluj"
     },
     "Dashboard": {
-        "welcome": "Witaj ponownie, {name}",
-        "subtitle": "Zarządzaj rekwizytami, Spektaklimi i listami kontrolnymi.",
+        "title": "Pulpit",
+        "subtitle": "Witaj w Rekwizytorze. Co chcesz dzisiaj zrobić?",
         "propsInventory": "Magazyn Rekwizytów",
-        "propsInventoryDesc": "Przeglądaj, dodawaj i organizuj swoją kolekcję rekwizytów.",
-        "productions": "Spektakli",
-        "productionsDesc": "Zarządzaj spektaklami, przydzielaj rekwizyty i śledź historię.",
+        "propsInventoryDesc": "Przeglądaj, dodawaj i zarządzaj całą kolekcją rekwizytów.",
+        "productions": "Spektakle",
+        "productionsDesc": "Zarządzaj listami rekwizytów dla poszczególnych spektakli.",
         "checklists": "Listy Kontrolne",
-        "checklistsDesc": "Śledzenie na żywo aktywnych przedstawień i prób.",
+        "checklistsDesc": "Śledź przygotowanie rekwizytów do nadchodzących wydarzeń.",
         "recentActivity": "Ostatnia Aktywność",
-        "noActivity": "Brak ostatniej aktywności."
+        "noActivity": "Brak ostatniej aktywności do wyświetlenia.",
+        "PendingAlert": {
+            "title": "Oczekujący Użytkownicy",
+            "message": "{count, plural, one {Jeden użytkownik czeka na zatwierdzenie.} few {# użytkowników czeka na zatwierdzenie.} many {# użytkowników czeka na zatwierdzenie.} other {# użytkowników czeka na zatwierdzenie.}}"
+        }
     },
     "Navigation": {
         "items": "Rekwizyty",
@@ -31,6 +60,7 @@
         "signOut": "Wyloguj się",
         "lists": "Listy",
         "notes": "Notatki",
+        "groups": "Grupy",
         "more": "Więcej"
     },
     "Groups": {
@@ -42,7 +72,8 @@
         "title": "Magazyn Rekwizytów",
         "subtitle": "Zarządzaj swoją kolekcją teatralną",
         "addProps": "Dodaj Rekwizyty",
-        "export": "Eksportuj"
+        "export": "Eksportuj",
+        "manageStructure": "Zarządzaj Strukturą"
     },
     "Performances": {
         "title": "Spektakle",
@@ -294,7 +325,17 @@
         "dontHaveAccount": "Nie masz konta? Zarejestruj się",
         "checkEmail": "Sprawdź swoją skrzynkę email, aby potwierdzić konto.",
         "name": "Imię",
-        "passwordTooWeak": "Hasło jest za słabe. Musi mieć co najmniej 8 znaków i zawierać wielkie litery, cyfry oraz znaki specjalne."
+        "passwordTooWeak": "Hasło jest za słabe. Musi mieć co najmniej 8 znaków i zawierać wielkie litery, cyfry oraz znaki specjalne.",
+        "forgotPassword": "Nie pamiętasz hasła?",
+        "resetPassword": "Zresetuj Hasło",
+        "sendResetLink": "Wyślij Link Resetujący",
+        "backToLogin": "Powrót do Logowania",
+        "emailSent": "Sprawdź swoją skrzynkę email, aby znaleźć link resetujący.",
+        "updatePassword": "Zaktualizuj Hasło",
+        "newPassword": "Nowe Hasło",
+        "confirmPassword": "Potwierdź Hasło",
+        "passwordUpdated": "Hasło zostało zaktualizowane pomyślnie.",
+        "passwordsDoNotMatch": "Hasła nie są identyczne."
     },
     "ItemsList": {
         "searchPlaceholderSmart": "Opisz czego potrzebujesz (np. 'stara walizka')...",
@@ -514,11 +555,12 @@
         "security": "Bezpieczeństwo i Sesja",
         "signOut": "Wyloguj",
         "signOutDescription": "Zakończ bieżącą sesję",
-        "signingOut": "Wylogowywanie..."
+        "signingOut": "Wylogowywanie...",
+        "changePassword": "Zmień Hasło"
     },
     "Waiting": {
         "title": "Konto Oczekujące na Zatwierdzenie",
-        "description": "Twoje konto zostało utworzone i oczekuje na zatwierdzenie przez administratora. Zostaniesz powiadomiony, gdy dostęp zostanie przyznany.",
+        "description": "Twoje konto oczekuje na zatwierdzenie.",
         "signOut": "Wyloguj się"
     },
     "Rejected": {
@@ -554,6 +596,85 @@
             "pending": "Oczekujący",
             "approved": "Zatwierdzony",
             "rejected": "Odrzucony"
+        }
+    },
+    "CreateItemForm": {
+        "itemName": "Nazwa Przedmiotu",
+        "itemNamePlaceholder": "np. Stara Lampa",
+        "group": "Grupa",
+        "selectGroup": "Wybierz grupę...",
+        "location": "Lokalizacja",
+        "selectLocation": "Wybierz lokalizację...",
+        "notes": "Notatki",
+        "notesPlaceholder": "Wszelkie szczegóły dotyczące przedmiotu...",
+        "image": "Zdjęcie",
+        "imageHelp": "JPG, PNG, GIF do 5MB",
+        "saveAsDraft": "Zapisz jako Szkic",
+        "skipsAI": "Pomija generowanie AI",
+        "cancel": "Anuluj",
+        "saveItem": "Zapisz Przedmiot",
+        "unknownError": "Wystąpił nieznany błąd"
+    },
+    "NotesList": {
+        "title": "Notatki",
+        "subtitle": "Zarządzaj notatkami osobistymi i związanymi ze spektaklami",
+        "newNote": "Nowa Notatka",
+        "searchPlaceholder": "Szukaj notatek...",
+        "loading": "Ładowanie notatek...",
+        "noNotes": "Brak notatek.",
+        "generalNotes": "Notatki Ogólne",
+        "master": "Główna",
+        "noContent": "Brak treści",
+        "deleteConfirm": "Czy na pewno chcesz usunąć tę notatkę?"
+    },
+    "NoteDetail": {
+        "invalidId": "Nieprawidłowe ID",
+        "privateNote": "Prywatna Notatka",
+        "untitledNote": "Notatka bez tytułu",
+        "copyContent": "Kopiuj zawartość",
+        "exportMarkdown": "Eksportuj jako Markdown",
+        "exportTxt": "Eksportuj jako TXT",
+        "exportJson": "Eksportuj jako JSON",
+        "copied": "Skopiowano do schowka! Możesz teraz wkleić do Notion, Evernote itp.",
+        "loading": "Ładowanie..."
+    },
+    "FastAddForm": {
+        "sessionSettings": "Ustawienia Sesji",
+        "location": "Lokalizacja",
+        "performance": "Spektakl",
+        "defaultLocation": "Domyślna Lokalizacja",
+        "selectLocation": "Wybierz Lokalizację...",
+        "selectPerformance": "Wybierz Spektakl...",
+        "takePhotos": "Zrób Zdjęcia",
+        "useCamera": "Użyj Aparatu",
+        "uploadFiles": "Prześlij Pliki",
+        "fromDevice": "Z Urządzenia",
+        "processItems": "Przetwórz {count} Przedmiotów",
+        "processing": "Przetwarzanie {current}/{total}..."
+    },
+    "Structure": {
+        "title": "Zarządzaj Strukturą",
+        "subtitle": "Organizuj lokalizacje i grupy metodą przeciągnij i upuść.",
+        "backToItems": "Powrót do Magazynu",
+        "locations": "Lokalizacje",
+        "groups": "Grupy",
+        "addLocation": "Dodaj Lokalizację",
+        "addGroup": "Dodaj Grupę",
+        "edit": "Edytuj",
+        "delete": "Usuń",
+        "deleteConfirm": "Czy na pewno chcesz usunąć ten element?",
+        "unassigned": "Nieprzypisane",
+        "name": "Nazwa",
+        "namePlaceholder": "Wpisz nazwę...",
+        "type": "Typ",
+        "create": "Utwórz",
+        "cancel": "Anuluj",
+        "dropHere": "Upuść tutaj",
+        "types": {
+            "main_storage": "Główny Magazyn",
+            "backstage": "Za kulisami",
+            "stage": "Scena",
+            "other": "Inne"
         }
     }
 }

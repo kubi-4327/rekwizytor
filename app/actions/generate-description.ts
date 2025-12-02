@@ -5,6 +5,7 @@ import { geminiFlash } from '@/utils/gemini'
 import { generateEmbedding } from '@/utils/embeddings'
 import { TaskType } from '@google/generative-ai'
 import { Database } from '@/types/supabase'
+import { sanitizeAIInput, validateAIResponse, AIDescriptionSchema, sanitizeAIOutput } from '@/utils/ai-security'
 
 export async function analyzeItemWithGemini(
     name: string,
@@ -16,12 +17,17 @@ export async function analyzeItemWithGemini(
     let contentParts: (string | { inlineData: { data: string; mimeType: string } })[] = []
     let source = 'name' // name, notes, or image
 
+    // 1. SANITIZE INPUTS
+    const safeName = sanitizeAIInput(name, 200)
+    const safeNotes = notes ? sanitizeAIInput(notes, 2000) : ''
+    const safeGroups = sanitizeAIInput(groupsList, 1000)
+
     // 1. Prioritize User Description (Notes) if available
-    if (notes && notes.trim().length > 5) {
+    if (safeNotes && safeNotes.trim().length > 5) {
         source = 'notes'
         prompt = `
-        Przeanalizuj poniższy opis rekwizytu teatralnego (Nazwa: "${name}").
-        Opis użytkownika: "${notes}"
+        Przeanalizuj poniższy opis rekwizytu teatralnego (Nazwa: "${safeName}").
+        Opis użytkownika: "${safeNotes}"
 
         Twoim zadaniem jest wygenerowanie metadanych dla inteligentnego wyszukiwania na podstawie tego opisu.
         
@@ -60,9 +66,9 @@ export async function analyzeItemWithGemini(
         const mimeType = response.headers.get('content-type') || 'image/jpeg'
 
         prompt = `
-        Przeanalizuj to zdjęcie rekwizytu teatralnego (Nazwa robocza: "${name}").
+        Przeanalizuj to zdjęcie rekwizytu teatralnego (Nazwa robocza: "${safeName}").
         
-        Dostępne kategorie (grupy): ${groupsList}
+        Dostępne kategorie (grupy): ${safeGroups}
 
         Zwróć obiekt JSON z następującymi polami:
         - description: Szczegółowy opis po polsku uwzględniający materiał, kolor, styl, epokę, stan i cechy charakterystyczne. Pełne zdania, język naturalny.
@@ -88,7 +94,7 @@ export async function analyzeItemWithGemini(
         source = 'name'
         prompt = `
         Jesteś ekspertem od rekwizytów teatralnych.
-        Wygeneruj opis dla przedmiotu o nazwie: "${name}".
+        Wygeneruj opis dla przedmiotu o nazwie: "${safeName}".
         
         Zwróć obiekt JSON z następującymi polami:
         - description: Szczegółowy, prawdopodobny opis po polsku.
@@ -105,7 +111,20 @@ export async function analyzeItemWithGemini(
     const usage = result.response.usageMetadata
 
     const jsonString = responseText.replace(/```json\n?|\n?```/g, '').trim()
-    const analysis = JSON.parse(jsonString)
+    const rawAnalysis = JSON.parse(jsonString)
+
+    // 2. VALIDATE OUTPUT
+    const validatedAnalysis = validateAIResponse(rawAnalysis, AIDescriptionSchema)
+
+    // 3. SANITIZE OUTPUT TEXT
+    const analysis = {
+        ...validatedAnalysis,
+        description: validatedAnalysis.description ? sanitizeAIOutput(validatedAnalysis.description) : undefined,
+        ai_description: validatedAnalysis.ai_description ? sanitizeAIOutput(validatedAnalysis.ai_description) : undefined,
+        category: validatedAnalysis.category ? sanitizeAIOutput(validatedAnalysis.category) : undefined,
+        // attributes are JSON, so we trust Zod validation structure, but we could sanitize string values inside if needed.
+        // For now, we assume attributes structure is safe enough as it's JSON.
+    }
 
     return { analysis, usage, source }
 }
@@ -136,7 +155,7 @@ export async function generateItemDescriptions(itemId: string, currentName: stri
         // Prepare update object
         const updateData: Database['public']['Tables']['items']['Update'] = {
             ai_description: analysis.ai_description,
-            attributes: analysis.attributes,
+            attributes: analysis.attributes as any,
             embedding: JSON.stringify(embedding)
         }
 

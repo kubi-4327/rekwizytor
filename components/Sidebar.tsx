@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Theater, Box, Layers, ClipboardList, Settings, LogOut, Sparkles, BarChart, Notebook, Tag, CheckCircle2 } from 'lucide-react'
+import { Theater, Box, Layers, ClipboardList, Settings, LogOut, Sparkles, Notebook, Tag, CheckCircle2 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -17,13 +17,12 @@ export function Sidebar() {
     const t = useTranslations('Navigation')
 
     const navigation = [
-        { name: t('items'), href: '/items', icon: Box },
-        { name: 'Groups', href: '/groups', icon: Tag },
         { name: t('productions'), href: '/performances', icon: Layers },
-        { name: t('checklists'), href: '/checklists', icon: ClipboardList },
+        { name: t('groups'), href: '/groups', icon: Tag },
         { name: t('notes'), href: '/notes', icon: Notebook },
+        { name: t('checklists'), href: '/checklists', icon: ClipboardList },
+        { name: t('items'), href: '/items', icon: Box },
         { name: t('reviewDrafts'), href: '/items/review', icon: CheckCircle2 },
-        { name: t('aiStats'), href: '/ai-stats', icon: BarChart },
     ]
 
     const handleSignOut = async () => {
@@ -39,10 +38,10 @@ export function Sidebar() {
                     <Link href="/" className="flex items-center hover:opacity-80 transition-opacity w-full h-full justify-center">
                         <div className="relative w-full h-full">
                             <Image
-                                src="/logo-full.png"
+                                src="/logo-sidebar.png"
                                 alt="Rekwizytor"
                                 fill
-                                className="object-contain p-4"
+                                className="object-contain"
                                 priority
                             />
                         </div>
@@ -58,15 +57,15 @@ export function Sidebar() {
                                     href={item.href}
                                     className={clsx(
                                         isActive
-                                            ? 'bg-neutral-800 text-white'
-                                            : 'text-neutral-400 hover:bg-neutral-800 hover:text-white',
-                                        'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors'
+                                            ? 'bg-burgundy-main/10 text-burgundy-main border-l-4 border-burgundy-main'
+                                            : 'text-neutral-400 hover:bg-neutral-800 hover:text-white border-l-4 border-transparent',
+                                        'group flex items-center px-2 py-2 text-sm font-medium rounded-r-md transition-all duration-200'
                                     )}
                                 >
                                     <item.icon
                                         className={clsx(
-                                            isActive ? 'text-white' : 'text-neutral-500 group-hover:text-white',
-                                            'mr-3 flex-shrink-0 h-6 w-6 transition-colors'
+                                            isActive ? 'text-burgundy-main' : 'text-neutral-500 group-hover:text-white',
+                                            'mr-3 flex-shrink-0 h-6 w-6 transition-colors duration-200'
                                         )}
                                         aria-hidden="true"
                                     />
