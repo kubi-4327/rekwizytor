@@ -124,7 +124,7 @@ function createPDFDocument(groups: GroupData[], qrCodes: string[], logoBase64: s
         const labelElements = pageGroups.map((group, idx) => {
             const globalIdx = pageIndex * labelsPerPage + idx
 
-            const children = [
+            const children: React.ReactElement[] = [
                 React.createElement(Text, { key: 'name', style: styles.labelName }, group.name),
             ]
 
@@ -197,8 +197,8 @@ export async function POST(request: NextRequest) {
         // Render PDF
         const pdfBuffer = await renderToBuffer(doc)
 
-        // Return PDF
-        return new NextResponse(pdfBuffer, {
+        // Return PDF (convert Buffer to Uint8Array for NextResponse)
+        return new NextResponse(new Uint8Array(pdfBuffer), {
             headers: {
                 'Content-Type': 'application/pdf',
                 'Content-Disposition': `attachment; filename="labels_${new Date().toISOString().split('T')[0]}.pdf"`,
