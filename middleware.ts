@@ -6,6 +6,11 @@ import { routing } from './i18n/routing';
 const intlMiddleware = createMiddleware(routing);
 
 export async function middleware(request: NextRequest) {
+    // Skip intl middleware for API routes
+    if (request.nextUrl.pathname.startsWith('/api')) {
+        return await updateSession(request);
+    }
+
     // First run the intl middleware to handle locale routing
     const response = intlMiddleware(request);
 

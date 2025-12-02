@@ -59,13 +59,48 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
         return a.localeCompare(b)
     })
 
+    const [isGenerating, setIsGenerating] = useState(false)
+
     const handleGenerateAllLabels = async () => {
-        const allGroups = groups.map(g => ({
-            id: g.id,
-            name: g.name,
-            locationName: g.locations?.name
-        }))
-        await import('@/utils/pdfUtils').then(mod => mod.generateAllGroupsLabelsPdf(allGroups))
+        try {
+            setIsGenerating(true)
+
+            const allGroups = groups.map(g => ({
+                id: g.id,
+                name: g.name,
+                locationName: g.locations?.name
+            }))
+
+            // Call backend API (use absolute URL to bypass locale routing)
+            const apiUrl = `${window.location.origin}/api/generate-labels`
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ groups: allGroups })
+            })
+
+            if (!response.ok) {
+                throw new Error('Failed to generate PDF')
+            }
+
+            // Download PDF
+            const blob = await response.blob()
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `labels_${new Date().toISOString().split('T')[0]}.pdf`
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+        } catch (error) {
+            console.error('Error generating labels:', error)
+            alert('Failed to generate labels. Please try again.')
+        } finally {
+            setIsGenerating(false)
+        }
     }
 
     return (
@@ -73,10 +108,11 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
             <div className="flex justify-end">
                 <button
                     onClick={handleGenerateAllLabels}
-                    className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-md transition-colors text-sm font-medium"
+                    disabled={isGenerating}
+                    className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-md transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <FileText className="w-4 h-4" />
-                    Generate All Labels
+                    {isGenerating ? 'Generating...' : 'Generate All Labels'}
                 </button>
             </div>
             {sortedLocations.map(location => (
