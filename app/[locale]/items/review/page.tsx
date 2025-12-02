@@ -37,7 +37,7 @@ export default async function ReviewPage() {
                             {t('subtitle')}
                         </p>
                     </div>
-                    <div className="text-sm text-neutral-500">
+                    <div className="text-sm text-neutral-500 hidden sm:block">
                         {t('pending', { count: draftItems?.length || 0 })}
                     </div>
                 </div>

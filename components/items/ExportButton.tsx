@@ -7,6 +7,7 @@ import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { useTranslations } from 'next-intl'
+import { loadPdfFonts, loadAppLogo } from '@/utils/pdfUtils'
 
 type Item = Database['public']['Tables']['items']['Row']
 
@@ -59,61 +60,28 @@ export function ExportButton({ items }: ExportButtonProps) {
         try {
             const doc = new jsPDF()
 
-            // Load Roboto font for Polish characters support
-            try {
-                const fontUrl = 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxP.ttf'
-                const response = await fetch(fontUrl)
-                const blob = await response.blob()
-                const reader = new FileReader()
-
-                await new Promise((resolve, reject) => {
-                    reader.onloadend = () => {
-                        const base64data = reader.result as string
-                        const base64Content = base64data.split(',')[1]
-                        doc.addFileToVFS('Roboto-Regular.ttf', base64Content)
-                        doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal')
-                        doc.setFont('Roboto')
-                        resolve(null)
-                    }
-                    reader.onerror = reject
-                    reader.readAsDataURL(blob)
-                })
-            } catch (e) {
-                console.error("Failed to load font, falling back to default", e)
-            }
-
-            // Load Logo
-            let logoBase64: string | null = null
-            try {
-                const logoUrl = window.location.origin + '/logo-full-sub.png'
-                const response = await fetch(logoUrl)
-                const blob = await response.blob()
-                const reader = new FileReader()
-                await new Promise((resolve) => {
-                    reader.onloadend = () => {
-                        logoBase64 = reader.result as string
-                        resolve(null)
-                    }
-                    reader.readAsDataURL(blob)
-                })
-            } catch (e) {
-                console.error("Failed to load logo", e)
-            }
+            // Load fonts and logo using utility
+            await loadPdfFonts(doc)
+            const logoBase64 = await loadAppLogo()
 
             doc.setFontSize(18)
+
+            let yPos = 20
 
             if (logoBase64) {
                 const imgProps = doc.getImageProperties(logoBase64)
                 const pdfWidth = 40
                 const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
                 doc.addImage(logoBase64, 'PNG', 14, 10, pdfWidth, pdfHeight)
-                doc.text(t('pdfTitle'), 14, 10 + pdfHeight + 10)
+                yPos = 10 + pdfHeight + 10
+                doc.text(t('pdfTitle'), 14, yPos)
             } else {
-                doc.text(t('pdfTitle'), 14, 22)
+                doc.text(t('pdfTitle'), 14, yPos)
             }
 
+            yPos += 10
             doc.setFontSize(11)
-            doc.text(`${t('generatedOn')} ${new Date().toLocaleDateString()}`, 14, 30)
+            doc.text(`${t('generatedOn')} ${new Date().toLocaleDateString()}`, 14, yPos)
 
             const tableData = items.map(item => [
                 item.name,
@@ -125,7 +93,7 @@ export function ExportButton({ items }: ExportButtonProps) {
             autoTable(doc, {
                 head: [[t('columns.name'), t('columns.notes'), t('columns.status'), t('columns.check')]],
                 body: tableData,
-                startY: 35,
+                startY: yPos + 5,
                 styles: {
                     fontSize: 10,
                     font: 'Roboto', // Use the custom font

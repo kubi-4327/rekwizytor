@@ -57,7 +57,9 @@ export async function updateSession(request: NextRequest, response?: NextRespons
         path.startsWith('/login') ||
         path.startsWith('/auth') ||
         // Check for localized paths (e.g. /pl/login, /en/auth)
-        /^\/(?:en|pl)\/(?:login|auth)/.test(path)
+        /^\/(?:en|pl)\/(?:login|auth|forgot-password|update-password)/.test(path) ||
+        path.startsWith('/forgot-password') ||
+        path.startsWith('/update-password')
 
     if (!user && !isAuthPage) {
         // no user, potentially respond by redirecting the user to the login page

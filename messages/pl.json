@@ -45,6 +45,15 @@
         "checklistsDesc": "Śledź przygotowanie rekwizytów do nadchodzących wydarzeń.",
         "recentActivity": "Ostatnia Aktywność",
         "noActivity": "Brak ostatniej aktywności do wyświetlenia.",
+        "nearestPerformance": "Najbliższy Spektakl",
+        "noUpcomingPerformances": "Brak nadchodzących spektakli",
+        "manageProduction": "Zarządzaj",
+        "daysLeft": "{count, plural, one {za 1 dzień} few {za # dni} many {za # dni} other {za # dni}}",
+        "today": "Dzisiaj!",
+        "recentMentions": "Ostatnie Wzmianki",
+        "noMentions": "Nie zostałeś ostatnio wspomniany w żadnych notatkach.",
+        "mentionedIn": "Wspomniano w: {title}",
+        "quickActions": "Szybkie Akcje",
         "PendingAlert": {
             "title": "Oczekujący Użytkownicy",
             "message": "{count, plural, one {Jeden użytkownik czeka na zatwierdzenie.} few {# użytkowników czeka na zatwierdzenie.} many {# użytkowników czeka na zatwierdzenie.} other {# użytkowników czeka na zatwierdzenie.}}"
@@ -61,7 +70,8 @@
         "lists": "Listy",
         "notes": "Notatki",
         "groups": "Grupy",
-        "more": "Więcej"
+        "more": "Więcej",
+        "about": "O Aplikacji"
     },
     "Groups": {
         "title": "Grupy",
@@ -78,8 +88,9 @@
     "Performances": {
         "title": "Spektakle",
         "subtitle": "Spektakle, próby i archiwa",
-        "addProduction": "Dodaj Przedstawienie",
-        "exportAllSchedule": "Eksportuj Cały Harmonogram"
+        "addProduction": "Dodaj Spektakl",
+        "add": "Dodaj",
+        "exportAllSchedule": "Eksportuj do kalendarza"
     },
     "NewItem": {
         "backToInventory": "Powrót do Magazynu",
@@ -87,8 +98,8 @@
         "subtitle": "Wypełnij szczegóły ręcznie, aby uzyskać precyzyjną kontrolę."
     },
     "NewPerformance": {
-        "title": "Dodaj Nowe Przedstawienie",
-        "subtitle": "Utwórz nowe przedstawienie, aby rozpocząć przypisywanie rekwizytów i list kontrolnych."
+        "title": "Dodaj Nowy Spektakl",
+        "subtitle": "Utwórz nowy Spektakl, aby rozpocząć przypisywanie rekwizytów i list kontrolnych."
     },
     "Review": {
         "backToInventory": "Powrót do Magazynu",
@@ -372,7 +383,7 @@
     "ExportButton": {
         "export": "Eksportuj",
         "toExcel": "Do Excela",
-        "toPdf": "Do PDF (Lista Kontrolna)",
+        "toPdf": "Do PDF",
         "pdfTitle": "Lista Kontrolna Magazynu Rekwizytów",
         "generatedOn": "Wygenerowano",
         "generatedBy": "Wygenerowano przez",
@@ -519,6 +530,7 @@
         "group": "Grupa",
         "confirm": "Zatwierdź",
         "edit": "Edytuj",
+        "delete": "Usuń",
         "deleteConfirmation": "Czy na pewno chcesz usunąć ten szkic?",
         "updateError": "Nie udało się zaktualizować przedmiotu",
         "confirmError": "Nie udało się zatwierdzić przedmiotu",
@@ -556,7 +568,10 @@
         "signOut": "Wyloguj",
         "signOutDescription": "Zakończ bieżącą sesję",
         "signingOut": "Wylogowywanie...",
-        "changePassword": "Zmień Hasło"
+        "changePassword": "Zmień Hasło",
+        "aboutTitle": "O Aplikacji",
+        "aboutDescription": "Informacje o wersji i licencjach",
+        "viewAbout": "Zobacz"
     },
     "Waiting": {
         "title": "Konto Oczekujące na Zatwierdzenie",
@@ -676,5 +691,19 @@
             "stage": "Scena",
             "other": "Inne"
         }
+    },
+    "About": {
+        "title": "O Aplikacji",
+        "subtitle": "Informacje o wersji, licencjach i twórcach.",
+        "backToSettings": "Powrót do Ustawień",
+        "appInfo": "Informacje o Aplikacji",
+        "version": "Wersja",
+        "buildDate": "Data Budowy",
+        "environment": "Środowisko",
+        "license": "Licencja",
+        "licenseText": "Ta aplikacja jest własnością prywatną. Dokładna licencja pojawi się po zakończeniu testów.",
+        "credits": "Twórcy",
+        "creditsText": "Zaprojektowane i zbudowane z ❤️ przez Jakub Pełka.",
+        "testVersionWarning": "To jest wersja testowa aplikacji. Niektóre funkcje mogą nie działać poprawnie."
     }
 }

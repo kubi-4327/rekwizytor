@@ -67,9 +67,9 @@ END:VCALENDAR`
     return (
         <button
             onClick={handleDownloadAll}
-            className="inline-flex items-center justify-center rounded-md bg-neutral-800 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 w-full sm:w-auto sm:min-w-[140px] border border-neutral-700"
+            className="inline-flex items-center justify-center rounded-md bg-neutral-800 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 sm:w-auto sm:min-w-[140px] border border-neutral-700"
         >
-            <Download className="mr-2 h-4 w-4" />
+            <Download className="sm:mr-2 h-4 w-4" />
             <span className="hidden sm:inline">{t('exportAllSchedule')}</span>
         </button>
     )

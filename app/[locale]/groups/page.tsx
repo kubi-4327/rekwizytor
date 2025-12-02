@@ -49,27 +49,7 @@ export default async function GroupsPage({ searchParams }: Props) {
                 </div>
             </div>
 
-            {/* Breadcrumbs */}
-            <div className="flex items-center gap-2 text-sm text-neutral-400 overflow-x-auto pb-2">
-                <Link
-                    href="/groups"
-                    className={`hover:text-white transition-colors flex items-center gap-1 ${!groupId ? 'text-white font-medium' : ''}`}
-                >
-                    <Home className="w-4 h-4" />
-                    <span>{t('allGroups')}</span>
-                </Link>
-                {breadcrumbs.map((group, index) => (
-                    <div key={group.id} className="flex items-center gap-2 whitespace-nowrap">
-                        <ChevronRight className="w-4 h-4" />
-                        <Link
-                            href={`/groups?groupId=${group.id}`}
-                            className={`hover:text-white transition-colors ${index === breadcrumbs.length - 1 ? 'text-white font-medium' : ''}`}
-                        >
-                            {group.name}
-                        </Link>
-                    </div>
-                ))}
-            </div>
+
 
             <GroupsList
                 groups={groups}

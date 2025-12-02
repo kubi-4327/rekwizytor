@@ -211,31 +211,48 @@ export function ReviewList({ initialItems, locations, groups }: Props) {
 
                     {/* Actions */}
                     {editingId !== item.id && (
-                        <div className="flex sm:flex-col gap-2 justify-end sm:justify-center border-t sm:border-t-0 sm:border-l border-neutral-800 pt-3 sm:pt-0 sm:pl-4">
+                        <div className="flex flex-row sm:flex-col gap-2 justify-end sm:justify-center border-t sm:border-t-0 sm:border-l border-neutral-800 pt-3 sm:pt-0 sm:pl-4">
                             <button
                                 onClick={() => handleConfirm(item.id)}
                                 disabled={!!processingId}
-                                className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500 transition-colors"
+                                className="flex-1 sm:flex-none flex items-center justify-center p-2 sm:px-3 sm:py-2 bg-green-600/20 text-green-400 border border-green-600/30 rounded hover:bg-green-600/30 transition-colors"
                                 title={t('confirm')}
                             >
                                 {processingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                                <span className="sm:hidden ml-2">{t('confirm')}</span>
+                                <span className="hidden sm:inline ml-2 text-sm font-medium">{t('confirm')}</span>
                             </button>
                             <button
                                 onClick={() => handleEdit(item)}
                                 disabled={!!processingId}
-                                className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 bg-neutral-800 text-white rounded hover:bg-neutral-700 transition-colors"
+                                className="flex-1 sm:flex-none flex items-center justify-center p-2 sm:px-3 sm:py-2 bg-neutral-800 text-neutral-300 border border-neutral-700 rounded hover:bg-neutral-700 hover:text-white transition-colors"
                                 title={t('edit')}
                             >
-                                {t('edit')}
+                                {/* Edit icon for desktop and mobile */}
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="lucide lucide-pencil"
+                                >
+                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                                    <path d="m15 5 4 4" />
+                                </svg>
+                                <span className="hidden sm:inline ml-2 text-sm font-medium">{t('edit')}</span>
                             </button>
                             <button
                                 onClick={() => handleDelete(item.id)}
                                 disabled={!!processingId}
-                                className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 bg-red-900/20 text-red-400 rounded hover:bg-red-900/40 transition-colors"
-                                title={t('edit')}
+                                className="flex-1 sm:flex-none flex items-center justify-center p-2 sm:px-3 sm:py-2 bg-red-900/20 text-red-400 border border-red-900/30 rounded hover:bg-red-900/40 transition-colors"
+                                title={t('delete')}
                             >
                                 <Trash2 className="w-4 h-4" />
+                                <span className="hidden sm:inline ml-2 text-sm font-medium">{t('delete')}</span>
                             </button>
                         </div>
                     )}

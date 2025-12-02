@@ -144,9 +144,7 @@ function SortableItem({
                 <div className="min-w-0 flex-1 cursor-pointer" onClick={() => assignment.items && onItemClick(assignment.items)}>
                     <div className="text-sm font-medium text-white truncate hover:text-action-primary transition-colors">{assignment.items?.name || 'Unknown Item'}</div>
                     <div className="flex items-center gap-2 text-xs text-neutral-500">
-                        {assignment.setup_instructions && (
-                            <span className="truncate">{assignment.setup_instructions}</span>
-                        )}
+
                         {profile && (
                             <div className="flex items-center gap-1 bg-neutral-800 px-1.5 py-0.5 rounded-full">
                                 {profile.avatar_url ? (

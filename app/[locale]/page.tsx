@@ -1,11 +1,11 @@
 import { createClient } from '@/utils/supabase/server'
-import Link from 'next/link'
-import { Box, Layers, ClipboardList, ArrowRight } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
 import { Greeting } from '@/components/dashboard/Greeting'
-
 import { PendingUsersAlert } from '@/components/dashboard/PendingUsersAlert'
+import { NearestPerformanceCard } from '@/components/dashboard/NearestPerformanceCard'
+import { UserMentionsList } from '@/components/dashboard/UserMentionsList'
+import { QuickNav } from '@/components/dashboard/QuickNav'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -24,9 +24,50 @@ export default async function Home() {
 
   const t = await getTranslations('Dashboard')
 
+  // Fetch Nearest Upcoming Performance
+  const { data: nearestPerformance } = await supabase
+    .from('performances')
+    .select('id, title, premiere_date, image_url, status')
+    .is('deleted_at', null)
+    .in('status', ['active', 'upcoming'])
+    .order('premiere_date', { ascending: true })
+    .limit(1)
+    .single()
+
+  // Fetch User Mentions in Notes
+  // Note: This requires a more complex query or a view if we want to be precise about "mentions".
+  // For now, we'll fetch notes created by others that might be relevant, or just recent notes.
+  // Ideally, we'd have a 'note_mentions' table or similar.
+  // Based on the schema, there is a 'note_mentions' table!
+  let recentMentions: any[] = []
+  if (user) {
+    const { data: mentions } = await supabase
+      .from('note_mentions')
+      .select(`
+        id,
+        note_id,
+        created_at,
+        note:notes (
+          id,
+          title,
+          performance_id,
+          performance:performances (
+            title,
+            color
+          )
+        )
+      `)
+      .eq('mentioned_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+
+    recentMentions = mentions || []
+  }
+
   return (
-    <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
       <PendingUsersAlert />
+
       <div className="space-y-2">
         <Greeting name={displayName} />
         <p className="text-neutral-400">
@@ -34,60 +75,26 @@ export default async function Home() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <Link
-          href="/items"
-          className="group relative overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 p-6 hover:border-neutral-700 transition-colors"
-        >
-          <div className="flex items-center justify-between">
-            <div className="rounded-lg bg-burgundy-main/20 p-3 text-burgundy-light">
-              <Box className="h-6 w-6" />
-            </div>
-            <ArrowRight className="h-5 w-5 text-neutral-600 group-hover:text-white transition-colors" />
-          </div>
-          <h3 className="mt-4 text-lg font-medium text-white">{t('propsInventory')}</h3>
-          <p className="mt-2 text-sm text-neutral-400">
-            {t('propsInventoryDesc')}
-          </p>
-        </Link>
+      <div className="grid gap-8 lg:grid-cols-3">
+        {/* Main Column (2/3 width on large screens) */}
+        <div className="lg:col-span-2 space-y-8">
+          <section>
+            <h2 className="text-lg font-medium text-white mb-4">{t('nearestPerformance')}</h2>
+            <NearestPerformanceCard performance={nearestPerformance} />
+          </section>
 
-        <Link
-          href="/performances"
-          className="group relative overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 p-6 hover:border-neutral-700 transition-colors"
-        >
-          <div className="flex items-center justify-between">
-            <div className="rounded-lg bg-ai-primary/20 p-3 text-ai-secondary">
-              <Layers className="h-6 w-6" />
-            </div>
-            <ArrowRight className="h-5 w-5 text-neutral-600 group-hover:text-white transition-colors" />
-          </div>
-          <h3 className="mt-4 text-lg font-medium text-white">{t('productions')}</h3>
-          <p className="mt-2 text-sm text-neutral-400">
-            {t('productionsDesc')}
-          </p>
-        </Link>
+          <section>
+            <h2 className="text-lg font-medium text-white mb-4">{t('quickActions')}</h2>
+            <QuickNav />
+          </section>
+        </div>
 
-        <Link
-          href="/checklists"
-          className="group relative overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 p-6 hover:border-neutral-700 transition-colors"
-        >
-          <div className="flex items-center justify-between">
-            <div className="rounded-lg bg-green-900/20 p-3 text-green-400">
-              <ClipboardList className="h-6 w-6" />
-            </div>
-            <ArrowRight className="h-5 w-5 text-neutral-600 group-hover:text-white transition-colors" />
-          </div>
-          <h3 className="mt-4 text-lg font-medium text-white">{t('checklists')}</h3>
-          <p className="mt-2 text-sm text-neutral-400">
-            {t('checklistsDesc')}
-          </p>
-        </Link>
-      </div>
-
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6">
-        <h3 className="text-lg font-medium text-white mb-4">{t('recentActivity')}</h3>
-        <div className="text-sm text-neutral-500 text-center py-8">
-          {t('noActivity')}
+        {/* Sidebar Column (1/3 width on large screens) */}
+        <div className="space-y-8">
+          <section>
+            {/* We can reuse the title inside the component or here. Let's keep it consistent. */}
+            <UserMentionsList mentions={recentMentions} />
+          </section>
         </div>
       </div>
     </div>

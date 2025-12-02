@@ -1,12 +1,11 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { Link, usePathname, useRouter } from '@/i18n/routing'
 import { Theater, Box, Layers, ClipboardList, Settings, LogOut, Sparkles, Notebook, Tag, CheckCircle2 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { createClient } from '@/utils/supabase/client'
-import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { motion, AnimatePresence } from 'framer-motion'
 
 import Image from 'next/image'
 
@@ -50,26 +49,49 @@ export function Sidebar() {
                 <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
                     <nav className="mt-5 flex-1 space-y-1 px-2">
                         {navigation.map((item) => {
-                            const isActive = pathname.startsWith(item.href)
+                            const isActive = pathname.startsWith(item.href) && !navigation.some(nav =>
+                                nav !== item &&
+                                nav.href.startsWith(item.href) &&
+                                nav.href.length > item.href.length &&
+                                pathname.startsWith(nav.href)
+                            )
                             return (
                                 <Link
                                     key={item.name}
                                     href={item.href}
                                     className={clsx(
                                         isActive
-                                            ? 'bg-burgundy-main/10 text-burgundy-main border-l-4 border-burgundy-main'
-                                            : 'text-neutral-400 hover:bg-neutral-800 hover:text-white border-l-4 border-transparent',
-                                        'group flex items-center px-2 py-2 text-sm font-medium rounded-r-md transition-all duration-200'
+                                            ? 'text-burgundy-main'
+                                            : 'text-neutral-400 hover:text-white',
+                                        'group relative flex items-center px-2 py-2 text-sm font-medium rounded-r-md transition-colors duration-200'
                                     )}
                                 >
-                                    <item.icon
-                                        className={clsx(
-                                            isActive ? 'text-burgundy-main' : 'text-neutral-500 group-hover:text-white',
-                                            'mr-3 flex-shrink-0 h-6 w-6 transition-colors duration-200'
+                                    <AnimatePresence>
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="sidebar-active"
+                                                className="absolute inset-0 bg-burgundy-main/10 border-l-4 border-burgundy-main rounded-r-md"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{
+                                                    type: "spring",
+                                                    stiffness: 350,
+                                                    damping: 30
+                                                }}
+                                            />
                                         )}
-                                        aria-hidden="true"
-                                    />
-                                    {item.name}
+                                    </AnimatePresence>
+                                    <span className="relative z-10 flex items-center">
+                                        <item.icon
+                                            className={clsx(
+                                                isActive ? 'text-burgundy-main' : 'text-neutral-500 group-hover:text-white',
+                                                'mr-3 flex-shrink-0 h-6 w-6 transition-colors duration-200'
+                                            )}
+                                            aria-hidden="true"
+                                        />
+                                        {item.name}
+                                    </span>
                                 </Link>
                             )
                         })}
@@ -78,10 +100,36 @@ export function Sidebar() {
                 <div className="flex flex-col gap-1 bg-[#2a2a2a] border-t border-neutral-800 p-4">
                     <Link
                         href="/settings"
-                        className="group flex items-center px-2 py-2 text-sm font-medium text-neutral-400 rounded-md hover:bg-neutral-800 hover:text-white transition-colors"
+                        className={clsx(
+                            pathname.startsWith('/settings')
+                                ? 'text-burgundy-main'
+                                : 'text-neutral-400 hover:text-white',
+                            'group relative flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors'
+                        )}
                     >
-                        <Settings className="mr-3 h-5 w-5 text-neutral-500 group-hover:text-white transition-colors" />
-                        {t('settings')}
+                        <AnimatePresence>
+                            {pathname.startsWith('/settings') && (
+                                <motion.div
+                                    layoutId="sidebar-active"
+                                    className="absolute inset-0 bg-burgundy-main/10 border-l-4 border-burgundy-main rounded-md"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{
+                                        type: "spring",
+                                        stiffness: 350,
+                                        damping: 30
+                                    }}
+                                />
+                            )}
+                        </AnimatePresence>
+                        <span className="relative z-10 flex items-center">
+                            <Settings className={clsx(
+                                pathname.startsWith('/settings') ? 'text-burgundy-main' : 'text-neutral-500 group-hover:text-white',
+                                'mr-3 h-5 w-5 transition-colors'
+                            )} />
+                            {t('settings')}
+                        </span>
                     </Link>
                     <button
                         onClick={handleSignOut}

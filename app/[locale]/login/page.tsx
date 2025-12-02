@@ -7,6 +7,7 @@ import { Loader2, Sparkles } from 'lucide-react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import LightRays from '@/components/ui/LightRays'
+import { Link } from '@/i18n/routing'
 
 export default function LoginPage() {
     const t = useTranslations('Login')
@@ -162,9 +163,9 @@ export default function LoginPage() {
                                 {t('password')}
                             </label>
                             <div className="flex justify-end">
-                                <a href="/forgot-password" className="text-xs text-neutral-400 hover:text-white transition-colors">
+                                <Link href="/forgot-password" className="text-xs text-neutral-400 hover:text-white transition-colors">
                                     {t('forgotPassword')}
-                                </a>
+                                </Link>
                             </div>
                             <input
                                 id="password"

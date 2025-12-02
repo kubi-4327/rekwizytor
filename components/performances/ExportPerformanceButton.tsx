@@ -6,6 +6,7 @@ import { Database } from '@/types/supabase'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { useTranslations } from 'next-intl'
+import { loadPdfFonts, loadAppLogo } from '@/utils/pdfUtils'
 
 type Performance = Database['public']['Tables']['performances']['Row']
 type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] & {
@@ -35,35 +36,14 @@ export function ExportPerformanceButton({ production, items, user, variant = 'de
         try {
             const doc = new jsPDF()
 
-            // Load Roboto font for Polish characters support
-            try {
-                const fontUrl = 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxP.ttf'
-                const response = await fetch(fontUrl)
-                const blob = await response.blob()
-                const reader = new FileReader()
-
-                await new Promise((resolve, reject) => {
-                    reader.onloadend = () => {
-                        const base64data = reader.result as string
-                        const base64Content = base64data.split(',')[1]
-                        doc.addFileToVFS('Roboto-Regular.ttf', base64Content)
-                        doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal')
-                        doc.setFont('Roboto')
-                        resolve(null)
-                    }
-                    reader.onerror = reject
-                    reader.readAsDataURL(blob)
-                })
-            } catch (e) {
-                console.error("Failed to load font, falling back to default", e)
-            }
+            // Load fonts and logo using utility
+            await loadPdfFonts(doc)
+            const logoBase64 = await loadAppLogo()
 
             // Load Poster Image
             let posterBase64: string | null = null
             if (production.image_url) {
                 try {
-                    // Use a proxy or ensure CORS is configured if fetching from external domain
-                    // For now assuming standard fetch works or it's a same-origin/CORS-friendly URL
                     const response = await fetch(production.image_url)
                     const blob = await response.blob()
                     const reader = new FileReader()
@@ -78,26 +58,6 @@ export function ExportPerformanceButton({ production, items, user, variant = 'de
                     console.error("Failed to load poster", e)
                 }
             }
-
-            // Load Logo
-            let logoBase64: string | null = null
-            try {
-                const logoUrl = window.location.origin + '/logo-full-sub.png'
-                const response = await fetch(logoUrl)
-                const blob = await response.blob()
-                const reader = new FileReader()
-                await new Promise((resolve) => {
-                    reader.onloadend = () => {
-                        logoBase64 = reader.result as string
-                        resolve(null)
-                    }
-                    reader.readAsDataURL(blob)
-                })
-            } catch (e) {
-                console.error("Failed to load logo", e)
-            }
-
-            // --- PDF Layout ---
             let yPos = 15
             const margin = 14
             const pageWidth = doc.internal.pageSize.getWidth()
@@ -113,15 +73,18 @@ export function ExportPerformanceButton({ production, items, user, variant = 'de
             doc.text(`${t('generatedBy')}: ${userStr}`, pageWidth - margin, yPos, { align: 'right' })
 
             // Add Logo if available
+            // Add Logo if available
             if (logoBase64) {
                 const imgProps = doc.getImageProperties(logoBase64)
                 const pdfWidth = 40
                 const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
                 doc.addImage(logoBase64, 'PNG', margin, 10, pdfWidth, pdfHeight)
-            }
 
-            // Move Y down for Title/Poster start
-            yPos = 30
+                // Move Y down based on logo height
+                yPos = Math.max(yPos, 10 + pdfHeight + 15)
+            } else {
+                yPos = 30
+            }
 
             // 2. Poster & Title
             if (posterBase64) {
@@ -178,13 +141,12 @@ export function ExportPerformanceButton({ production, items, user, variant = 'de
             const tableData = items.map(item => [
                 item.items?.name || 'Unknown Item',
                 item.scene_number ? `Scena ${item.scene_number}` : 'Unassigned',
-                item.setup_instructions || '',
                 '' // Checkbox column
             ])
 
             autoTable(doc, {
                 startY: yPos,
-                head: [['Nazwa', 'Scena', 'Instrukcje', 'Sprawdzone']],
+                head: [['Nazwa', 'Scena', 'Sprawdzone']],
                 body: tableData,
                 theme: 'grid',
                 headStyles: { fillColor: [40, 40, 40] },
@@ -192,12 +154,11 @@ export function ExportPerformanceButton({ production, items, user, variant = 'de
                 columnStyles: {
                     0: { cellWidth: 'auto' },
                     1: { cellWidth: 30 },
-                    2: { cellWidth: 'auto' },
-                    3: { cellWidth: 25 }
+                    2: { cellWidth: 25 }
                 },
                 didParseCell: (data) => {
                     // Empty content for checkbox column to ensure it's clean
-                    if (data.section === 'body' && data.column.index === 3) {
+                    if (data.section === 'body' && data.column.index === 2) {
                         data.cell.text = ['[   ]']
                     }
                 }

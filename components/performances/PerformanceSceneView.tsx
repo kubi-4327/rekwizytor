@@ -35,7 +35,7 @@ export function PerformanceSceneView({ performanceId, propsByAct, assignedProps 
                         <tr>
                             <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('table.scene')}</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('table.item')}</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('table.instructions')}</th>
+
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-800">
@@ -45,7 +45,7 @@ export function PerformanceSceneView({ performanceId, propsByAct, assignedProps 
                                 <Fragment key={actNum}>
                                     {/* Act Header */}
                                     <tr className="bg-neutral-950/50">
-                                        <td colSpan={3} className="px-4 py-2 text-xs font-bold text-neutral-500 uppercase tracking-wider border-y border-neutral-800 text-center">
+                                        <td colSpan={2} className="px-4 py-2 text-xs font-bold text-neutral-500 uppercase tracking-wider border-y border-neutral-800 text-center">
                                             {t('act', { actNum })}
                                         </td>
                                     </tr>
@@ -64,9 +64,7 @@ export function PerformanceSceneView({ performanceId, propsByAct, assignedProps 
                                                 <td className="px-4 py-3 text-sm text-white align-top">
                                                     {prop.items?.name || prop.item_name_snapshot}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-neutral-400 align-top">
-                                                    {prop.setup_instructions || '-'}
-                                                </td>
+
                                             </tr>
                                         )
                                     })}
@@ -75,7 +73,7 @@ export function PerformanceSceneView({ performanceId, propsByAct, assignedProps 
 
                         {(!assignedProps || assignedProps.length === 0) && (
                             <tr>
-                                <td colSpan={3} className="px-4 py-8 text-center text-sm text-neutral-500">
+                                <td colSpan={2} className="px-4 py-8 text-center text-sm text-neutral-500">
                                     {t('noProps')}
                                 </td>
                             </tr>
@@ -115,11 +113,7 @@ export function PerformanceSceneView({ performanceId, propsByAct, assignedProps 
                                                     <h4 className="text-sm font-medium text-white mb-1">
                                                         {prop.items?.name || prop.item_name_snapshot}
                                                     </h4>
-                                                    {prop.setup_instructions && (
-                                                        <p className="text-xs text-neutral-400">
-                                                            {prop.setup_instructions}
-                                                        </p>
-                                                    )}
+
                                                 </div>
                                                 {/* Could add item image here if available */}
                                                 {prop.items?.image_url && (

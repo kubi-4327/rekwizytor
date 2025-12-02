@@ -65,23 +65,40 @@ export function ActiveChecklistsList({ initialChecklists }: Props) {
 
     // Realtime Subscription to refresh list when shows become active/inactive
     useEffect(() => {
-        const channel = supabase
-            .channel('active-checklists-list')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'scene_checklists',
-                },
-                () => {
-                    router.refresh()
+        let channel: ReturnType<typeof supabase.channel> | null = null
+
+        try {
+            channel = supabase
+                .channel('active-checklists-list')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'scene_checklists',
+                    },
+                    () => {
+                        router.refresh()
+                    }
+                )
+
+            channel.subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    // console.log('Subscribed to active checklists')
+                } else if (status === 'CHANNEL_ERROR') {
+                    console.error('Error subscribing to active checklists channel')
+                } else if (status === 'TIMED_OUT') {
+                    console.error('Subscription timed out')
                 }
-            )
-            .subscribe()
+            })
+        } catch (error) {
+            console.error('Failed to setup realtime subscription:', error)
+        }
 
         return () => {
-            supabase.removeChannel(channel)
+            if (channel) {
+                supabase.removeChannel(channel)
+            }
         }
     }, [supabase, router])
 

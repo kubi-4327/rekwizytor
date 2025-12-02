@@ -123,18 +123,20 @@ export default function NotesList({ performanceId }: { performanceId?: string })
     return (
         <div className="space-y-4 overflow-x-hidden max-w-full">
             {/* Header */}
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                 <div>
                     <h1 className="text-xl font-bold text-white">{t('title')}</h1>
                     <p className="text-neutral-400 text-xs sm:text-sm mt-1">{t('subtitle')}</p>
                 </div>
-                <button
-                    onClick={createNote}
-                    className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-md hover:bg-neutral-200 transition-colors font-medium text-sm sm:min-w-[140px] border border-transparent justify-center"
-                >
-                    <Plus size={16} />
-                    <span className="hidden sm:inline">{t('newNote')}</span>
-                </button>
+                <div className="flex justify-end w-full sm:w-auto">
+                    <button
+                        onClick={createNote}
+                        className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-md hover:bg-neutral-200 transition-colors font-medium text-sm w-full sm:w-auto sm:min-w-[140px] border border-transparent justify-center"
+                    >
+                        <Plus size={16} />
+                        <span>{t('newNote')}</span>
+                    </button>
+                </div>
             </div>
 
             {/* Search Section */}

@@ -6,8 +6,11 @@ import * as LucideIcons from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { EditGroupDialog } from './EditGroupDialog'
+import { GroupLabelButton } from './GroupLabelButton'
 
-type Group = Database['public']['Tables']['groups']['Row']
+type Group = Database['public']['Tables']['groups']['Row'] & {
+    locations: { name: string } | null
+}
 
 interface GroupCardProps {
     group: Group
@@ -40,6 +43,11 @@ export function GroupCard({ group, subgroupCount = 0, href }: GroupCardProps) {
                                 {subgroupCount}
                             </span>
                         )}
+                        <GroupLabelButton
+                            groupId={group.id}
+                            groupName={group.name}
+                            locationName={group.locations?.name || undefined}
+                        />
                         <button
                             onClick={(e) => {
                                 e.preventDefault()

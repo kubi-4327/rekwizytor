@@ -216,50 +216,7 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
                         </div>
                     </div>
 
-                    {/* Token Usage Chart */}
-                    <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
-                        <h3 className="text-base font-medium text-white mb-6 font-boldonse">{t('tokenUsageChart')}</h3>
-                        <div className="h-64 flex items-end gap-2">
-                            {(() => {
-                                // Group logs by date (last 14 days)
-                                const days = 14
-                                const now = new Date()
-                                const data = Array.from({ length: days }).map((_, i) => {
-                                    const d = new Date()
-                                    d.setDate(now.getDate() - (days - 1 - i))
-                                    // Use local date string for comparison (YYYY-MM-DD)
-                                    const dateStr = d.toLocaleDateString('en-CA')
 
-                                    const dayLogs = logs.filter(l => {
-                                        if (!l.created_at) return false
-                                        const logDate = new Date(l.created_at).toLocaleDateString('en-CA')
-                                        return logDate === dateStr
-                                    })
-
-                                    const total = dayLogs.reduce((acc, curr) => acc + (curr.total_tokens || 0), 0)
-                                    return { date: dateStr, total, label: d.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' }) }
-                                })
-
-                                const max = Math.max(...data.map(d => d.total), 100) // Min max 100 to avoid div by zero
-
-                                return data.map((d) => (
-                                    <div key={d.date} className="flex-1 flex flex-col items-center gap-2 group">
-                                        <div className="w-full relative flex items-end justify-center h-full">
-                                            <div
-                                                className="w-full bg-neutral-800 rounded-t-sm hover:bg-ai-secondary transition-colors relative group-hover:opacity-100"
-                                                style={{ height: `${(d.total / max) * 100}%` }}
-                                            >
-                                                <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10 border border-neutral-700 font-courier">
-                                                    {d.total.toLocaleString()} tokens
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <span className="text-[10px] text-neutral-500 font-courier rotate-45 origin-left translate-y-2">{d.label}</span>
-                                    </div>
-                                ))
-                            })()}
-                        </div>
-                    </div>
 
                     {/* Recent Logs Table */}
                     <div className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">

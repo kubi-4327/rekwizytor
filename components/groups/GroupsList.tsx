@@ -4,7 +4,7 @@ import { Database } from '@/types/supabase'
 import { GroupCard } from './GroupCard'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, MapPin } from 'lucide-react'
+import { ChevronDown, ChevronRight, MapPin, FileText } from 'lucide-react'
 
 type Group = Database['public']['Tables']['groups']['Row'] & {
     locations: { name: string } | null
@@ -59,8 +59,26 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
         return a.localeCompare(b)
     })
 
+    const handleGenerateAllLabels = async () => {
+        const allGroups = groups.map(g => ({
+            id: g.id,
+            name: g.name,
+            locationName: g.locations?.name
+        }))
+        await import('@/utils/pdfUtils').then(mod => mod.generateAllGroupsLabelsPdf(allGroups))
+    }
+
     return (
         <div className="space-y-8">
+            <div className="flex justify-end">
+                <button
+                    onClick={handleGenerateAllLabels}
+                    className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-md transition-colors text-sm font-medium"
+                >
+                    <FileText className="w-4 h-4" />
+                    Generate All Labels
+                </button>
+            </div>
             {sortedLocations.map(location => (
                 <div key={location} className="space-y-4">
                     <button

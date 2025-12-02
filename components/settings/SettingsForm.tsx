@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { LogOut, User, Globe, Shield, LayoutGrid, BarChart, Settings as SettingsIcon, Clock } from 'lucide-react'
+import { LogOut, User, Globe, Shield, LayoutGrid, BarChart, Settings as SettingsIcon, Clock, Info } from 'lucide-react'
 import { useTimeFormat } from '@/hooks/useTimeFormat'
 import { useTranslations } from 'next-intl'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
@@ -172,6 +172,20 @@ export function SettingsForm({ user }: { user: UserData }) {
                         >
                             <BarChart className="w-4 h-4" />
                             {tSettings('viewStats')}
+                        </Link>
+                    </div>
+
+                    <div className="border-t border-neutral-800 pt-4 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-base font-medium text-white">{t('aboutTitle')}</h3>
+                            <p className="text-sm text-neutral-400 mt-1">{t('aboutDescription')}</p>
+                        </div>
+                        <Link
+                            href="/about"
+                            className="flex items-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors font-medium text-sm border border-neutral-700"
+                        >
+                            <Info className="w-4 h-4" />
+                            {t('viewAbout')}
                         </Link>
                     </div>
                 </div>
