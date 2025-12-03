@@ -3,13 +3,13 @@
 import { useState } from 'react'
 import { QrCode, Loader2 } from 'lucide-react'
 
-interface GroupLabelButtonProps {
-    groupId: string
-    groupName: string
-    locationName?: string
+interface PerformanceLabelButtonProps {
+    performanceId: string
+    performanceTitle: string
+    premiereDate?: string | null
 }
 
-export function GroupLabelButton({ groupId, groupName, locationName }: GroupLabelButtonProps) {
+export function PerformanceLabelButton({ performanceId, performanceTitle, premiereDate }: PerformanceLabelButtonProps) {
     const [isGenerating, setIsGenerating] = useState(false)
 
     const handleGenerateLabel = async (e: React.MouseEvent) => {
@@ -18,16 +18,16 @@ export function GroupLabelButton({ groupId, groupName, locationName }: GroupLabe
 
         setIsGenerating(true)
         try {
-            const response = await fetch('/api/generate-labels', {
+            const response = await fetch('/api/generate-performance-labels', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    groups: [{
-                        id: groupId,
-                        name: groupName,
-                        locationName
+                    performances: [{
+                        id: performanceId,
+                        title: performanceTitle,
+                        premiereDate: premiereDate ? new Date(premiereDate).toLocaleDateString('pl-PL') : undefined
                     }]
                 }),
             })
@@ -38,7 +38,7 @@ export function GroupLabelButton({ groupId, groupName, locationName }: GroupLabe
             const url = window.URL.createObjectURL(blob)
             const a = document.createElement('a')
             a.href = url
-            a.download = `label_${groupName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`
+            a.download = `label_${performanceTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`
             document.body.appendChild(a)
             a.click()
             document.body.removeChild(a)

@@ -9,6 +9,7 @@ import { SearchInput } from '@/components/ui/SearchInput'
 import { FilterSelect } from '@/components/ui/FilterSelect'
 import { useTranslations } from 'next-intl'
 import { format } from 'date-fns'
+import { PerformanceLabelButton } from './PerformanceLabelButton'
 
 type Performance = Database['public']['Tables']['performances']['Row']
 
@@ -22,53 +23,64 @@ const PerformanceListItem = ({ show }: { show: Performance }) => {
     const [isHovered, setIsHovered] = useState(false)
 
     return (
-        <Link
-            href={`/performances/${show.id}`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            className="group flex items-center gap-4 bg-neutral-900/50 border border-neutral-800 rounded-lg p-4 transition-all"
-            style={{
-                borderLeftColor: show.color || undefined,
-                borderLeftWidth: show.color ? '4px' : '1px',
-                borderColor: isHovered && show.color ? show.color : undefined
-            }}
-        >
-            {/* Thumbnail */}
-            <div className="relative h-16 w-16 flex-shrink-0 rounded-md overflow-hidden bg-neutral-800">
-                {show.thumbnail_url ? (
-                    <Image
-                        src={show.thumbnail_url}
-                        alt={show.title}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center text-neutral-600">
-                        <Layers className="w-6 h-6" />
-                    </div>
-                )}
-            </div>
-
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-                <h3
-                    className="text-lg font-medium text-white truncate transition-colors"
-                    style={{ color: isHovered && show.color ? show.color : undefined }}
-                >
-                    {show.title}
-                </h3>
-                <div className="flex items-center gap-3 text-sm text-neutral-400 mt-1">
-                    <span>{show.premiere_date ? format(new Date(show.premiere_date), 'dd/MM/yyyy') : t('tbd')}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs border ${show.status === 'active' ? 'bg-emerald-900/20 text-emerald-400 border-emerald-900/50' :
-                        show.status === 'upcoming' ? 'bg-yellow-900/20 text-yellow-400 border-yellow-900/50' :
-                            'bg-neutral-800 text-neutral-400 border-neutral-700'
-                        }`}>
-                        {tStatus(show.status as Database['public']['Enums']['performance_status_enum'])}
-                    </span>
+        <div className="relative group">
+            <Link
+                href={`/performances/${show.id}`}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                className="flex items-center gap-4 bg-neutral-900/50 border border-neutral-800 rounded-lg p-4 transition-all"
+                style={{
+                    borderLeftColor: show.color || undefined,
+                    borderLeftWidth: show.color ? '4px' : '1px',
+                    borderColor: isHovered && show.color ? show.color : undefined
+                }}
+            >
+                {/* Thumbnail */}
+                <div className="relative h-16 w-16 flex-shrink-0 rounded-md overflow-hidden bg-neutral-800">
+                    {show.thumbnail_url ? (
+                        <Image
+                            src={show.thumbnail_url}
+                            alt={show.title}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-neutral-600">
+                            <Layers className="w-6 h-6" />
+                        </div>
+                    )}
                 </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                    <h3
+                        className="text-lg font-medium text-white truncate transition-colors"
+                        style={{ color: isHovered && show.color ? show.color : undefined }}
+                    >
+                        {show.title}
+                    </h3>
+                    <div className="flex items-center gap-3 text-sm text-neutral-400 mt-1">
+                        <span>{show.premiere_date ? format(new Date(show.premiere_date), 'dd/MM/yyyy') : t('tbd')}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-xs border ${show.status === 'active' ? 'bg-emerald-900/20 text-emerald-400 border-emerald-900/50' :
+                            show.status === 'upcoming' ? 'bg-yellow-900/20 text-yellow-400 border-yellow-900/50' :
+                                'bg-neutral-800 text-neutral-400 border-neutral-700'
+                            }`}>
+                            {tStatus(show.status as Database['public']['Enums']['performance_status_enum'])}
+                        </span>
+                    </div>
+                </div>
+            </Link>
+
+            {/* Label Button - positioned absolutely on the right */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <PerformanceLabelButton
+                    performanceId={show.id}
+                    performanceTitle={show.title}
+                    premiereDate={show.premiere_date}
+                />
             </div>
-        </Link>
+        </div>
     )
 }
 
@@ -78,58 +90,69 @@ const PerformanceGridItem = ({ show }: { show: Performance }) => {
     const [isHovered, setIsHovered] = useState(false)
 
     return (
-        <Link
-            href={`/performances/${show.id}`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            className="group relative bg-neutral-900/50 border border-neutral-800 rounded-xl overflow-hidden transition-all flex flex-col"
-            style={{
-                borderColor: isHovered && show.color ? show.color : undefined
-            }}
-        >
-            {/* Poster Area */}
-            <div className="relative aspect-[2/3] w-full bg-neutral-800">
-                {show.image_url ? (
-                    <Image
-                        src={show.image_url}
-                        alt={show.title}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center text-neutral-700">
-                        <Layers className="w-12 h-12" />
-                    </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+        <div className="relative group">
+            <Link
+                href={`/performances/${show.id}`}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                className="relative bg-neutral-900/50 border border-neutral-800 rounded-xl overflow-hidden transition-all flex flex-col"
+                style={{
+                    borderColor: isHovered && show.color ? show.color : undefined
+                }}
+            >
+                {/* Poster Area */}
+                <div className="relative aspect-[2/3] w-full bg-neutral-800">
+                    {show.image_url ? (
+                        <Image
+                            src={show.image_url}
+                            alt={show.title}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-neutral-700">
+                            <Layers className="w-12 h-12" />
+                        </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <h3
-                        className="text-lg font-bold text-white leading-tight transition-colors"
-                        style={{ color: isHovered && show.color ? show.color : undefined }}
-                    >
-                        {show.title}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-2">
-                        <span className={`px-2 py-0.5 rounded-full text-xs border backdrop-blur-sm ${show.status === 'active' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/30' :
-                            show.status === 'upcoming' ? 'bg-yellow-900/40 text-yellow-300 border-yellow-500/30' :
-                                'bg-neutral-800/80 text-neutral-400 border-neutral-700'
-                            }`}>
-                            {tStatus(show.status as Database['public']['Enums']['performance_status_enum'])}
-                        </span>
-                        <span className="text-xs text-neutral-300">
-                            {show.premiere_date ? format(new Date(show.premiere_date), 'dd/MM/yyyy') : t('tbd')}
-                        </span>
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h3
+                            className="text-lg font-bold text-white leading-tight transition-colors"
+                            style={{ color: isHovered && show.color ? show.color : undefined }}
+                        >
+                            {show.title}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-2">
+                            <span className={`px-2 py-0.5 rounded-full text-xs border backdrop-blur-sm ${show.status === 'active' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/30' :
+                                show.status === 'upcoming' ? 'bg-yellow-900/40 text-yellow-300 border-yellow-500/30' :
+                                    'bg-neutral-800/80 text-neutral-400 border-neutral-700'
+                                }`}>
+                                {tStatus(show.status as Database['public']['Enums']['performance_status_enum'])}
+                            </span>
+                            <span className="text-xs text-neutral-300">
+                                {show.premiere_date ? format(new Date(show.premiere_date), 'dd/MM/yyyy') : t('tbd')}
+                            </span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Color Strip */}
-            {show.color && (
-                <div className="h-1 w-full" style={{ backgroundColor: show.color }} />
-            )}
-        </Link>
+                {/* Color Strip */}
+                {show.color && (
+                    <div className="h-1 w-full" style={{ backgroundColor: show.color }} />
+                )}
+            </Link>
+
+            {/* Label Button - positioned absolutely in top right corner */}
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <PerformanceLabelButton
+                    performanceId={show.id}
+                    performanceTitle={show.title}
+                    premiereDate={show.premiere_date}
+                />
+            </div>
+        </div>
     )
 }
 

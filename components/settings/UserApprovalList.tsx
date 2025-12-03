@@ -43,7 +43,8 @@ export function UserApprovalList() {
             const typedData: Profile[] = (data || []).map(p => ({
                 ...p,
                 role: (p.role as 'admin' | 'user' | 'manager') || 'user',
-                status: (p.status as 'pending' | 'approved' | 'rejected') || 'pending'
+                status: (p.status as 'pending' | 'approved' | 'rejected') || 'pending',
+                created_at: p.created_at ?? undefined
             }))
 
             setPendingUsers(typedData)
@@ -208,8 +209,8 @@ export function UserApprovalList() {
                             <button
                                 onClick={handleStatusChange}
                                 className={`px-5 py-2.5 rounded-lg font-bold text-white transition-all shadow-lg ${confirmAction.type === 'approve'
-                                        ? 'bg-red-600 hover:bg-red-500 shadow-red-900/20'
-                                        : 'bg-neutral-700 hover:bg-neutral-600'
+                                    ? 'bg-red-600 hover:bg-red-500 shadow-red-900/20'
+                                    : 'bg-neutral-700 hover:bg-neutral-600'
                                     }`}
                             >
                                 {t('confirm')}

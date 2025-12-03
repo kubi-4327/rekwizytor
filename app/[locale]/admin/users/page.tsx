@@ -44,7 +44,8 @@ export default async function AdminUsersPage() {
             <UsersList initialProfiles={(profiles || []).map(p => ({
                 ...p,
                 role: p.role || 'user',
-                status: p.status || 'pending'
+                status: p.status || 'pending',
+                created_at: p.created_at ?? undefined
             }))} />
         </div>
     )

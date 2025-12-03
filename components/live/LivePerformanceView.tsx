@@ -68,6 +68,81 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
     const [showCancelConfirmation, setShowCancelConfirmation] = useState(false)
     const [connectionError, setConnectionError] = useState<string | null>(null)
 
+    // Break State
+    const [isBreak, setIsBreak] = useState(false)
+    const [breakStartTime, setBreakStartTime] = useState<number | null>(null)
+    const [totalBreakTime, setTotalBreakTime] = useState(0)
+
+    // Load Break State
+    useEffect(() => {
+        const storedIsBreak = localStorage.getItem(`live_view_is_break_${performanceId}`)
+        if (storedIsBreak === 'true') setIsBreak(true)
+
+        const storedBreakStart = localStorage.getItem(`live_view_break_start_${performanceId}`)
+        if (storedBreakStart) setBreakStartTime(parseInt(storedBreakStart))
+
+        const storedTotalBreak = localStorage.getItem(`live_view_total_break_${performanceId}`)
+        if (storedTotalBreak) setTotalBreakTime(parseInt(storedTotalBreak))
+    }, [performanceId])
+
+    const startBreak = () => {
+        const now = Date.now()
+        setIsBreak(true)
+        setBreakStartTime(now)
+        localStorage.setItem(`live_view_is_break_${performanceId}`, 'true')
+        localStorage.setItem(`live_view_break_start_${performanceId}`, now.toString())
+
+        // Deactivate all scenes
+        const activeIds = checklists.filter(c => c.is_active).map(c => c.id)
+        if (activeIds.length > 0) {
+            supabase
+                .from('scene_checklists')
+                .update({ is_active: false })
+                .in('id', activeIds)
+                .then()
+
+            setChecklists(prev => prev.map(c => ({ ...c, is_active: false })))
+        }
+    }
+
+    const endBreak = () => {
+        const now = Date.now()
+        let addedBreakTime = 0
+        if (breakStartTime) {
+            addedBreakTime = now - breakStartTime
+        }
+
+        const newTotalBreak = totalBreakTime + addedBreakTime
+        setTotalBreakTime(newTotalBreak)
+        setIsBreak(false)
+        setBreakStartTime(null)
+
+        localStorage.setItem(`live_view_total_break_${performanceId}`, newTotalBreak.toString())
+        localStorage.removeItem(`live_view_is_break_${performanceId}`)
+        localStorage.removeItem(`live_view_break_start_${performanceId}`)
+
+        // Activate next scene (First scene of next Act)
+        // We need to find the first scene of the next act relative to the last active one
+        // But since we are in break, we probably know which act is coming next.
+        // Actually, startBreak is called when finishing an Act.
+        // So we should find the first scene of the *next* act.
+
+        // Better approach: When starting break, we set localActiveSceneId to the first scene of the next act.
+        // So here we just activate it.
+
+        if (localActiveSceneId) {
+            supabase
+                .from('scene_checklists')
+                .update({ is_active: true })
+                .eq('id', localActiveSceneId)
+                .then()
+
+            setChecklists(prev => prev.map(c =>
+                c.id === localActiveSceneId ? { ...c, is_active: true } : c
+            ))
+        }
+    }
+
     // Sort checklists by scene number
     const sortedChecklists = useMemo(() => {
         return [...checklists].sort((a, b) => {
@@ -110,6 +185,9 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                 localStorage.removeItem(key)
             }
         })
+        localStorage.removeItem(`live_view_is_break_${performanceId}`)
+        localStorage.removeItem(`live_view_break_start_${performanceId}`)
+        localStorage.removeItem(`live_view_total_break_${performanceId}`)
     }, [performanceId])
 
     const finishScene = React.useCallback(async (forceFinish = false) => {
@@ -128,66 +206,83 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         const nextChecklist = sortedChecklists[currentIndex + 1]
 
         // Check if we need to perform a global action (Finish Act or Finish Show)
-        const isEndOfAct = nextChecklist && nextChecklist.act_number !== sortedChecklists[currentIndex].act_number
+        const isEndOfAct = nextChecklist && currentChecklist && nextChecklist.act_number !== currentChecklist.act_number
         const isLastScene = !nextChecklist
 
-        if (forceFinish || isLastScene || isEndOfAct) {
-            // GLOBAL ACTION
-            const updates = []
+        if (forceFinish || isLastScene) {
+            // End of show OR Forced Finish
+            const now = Date.now()
+            // Calculate final duration excluding breaks
+            // If we are currently in a break, we should probably end it first or just ignore the current partial break?
+            // Let's assume we just take current time.
 
-            // Deactivate ALL currently active scenes to be safe
+            setEndTime(now)
+            localStorage.setItem(`live_view_end_${performanceId}`, now.toString())
+
+            clearLiveStorage()
+            setShowStats(true)
+            if (forceFinish) {
+                setChecklists(prev => prev.map(c => ({ ...c, is_active: false })))
+                return
+            }
+
+            // Deactivate all
             const activeIds = checklists.filter(c => c.is_active).map(c => c.id)
             if (activeIds.length > 0) {
-                updates.push(
-                    supabase
-                        .from('scene_checklists')
-                        .update({ is_active: false })
-                        .in('id', activeIds)
-                )
+                await supabase
+                    .from('scene_checklists')
+                    .update({ is_active: false })
+                    .in('id', activeIds)
             }
 
-            if (nextChecklist && !forceFinish && !isLastScene) {
-                // Activate next scene (Start of new Act)
-                updates.push(
-                    supabase
-                        .from('scene_checklists')
-                        .update({ is_active: true })
-                        .eq('id', nextChecklist.id)
-                )
-            } else {
-                // End of show OR Forced Finish
-                const now = Date.now()
-                setEndTime(now)
-                localStorage.setItem(`live_view_end_${performanceId}`, now.toString())
+            setChecklists(prev => prev.map(c => ({ ...c, is_active: false })))
 
-                clearLiveStorage()
-                setShowStats(true)
-                if (forceFinish) {
-                    setChecklists(prev => prev.map(c => ({ ...c, is_active: false })))
-                    return
-                }
+        } else if (isEndOfAct) {
+            // START BREAK
+            // 1. Deactivate current scene
+            const activeIds = checklists.filter(c => c.is_active).map(c => c.id)
+            if (activeIds.length > 0) {
+                await supabase
+                    .from('scene_checklists')
+                    .update({ is_active: false })
+                    .in('id', activeIds)
             }
+            setChecklists(prev => prev.map(c => ({ ...c, is_active: false })))
 
-            // Optimistic update for global state
-            setChecklists(prev => prev.map(c => {
-                // Deactivate all
-                const newC = { ...c, is_active: false }
-                // Activate next if applicable
-                if (nextChecklist && !forceFinish && !isLastScene && c.id === nextChecklist.id) {
-                    newC.is_active = true
-                }
-                return newC
-            }))
-
-            await Promise.all(updates)
-
-        } else {
-            // LOCAL ACTION (Next Scene within Act)
+            // 2. Set next scene as local active (so when we resume, we are there)
             if (nextChecklist) {
                 setLocalActiveSceneId(nextChecklist.id)
             }
+
+            // 3. Start Break Mode
+            startBreak()
+
+        } else {
+            // LOCAL ACTION (Next Scene within Act)
+            // Deactivate current, Activate next
+            const activeIds = checklists.filter(c => c.is_active).map(c => c.id)
+            if (activeIds.length > 0) {
+                await supabase
+                    .from('scene_checklists')
+                    .update({ is_active: false })
+                    .in('id', activeIds)
+            }
+
+            if (nextChecklist) {
+                await supabase
+                    .from('scene_checklists')
+                    .update({ is_active: true })
+                    .eq('id', nextChecklist.id)
+
+                setChecklists(prev => prev.map(c => {
+                    if (c.id === currentId) return { ...c, is_active: false }
+                    if (c.id === nextChecklist.id) return { ...c, is_active: true }
+                    return c
+                }))
+                setLocalActiveSceneId(nextChecklist.id)
+            }
         }
-    }, [currentChecklist, localActiveSceneId, sortedChecklists, checklists, supabase, performanceId, clearLiveStorage])
+    }, [currentChecklist, localActiveSceneId, sortedChecklists, checklists, supabase, performanceId, clearLiveStorage, totalBreakTime, startBreak])
 
     // Load End Time
     useEffect(() => {
@@ -221,18 +316,19 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
 
             // Auto-shutdown after 3 hours (3 * 60 * 60 * 1000 = 10800000 ms)
             const start = storedStartTime ? parseInt(storedStartTime) : startTime
-            if (start && (currentTime - start > 10800000)) {
+            const currentBreakDuration = isBreak && breakStartTime ? currentTime - breakStartTime : 0
+            if (start && (currentTime - start - totalBreakTime - currentBreakDuration > 10800000)) {
                 // Force finish show
                 finishScene(true)
             }
         }, 1000)
 
         return () => clearInterval(interval)
-    }, [isConfirmed, performanceId, startTime])
+    }, [isConfirmed, performanceId, startTime, isBreak, breakStartTime, totalBreakTime, finishScene])
 
     // Act Timer Logic
     useEffect(() => {
-        if (!isConfirmed || !currentChecklist) return
+        if (!isConfirmed || !currentChecklist || isBreak) return // Don't update act timer during break
 
         const actKey = `live_view_act_start_${performanceId}_${currentChecklist.act_number}`
         const storedActStart = localStorage.getItem(actKey)
@@ -246,11 +342,11 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
             setActStartTime(newActStart)
             localStorage.setItem(actKey, newActStart.toString())
         }
-    }, [isConfirmed, currentChecklist?.act_number, performanceId])
+    }, [isConfirmed, currentChecklist?.act_number, performanceId, isBreak])
 
     // Heartbeat Effect
     useEffect(() => {
-        if (!isConfirmed || !activeSceneId) return
+        if (!isConfirmed || !activeSceneId || isBreak) return // No heartbeat during break
 
         // Initial heartbeat
         const sendHeartbeat = async () => {
@@ -263,12 +359,12 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
 
         const interval = setInterval(sendHeartbeat, 30000) // Every 30s
         return () => clearInterval(interval)
-    }, [isConfirmed, activeSceneId, supabase])
+    }, [isConfirmed, activeSceneId, supabase, isBreak])
 
     // Realtime Subscriptions
     useEffect(() => {
-        const channelName = `live-performance-${performanceId}`
-
+        // Use a unique channel name to avoid potential collisions or stale bindings
+        const channelName = `live-performance-${performanceId}-${Date.now()}`
         const channel = supabase
             .channel(channelName)
             .on(
@@ -329,7 +425,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
     useEffect(() => {
         // If we had an active scene, and now we don't (and it's not just initial load), show stats
         const hasActiveScene = checklists.some(c => c.is_active)
-        if (!hasActiveScene && isConfirmed && !showStats && startTime) {
+        if (!hasActiveScene && isConfirmed && !showStats && startTime && !isBreak) { // Don't trigger if in break
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setShowStats(true)
             // Set end time if not set
@@ -341,7 +437,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
             }
             clearLiveStorage()
         }
-    }, [checklists, isConfirmed, showStats, startTime, endTime, performanceId])
+    }, [checklists, isConfirmed, showStats, startTime, endTime, performanceId, isBreak, clearLiveStorage])
 
 
 
@@ -529,6 +625,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
 
     // Format helper
     const formatDuration = (ms: number) => {
+        if (ms < 0) ms = 0
         const seconds = Math.floor((ms / 1000) % 60)
         const minutes = Math.floor((ms / (1000 * 60)) % 60)
         const hours = Math.floor((ms / (1000 * 60 * 60)))
@@ -574,7 +671,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         const stagedItems = items.filter(i => i.is_on_stage).length
         // Use endTime if available, otherwise current time (fallback)
         const end = endTime || now
-        const duration = startTime ? end - startTime : 0
+        const duration = startTime ? end - startTime - totalBreakTime : 0
         const durationFormatted = formatDuration(duration)
 
         return (
@@ -626,6 +723,18 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                                 setStartTime(now)
                                 localStorage.setItem(`live_view_start_${performanceId}`, now.toString())
 
+                                // Clear any previous end time
+                                setEndTime(null)
+                                localStorage.removeItem(`live_view_end_${performanceId}`)
+
+                                // Clear break state
+                                setIsBreak(false)
+                                setBreakStartTime(null)
+                                setTotalBreakTime(0)
+                                localStorage.removeItem(`live_view_is_break_${performanceId}`)
+                                localStorage.removeItem(`live_view_break_start_${performanceId}`)
+                                localStorage.removeItem(`live_view_total_break_${performanceId}`)
+
                                 // Activate first scene if none are active
                                 const hasActive = checklists.some(c => c.is_active)
                                 if (!hasActive && sortedChecklists.length > 0) {
@@ -655,6 +764,60 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                         </button>
                     </div>
                 </div>
+            </div>
+        )
+    }
+
+    if (isBreak) {
+        const currentBreakDuration = breakStartTime ? now - breakStartTime : 0
+
+        return (
+            <div className="fixed inset-0 z-[100] bg-neutral-900 flex flex-col items-center justify-center p-8 text-center space-y-8">
+                <div className="w-24 h-24 bg-yellow-500/10 rounded-full flex items-center justify-center animate-pulse">
+                    <Clock className="w-12 h-12 text-yellow-500" />
+                </div>
+
+                <div>
+                    <h2 className="text-4xl font-bold text-white mb-4">{t('breakInProgress')}</h2>
+                    <div className="text-6xl font-mono font-bold text-yellow-500 mb-2">
+                        {formatDuration(currentBreakDuration)}
+                    </div>
+                    <p className="text-neutral-400 uppercase tracking-wider text-sm">{t('breakDuration')}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8 w-full max-w-lg">
+                    <div className="bg-neutral-800 p-6 rounded-2xl">
+                        <div className="text-2xl font-bold text-white">
+                            {formatDuration(startTime ? now - startTime - totalBreakTime - currentBreakDuration : 0)}
+                        </div>
+                        <div className="text-xs text-neutral-400 uppercase tracking-wider mt-2">{t('totalDuration')}</div>
+                    </div>
+                    <div className="bg-neutral-800 p-6 rounded-2xl">
+                        {/* Previous Act Duration? We'd need to track it. For now show something else or empty */}
+                        <div className="text-2xl font-bold text-white">
+                            {actStartTime ? formatDuration(now - actStartTime) : '00:00'}
+                        </div>
+                        <div className="text-xs text-neutral-400 uppercase tracking-wider mt-2">{t('actDuration')}</div>
+                    </div>
+                </div>
+
+                <div className="flex gap-4 w-full max-w-md">
+                    <button
+                        onClick={endBreak}
+                        className="flex-1 py-4 bg-white text-black font-bold rounded-xl hover:bg-neutral-200 transition-colors text-lg flex items-center justify-center gap-2"
+                    >
+                        <ArrowRight className="w-6 h-6" />
+                        {t('resumeShow')}
+                    </button>
+                </div>
+
+                {/* Allow peeking at previous scenes? */}
+                <button
+                    onClick={() => setIsBreak(false)}
+                    className="text-neutral-500 hover:text-white transition-colors text-sm"
+                >
+                    {t('goToActive')} ({t('scene', { number: sortedChecklists.find(c => c.id === localActiveSceneId)?.scene_number ?? '-' })})
+                </button>
             </div>
         )
     }
@@ -828,7 +991,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                             {startTime && (
                                 <div className="flex items-center gap-1">
                                     <span className="text-neutral-500">TOTAL:</span>
-                                    <span className="text-white">{formatDuration(now - startTime)}</span>
+                                    <span className="text-white">{formatDuration(now - startTime - totalBreakTime - (isBreak && breakStartTime ? now - breakStartTime : 0))}</span>
                                 </div>
                             )}
                         </div>
@@ -994,7 +1157,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                             const currentIndex = sortedChecklists.findIndex(c => c.id === currentChecklist?.id)
                             const isLastScene = currentIndex === sortedChecklists.length - 1
                             const nextChecklist = sortedChecklists[currentIndex + 1]
-                            const isEndOfAct = nextChecklist && nextChecklist.act_number !== currentChecklist?.act_number
+                            const isEndOfAct = nextChecklist && currentChecklist && nextChecklist.act_number !== currentChecklist.act_number
 
                             // Check if we are viewing the currently active scene
                             const isLive = currentChecklist?.id === activeSceneId
@@ -1003,14 +1166,18 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                             // We should only allow navigation, not state changes
                             if (!isLive) {
                                 if (isLastScene) {
-                                    // If reviewing the very last scene, show nothing or disabled
                                     return (
                                         <button
-                                            disabled
-                                            className="bg-neutral-800 text-neutral-500 rounded-xl font-bold flex items-center justify-center gap-2 cursor-not-allowed"
+                                            onClick={() => finishScene()} // Allow finishing even from review if it's the last scene? 
+                                            // Or maybe just navigate back to active?
+                                            // If the show is actually finished, we wouldn't be here (we'd be in stats).
+                                            // If the show is running, and we are at the last scene, it means we are at the end.
+                                            // So we should be able to finish.
+
+                                            className="bg-neutral-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-neutral-700"
                                             style={{ flex: '2' }}
                                         >
-                                            {t('endOfShow')}
+                                            {t('finishShow')}
                                         </button>
                                     )
                                 }
@@ -1046,7 +1213,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                                         style={{ flex: '2' }}
                                     >
                                         <PauseCircle className="w-5 h-5" />
-                                        {t('finishAct')}
+                                        {t('startBreak')}
                                     </button>
                                 )
                             } else {
@@ -1068,4 +1235,3 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         </div>
     )
 }
-

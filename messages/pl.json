@@ -90,6 +90,17 @@
         "noMentions": "Nie zostałeś ostatnio wspomniany w żadnych notatkach.",
         "mentionedIn": "Wspomniano w: {title}",
         "quickActions": "Szybkie Akcje",
+        "inventoryStats": "Statystyki Magazynu",
+        "totalItems": "Wszystkie Przedmioty",
+        "inMaintenance": "W Konserwacji",
+        "unassigned": "Nieprzypisane",
+        "upcomingPerformances": "Nadchodzące Spektakle",
+        "daysUntil": "za {days, plural, one {1 dzień} few {# dni} many {# dni} other {# dni}}",
+        "tomorrow": "Jutro",
+        "activeChecklists": "Aktywne Listy",
+        "noActiveChecklists": "Brak aktywnych list",
+        "checklistProgress": "{completed} z {total} przedmiotów",
+        "viewLiveView": "Zobacz Live View",
         "PendingAlert": {
             "title": "Oczekujący Użytkownicy",
             "message": "{count, plural, one {Jeden użytkownik czeka na zatwierdzenie.} few {# użytkowników czeka na zatwierdzenie.} many {# użytkowników czeka na zatwierdzenie.} other {# użytkowników czeka na zatwierdzenie.}}"
@@ -305,7 +316,16 @@
         "returnToDashboard": "Powrót do Ekranu Głównego",
         "cancel": "Anuluj",
         "cancelLiveView": "Anuluj Live View",
-        "unassigned": "Nieprzypisane"
+        "unassigned": "Nieprzypisane",
+        "endOfShow": "Koniec Spektaklu",
+        "startBreak": "Rozpocznij Przerwę",
+        "endBreak": "Zakończ Przerwę",
+        "breakInProgress": "Przerwa w Toku",
+        "breakDuration": "Czas Trwania Przerwy",
+        "actDuration": "Czas Trwania Aktu",
+        "totalDuration": "Całkowity Czas (bez przerw)",
+        "resumeShow": "Wznów Spektakl",
+        "goToActive": "Idź do Aktywnej Sceny"
     },
     "ChecklistPage": {
         "backToPerformance": "Powrót do Spektakli",

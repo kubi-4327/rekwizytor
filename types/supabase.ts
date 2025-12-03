@@ -57,6 +57,7 @@ export type Database = {
           location_id: string | null
           name: string
           parent_id: string | null
+          short_id: string | null
         }
         Insert: {
           color?: string | null
@@ -67,6 +68,7 @@ export type Database = {
           location_id?: string | null
           name: string
           parent_id?: string | null
+          short_id?: string | null
         }
         Update: {
           color?: string | null
@@ -77,6 +79,7 @@ export type Database = {
           location_id?: string | null
           name?: string
           parent_id?: string | null
+          short_id?: string | null
         }
         Relationships: [
           {
@@ -439,6 +442,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          created_at: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -450,6 +454,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          created_at?: string | null
           email?: string | null
           full_name?: string | null
           id: string
@@ -461,6 +466,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          created_at?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
@@ -546,6 +552,7 @@ export type Database = {
           created_at: string | null
           id: string
           is_active: boolean | null
+          last_heartbeat: string | null
           performance_id: string
           scene_name: string | null
           scene_number: string
@@ -557,6 +564,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_active?: boolean | null
+          last_heartbeat?: string | null
           performance_id: string
           scene_name?: string | null
           scene_number: string
@@ -568,6 +576,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_active?: boolean | null
+          last_heartbeat?: string | null
           performance_id?: string
           scene_name?: string | null
           scene_number?: string
@@ -737,6 +746,8 @@ export type Database = {
           size_bytes: number
         }[]
       }
+      is_admin: { Args: never; Returns: boolean }
+      is_approved: { Args: never; Returns: boolean }
       match_items: {
         Args: {
           match_count: number

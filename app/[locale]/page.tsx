@@ -6,6 +6,9 @@ import { PendingUsersAlert } from '@/components/dashboard/PendingUsersAlert'
 import { NearestPerformanceCard } from '@/components/dashboard/NearestPerformanceCard'
 import { UserMentionsList } from '@/components/dashboard/UserMentionsList'
 import { QuickNav } from '@/components/dashboard/QuickNav'
+import { InventoryStats } from '@/components/dashboard/InventoryStats'
+import { UpcomingPerformances } from '@/components/dashboard/UpcomingPerformances'
+import { ActiveChecklistsStatus } from '@/components/dashboard/ActiveChecklistsStatus'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -34,11 +37,63 @@ export default async function Home() {
     .limit(1)
     .single()
 
+  // Fetch Upcoming Performances (3-5 shows)
+  const { data: upcomingPerformances } = await supabase
+    .from('performances')
+    .select('id, title, premiere_date, status, color')
+    .is('deleted_at', null)
+    .in('status', ['active', 'upcoming'])
+    .gte('premiere_date', new Date().toISOString())
+    .order('premiere_date', { ascending: true })
+    .limit(5)
+
+  // Fetch Inventory Statistics
+  const { count: totalItems } = await supabase
+    .from('items')
+    .select('*', { count: 'exact', head: true })
+    .is('deleted_at', null)
+
+  const { count: inMaintenance } = await supabase
+    .from('items')
+    .select('*', { count: 'exact', head: true })
+    .is('deleted_at', null)
+    .eq('status', 'in_maintenance')
+
+  const { count: unassigned } = await supabase
+    .from('items')
+    .select('*', { count: 'exact', head: true })
+    .is('deleted_at', null)
+    .is('performance_id', null)
+
+  // Fetch Active Checklists
+  const { data: activeShows } = await supabase
+    .from('scheduled_shows')
+    .select(`
+      id,
+      performance:performances (
+        title
+      ),
+      scene_checklists (
+        id,
+        is_staged
+      )
+    `)
+    .eq('status', 'in_progress')
+
+  const activeChecklists = activeShows?.map(show => {
+    const checklists = show.scene_checklists || []
+    const completed = checklists.filter((c: any) => c.is_staged).length
+    const total = checklists.length
+
+    return {
+      id: show.id,
+      performance_title: (show.performance as any)?.title || 'Unknown',
+      completed,
+      total
+    }
+  }) || []
+
   // Fetch User Mentions in Notes
-  // Note: This requires a more complex query or a view if we want to be precise about "mentions".
-  // For now, we'll fetch notes created by others that might be relevant, or just recent notes.
-  // Ideally, we'd have a 'note_mentions' table or similar.
-  // Based on the schema, there is a 'note_mentions' table!
   let recentMentions: any[] = []
   if (user) {
     const { data: mentions } = await supabase
@@ -70,7 +125,6 @@ export default async function Home() {
 
       <div className="space-y-2">
         <Greeting name={displayName} />
-
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
@@ -82,6 +136,10 @@ export default async function Home() {
           </section>
 
           <section>
+            <UpcomingPerformances performances={upcomingPerformances || []} />
+          </section>
+
+          <section>
             <h2 className="text-lg font-medium text-white mb-4">{t('quickActions')}</h2>
             <QuickNav />
           </section>
@@ -90,7 +148,18 @@ export default async function Home() {
         {/* Sidebar Column (1/3 width on large screens) */}
         <div className="space-y-8">
           <section>
-            {/* We can reuse the title inside the component or here. Let's keep it consistent. */}
+            <InventoryStats
+              totalItems={totalItems || 0}
+              inMaintenance={inMaintenance || 0}
+              unassigned={unassigned || 0}
+            />
+          </section>
+
+          <section>
+            <ActiveChecklistsStatus checklists={activeChecklists} />
+          </section>
+
+          <section>
             <UserMentionsList mentions={recentMentions} />
           </section>
         </div>

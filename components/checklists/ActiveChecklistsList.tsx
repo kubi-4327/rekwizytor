@@ -70,36 +70,45 @@ export function ActiveChecklistsList({ initialChecklists }: Props) {
     useEffect(() => {
         let channel: ReturnType<typeof supabase.channel> | null = null
 
-        try {
-            channel = supabase
-                .channel('active-checklists-list')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: '*',
-                        schema: 'public',
-                        table: 'scene_checklists',
-                    },
-                    () => {
-                        router.refresh()
-                    }
-                )
+        const setupSubscription = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser()
+                console.log('Realtime Subscription - Current User:', user?.id || 'ANONYMOUS')
 
-            channel.subscribe((status, err) => {
-                if (status === 'SUBSCRIBED') {
-                    setConnectionError(null)
-                } else if (status === 'CHANNEL_ERROR') {
-                    console.error('Error subscribing to active checklists channel:', err)
-                    setConnectionError('Błąd połączenia z serwerem (Realtime). Odśwież stronę.')
-                } else if (status === 'TIMED_OUT') {
-                    console.error('Subscription timed out')
-                    setConnectionError('Przekroczono limit czasu połączenia. Odśwież stronę.')
-                }
-            })
-        } catch (error) {
-            console.error('Failed to setup realtime subscription:', error)
-            setConnectionError('Nie udało się nawiązać połączenia.')
+                // Use a unique channel name to avoid potential collisions or stale bindings
+                const channelName = `active-checklists-list-${Date.now()}`
+                channel = supabase
+                    .channel(channelName)
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: '*',
+                            schema: 'public',
+                            table: 'scene_checklists',
+                        },
+                        () => {
+                            router.refresh()
+                        }
+                    )
+
+                channel.subscribe((status, err) => {
+                    if (status === 'SUBSCRIBED') {
+                        setConnectionError(null)
+                    } else if (status === 'CHANNEL_ERROR') {
+                        console.error('Error subscribing to active checklists channel:', err)
+                        setConnectionError('Błąd połączenia z serwerem (Realtime). Odśwież stronę.')
+                    } else if (status === 'TIMED_OUT') {
+                        console.error('Subscription timed out')
+                        setConnectionError('Przekroczono limit czasu połączenia. Odśwież stronę.')
+                    }
+                })
+            } catch (error) {
+                console.error('Failed to setup realtime subscription:', error)
+                setConnectionError('Nie udało się nawiązać połączenia.')
+            }
         }
+
+        setupSubscription()
 
         return () => {
             if (channel) {

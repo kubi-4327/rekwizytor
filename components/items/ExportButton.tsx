@@ -4,10 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Download, FileSpreadsheet, FileText, ChevronDown, Loader2 } from 'lucide-react'
 import { Database } from '@/types/supabase'
 import * as XLSX from 'xlsx'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import { useTranslations } from 'next-intl'
-import { loadPdfFonts, loadAppLogo } from '@/utils/pdfUtils'
 import { format } from 'date-fns'
 
 type Item = Database['public']['Tables']['items']['Row']
@@ -59,79 +56,28 @@ export function ExportButton({ items }: ExportButtonProps) {
     const handleExportPDF = async () => {
         setIsExporting(true)
         try {
-            const doc = new jsPDF()
-
-            // Load fonts and logo using utility
-            await loadPdfFonts(doc)
-            const logoBase64 = await loadAppLogo()
-
-            doc.setFontSize(18)
-
-            let yPos = 20
-
-            if (logoBase64) {
-                const imgProps = doc.getImageProperties(logoBase64)
-                const pdfWidth = 40
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-                doc.addImage(logoBase64, 'PNG', 14, 10, pdfWidth, pdfHeight)
-                yPos = 10 + pdfHeight + 10
-                doc.text(t('pdfTitle'), 14, yPos)
-            } else {
-                doc.text(t('pdfTitle'), 14, yPos)
-            }
-
-            yPos += 10
-            doc.setFontSize(11)
-            doc.text(`${t('generatedOn')} ${format(new Date(), 'dd/MM/yyyy')}`, 14, yPos)
-
-            const tableData = items.map(item => [
-                item.name,
-                item.notes || '',
-                item.performance_status || 'Unassigned',
-                '' // Empty check column as requested
-            ])
-
-            autoTable(doc, {
-                head: [[t('columns.name'), t('columns.notes'), t('columns.status'), t('columns.check')]],
-                body: tableData,
-                startY: yPos + 5,
-                styles: {
-                    fontSize: 10,
-                    font: 'Roboto', // Use the custom font
-                    overflow: 'linebreak',
-                    cellPadding: 3
+            const response = await fetch('/api/generate-items-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-                columnStyles: {
-                    0: { cellWidth: 50 },
-                    1: { cellWidth: 'auto' }, // Allow notes to take remaining space
-                    2: { cellWidth: 30 },
-                    3: { cellWidth: 15 }
-                },
-                headStyles: {
-                    fillColor: [23, 23, 23], // neutral-900
-                    textColor: 255
-                },
-                didDrawPage: () => {
-                    // Footer
-                    const pageSize = doc.internal.pageSize
-                    const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight()
-                    const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth()
-
-                    doc.setFontSize(10)
-                    doc.setTextColor(150)
-
-                    // Watermark / Logo text
-                    doc.text('Rekwizytorium', 14, pageHeight - 10)
-
-                    // Page number
-                    const pageStr = `${t('page')} ${doc.getNumberOfPages()}`
-                    doc.text(pageStr, pageWidth - 25, pageHeight - 10)
-                }
+                body: JSON.stringify({ items }),
             })
 
-            doc.save("props_checklist.pdf")
+            if (!response.ok) throw new Error('Failed to generate PDF')
+
+            const blob = await response.blob()
+            const url = window.URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `items_list_${format(new Date(), 'yyyy-MM-dd')}.pdf`
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            window.URL.revokeObjectURL(url)
         } catch (error) {
             console.error("Export failed", error)
+            alert("Failed to generate PDF. Please try again.")
         } finally {
             setIsExporting(false)
             setIsOpen(false)
