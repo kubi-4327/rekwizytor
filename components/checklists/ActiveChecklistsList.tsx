@@ -32,7 +32,39 @@ export function ActiveChecklistsList({ initialChecklists }: Props) {
     const [managingShowId, setManagingShowId] = useState<string | null>(null)
     const [connectionError, setConnectionError] = useState<string | null>(null)
 
-    // ... (existing code)
+    const [isResetting, setIsResetting] = useState(false)
+
+    // Group by performance, then find the nearest show
+    const nearestShows = Object.values(
+        initialChecklists.reduce((acc, checklist) => {
+            const perfId = checklist.performance_id
+            if (!acc[perfId]) {
+                acc[perfId] = []
+            }
+            acc[perfId].push(checklist)
+            return acc
+        }, {} as Record<string, Checklist[]>)
+    ).map(performanceChecklists => {
+        // Sort by date ascending
+        const sorted = performanceChecklists.sort((a, b) =>
+            new Date(a.show_date).getTime() - new Date(b.show_date).getTime()
+        )
+
+        // Find active or first upcoming
+        const active = sorted.find(c => c.is_active)
+        const next = sorted[0] // Since we filtered for future/active in page.tsx, the first one is the nearest
+
+        // We use the active one if exists, otherwise the next one
+        const showToCheck = active || next
+
+        return {
+            performanceId: showToCheck.performance_id,
+            performanceTitle: showToCheck.performances?.title || t('unknownProduction'),
+            performanceColor: showToCheck.performances?.color || '#3b82f6', // Default blue
+            showDate: showToCheck.show_date,
+            isActive: !!active,
+        }
+    })
 
     // Realtime Subscription to refresh list when shows become active/inactive
     useEffect(() => {
@@ -76,7 +108,75 @@ export function ActiveChecklistsList({ initialChecklists }: Props) {
         }
     }, [supabase, router])
 
-    // ... (existing code)
+    const stopShow = async (performanceId: string) => {
+        setIsResetting(true)
+        try {
+            // 1. Deactivate all checklists for this performance
+            await supabase
+                .from('scene_checklists')
+                .update({ is_active: false })
+                .eq('performance_id', performanceId)
+
+            // 2. Clear local storage (optional, but good practice if we can)
+            // We can't clear other users' local storage, but the LiveView component handles that on "Finish".
+            // Since we are just deactivating, the LiveView component will detect "no active scene" and show stats/exit.
+
+            setManagingShowId(null)
+            router.refresh()
+        } catch (error) {
+            console.error('Error stopping show:', error)
+        } finally {
+            setIsResetting(false)
+        }
+    }
+
+    const restartShow = async (performanceId: string) => {
+        setIsResetting(true)
+        try {
+            // 1. Get all checklist IDs for this performance
+            const { data: checklists } = await supabase
+                .from('scene_checklists')
+                .select('id, scene_number')
+                .eq('performance_id', performanceId)
+                .order('scene_number', { ascending: true })
+
+            if (!checklists || checklists.length === 0) return
+
+            const ids = checklists.map(c => c.id)
+
+            // 2. Reset all items
+            await supabase
+                .from('scene_checklist_items')
+                .update({
+                    is_prepared: false,
+                    is_on_stage: false,
+                    live_notes: null
+                })
+                .in('scene_checklist_id', ids)
+
+            // 3. Deactivate all scenes
+            await supabase
+                .from('scene_checklists')
+                .update({ is_active: false })
+                .eq('performance_id', performanceId)
+
+            // 4. Activate first scene
+            const firstScene = checklists[0]
+            if (firstScene) {
+                await supabase
+                    .from('scene_checklists')
+                    .update({ is_active: true })
+                    .eq('id', firstScene.id)
+            }
+
+            setManagingShowId(null)
+            router.refresh()
+        } catch (error) {
+            console.error('Error restarting show:', error)
+        } finally {
+            setIsResetting(false)
+        }
+    }
 
     return (
         <>
