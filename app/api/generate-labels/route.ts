@@ -8,6 +8,7 @@ interface GroupData {
     id: string
     name: string
     locationName?: string
+    short_id?: string
 }
 
 interface RequestBody {
@@ -15,6 +16,26 @@ interface RequestBody {
 }
 
 // Register fonts
+// Boldonse from local file
+async function registerBoldonseFont() {
+    try {
+        const fontPath = process.cwd() + '/public/fonts/Boldonse-Regular.ttf'
+        const fs = await import('fs/promises')
+        const buffer = await fs.readFile(fontPath)
+        const base64 = buffer.toString('base64')
+
+        Font.register({
+            family: 'Boldonse',
+            src: `data:font/truetype;base64,${base64}`,
+        })
+        return true
+    } catch (e) {
+        console.error('Failed to load Boldonse font:', e)
+        return false
+    }
+}
+
+// Courier Prime from Google Fonts
 Font.register({
     family: 'Courier Prime',
     fonts: [
@@ -32,87 +53,95 @@ Font.register({
 // Styles
 const styles = StyleSheet.create({
     page: {
-        padding: '10mm',
+        padding: '8mm',
         backgroundColor: 'white',
+    },
+    pageHeader: {
+        position: 'absolute',
+        top: '5mm',
+        left: '8mm',
+        fontSize: 10,
+        fontFamily: 'Courier Prime',
+        color: '#999999',
     },
     grid: {
         display: 'flex',
         flexDirection: 'row',
         flexWrap: 'wrap',
         width: '100%',
+        marginTop: '5mm',
     },
     labelContainer: {
         width: '50%',
-        padding: '5mm',
+        padding: '1.5mm',
+        position: 'relative',
     },
     label: {
-        border: '2px dashed #cccccc',
-        padding: '5mm',
-        height: '45mm',
+        border: '0.5px dashed #d0d0d0',
+        padding: '4mm',
+        height: '47mm',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'flex-start',
     },
-    labelName: {
+    scissorsIcon: {
+        position: 'absolute',
+        top: '-1.5mm',
+        right: '-1.5mm',
+        fontSize: 8,
+        color: '#d0d0d0',
+    },
+    labelLocation: {
+        position: 'absolute',
+        top: '4mm',
+        left: '4mm',
         fontFamily: 'Courier Prime',
-        fontSize: 16,
+        fontSize: 8,
+        textAlign: 'left',
+        color: '#000000',
+        textTransform: 'uppercase',
+    },
+    labelName: {
+        fontFamily: 'Boldonse',
+        fontSize: 20,
         fontWeight: 700,
         textAlign: 'center',
         color: '#000000',
-        marginTop: '8mm',
-        maxWidth: '75mm',
-        lineHeight: 1.2,
-    },
-    labelLocation: {
-        fontFamily: 'Courier Prime',
-        fontSize: 10,
-        textAlign: 'center',
-        color: '#666666',
-        marginTop: '3mm',
+        marginTop: '6mm',
+        maxWidth: '70mm',
+        lineHeight: 0.9,
+        wordWrap: 'break-word',
     },
     qrCode: {
         position: 'absolute',
-        bottom: '5mm',
-        right: '5mm',
-        width: '22mm',
-        height: '22mm',
+        bottom: '4mm',
+        right: '4mm',
+        width: '15mm',
+        height: '15mm',
     },
-    logo: {
+    rekwizytor: {
         position: 'absolute',
-        bottom: '5mm',
-        left: '5mm',
-        maxWidth: '22mm',
-        maxHeight: '22mm',
-        objectFit: 'contain',
+        bottom: '4mm',
+        left: '4mm',
+        fontSize: 8,
+        fontFamily: 'Boldonse',
+        color: '#000000',
     },
     labelId: {
         position: 'absolute',
-        bottom: '2mm',
+        bottom: '1mm',
         left: '50%',
         transform: 'translateX(-50%)',
-        fontSize: 6,
-        color: '#999999',
+        fontSize: 5,
+        color: '#cccccc',
         fontFamily: 'Courier Prime',
     },
 })
 
-// Get logo as base64
-async function getLogoBase64(): Promise<string | null> {
-    try {
-        const logoPath = process.cwd() + '/public/logo-pdf.png'
-        const fs = await import('fs/promises')
-        const buffer = await fs.readFile(logoPath)
-        return `data:image/png;base64,${buffer.toString('base64')}`
-    } catch (e) {
-        console.error('Failed to load logo:', e)
-        return null
-    }
-}
-
 // Create PDF document using React.createElement
-function createPDFDocument(groups: GroupData[], qrCodes: string[], logoBase64: string | null) {
+function createPDFDocument(groups: GroupData[], qrCodes: string[]) {
     const labelsPerPage = 10
     const pages: GroupData[][] = []
 
@@ -124,26 +153,53 @@ function createPDFDocument(groups: GroupData[], qrCodes: string[], logoBase64: s
         const labelElements = pageGroups.map((group, idx) => {
             const globalIdx = pageIndex * labelsPerPage + idx
 
+            // Calculate dynamic font size based on name length
+            // Shifted down by one step as requested
+            // Boldonse is taller than Courier Prime (~1.7x at same font size)
+            let nameFontSize = 20 // Changed from 24
+            if (group.name.length > 15) {
+                nameFontSize = 16 // Changed from 20
+            }
+            if (group.name.length > 25) {
+                nameFontSize = 14 // Changed from 16
+            }
+            if (group.name.length > 35) {
+                nameFontSize = 12 // Changed from 14
+            }
+
+            const dynamicNameStyle = {
+                ...styles.labelName,
+                fontSize: nameFontSize,
+            }
+
             const children: React.ReactElement[] = [
-                React.createElement(Text, { key: 'name', style: styles.labelName }, group.name),
+                // Scissors icon for cut line
+                React.createElement(Text, { key: 'scissors', style: styles.scissorsIcon }, '✂'),
             ]
 
+            // Location at top left (if exists)
             if (group.locationName) {
                 children.push(
                     React.createElement(Text, { key: 'location', style: styles.labelLocation }, group.locationName)
                 )
             }
 
+            // Main name in center
+            children.push(
+                React.createElement(Text, { key: 'name', style: dynamicNameStyle }, group.name)
+            )
+
+            // QR code at bottom right
             children.push(
                 React.createElement(Image, { key: 'qr', src: qrCodes[globalIdx], style: styles.qrCode })
             )
 
-            if (logoBase64) {
-                children.push(
-                    React.createElement(Image, { key: 'logo', src: logoBase64, style: styles.logo })
-                )
-            }
+            // "Rekwizytor" text at bottom left (instead of logo)
+            children.push(
+                React.createElement(Text, { key: 'rekwizytor', style: styles.rekwizytor }, 'Rekwizytor')
+            )
 
+            // ID at bottom center
             children.push(
                 React.createElement(Text, { key: 'id', style: styles.labelId }, group.id.slice(0, 8))
             )
@@ -158,7 +214,10 @@ function createPDFDocument(groups: GroupData[], qrCodes: string[], logoBase64: s
         return React.createElement(
             Page,
             { key: pageIndex, size: 'A4', style: styles.page },
-            React.createElement(View, { style: styles.grid }, labelElements)
+            [
+                React.createElement(Text, { key: 'header', style: styles.pageHeader }, 'Narzędzie dla teatru'),
+                React.createElement(View, { key: 'grid', style: styles.grid }, labelElements)
+            ]
         )
     })
 
@@ -176,23 +235,28 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        // Register Boldonse font
+        await registerBoldonseFont()
+
         // Generate QR codes
         const qrCodes = await Promise.all(
             body.groups.map(async (group) => {
-                const url = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/items?groupId=${group.id}`
+                // Use short URL if short_id is available, otherwise fallback to full URL
+                const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+                const url = group.short_id
+                    ? `${baseUrl}/g/${group.short_id}`
+                    : `${baseUrl}/pl/items?groupId=${group.id}`
+
                 return await QRCode.toDataURL(url, {
-                    errorCorrectionLevel: 'H',
+                    errorCorrectionLevel: 'L', // Lower error correction for less dense QR code
                     margin: 0,
                     width: 200,
                 })
             })
         )
 
-        // Load logo
-        const logoBase64 = await getLogoBase64()
-
-        // Create document
-        const doc = createPDFDocument(body.groups, qrCodes, logoBase64)
+        // Create document (no logo needed - we use text 'Rekwizytor' instead)
+        const doc = createPDFDocument(body.groups, qrCodes)
 
         // Render PDF
         const pdfBuffer = await renderToBuffer(doc)

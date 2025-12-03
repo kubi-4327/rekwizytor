@@ -26,6 +26,7 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { GripVertical, Plus, Trash2, MapPin, Folder } from 'lucide-react'
 import { CreateStructureDialog } from './CreateStructureDialog'
+import { generateShortId } from '@/utils/shortId'
 
 type Location = Database['public']['Tables']['locations']['Row']
 type Group = Database['public']['Tables']['groups']['Row']
@@ -481,11 +482,13 @@ export function StructureEditor({ initialLocations, initialGroups }: Props) {
 
     const handleCreateGroup = async (name: string) => {
         try {
+            const shortId = generateShortId()
             const { data, error } = await supabase
                 .from('groups')
                 .insert({
                     name,
-                    location_id: targetLocationId
+                    location_id: targetLocationId,
+                    short_id: shortId
                 })
                 .select()
                 .single()

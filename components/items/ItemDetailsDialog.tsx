@@ -6,9 +6,10 @@ import { ItemIcon } from '@/components/ui/ItemIcon'
 import { Pencil, MapPin, Layers, Calendar, X, Trash2, Tag } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { useTranslations, useLocale } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { format } from 'date-fns'
 
 type Item = Database['public']['Tables']['items']['Row']
 type Location = Database['public']['Tables']['locations']['Row']
@@ -25,7 +26,7 @@ type Props = {
 
 export function ItemDetailsDialog({ item, isOpen, onClose, onEdit, locations, groups }: Props) {
     const t = useTranslations('ItemDetailsDialog')
-    const locale = useLocale()
+
     const supabase = createClient()
     const router = useRouter()
     const [mentions, setMentions] = useState<any[]>([])
@@ -148,7 +149,7 @@ export function ItemDetailsDialog({ item, isOpen, onClose, onEdit, locations, gr
                                 {t('added')}
                             </div>
                             <p className="text-neutral-200 font-medium pl-6 text-lg">
-                                {item.created_at ? new Date(item.created_at).toLocaleDateString(locale) : t('unknown')}
+                                {item.created_at ? format(new Date(item.created_at), 'dd/MM/yyyy') : t('unknown')}
                             </p>
                         </div>
                     </div>
@@ -174,7 +175,7 @@ export function ItemDetailsDialog({ item, isOpen, onClose, onEdit, locations, gr
                                     >
                                         <div className="font-medium text-white">{mention.notes.title}</div>
                                         <div className="text-xs text-neutral-500 mt-1">
-                                            {new Date(mention.notes.created_at).toLocaleDateString(locale)}
+                                            {format(new Date(mention.notes.created_at), 'dd/MM/yyyy')}
                                         </div>
                                     </Link>
                                 ))}

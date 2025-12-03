@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { format } from 'date-fns'
 import { Calendar, Box, ArrowLeft, Settings } from 'lucide-react'
 import { ScheduledShowsList } from '@/components/performances/ScheduledShowsList'
 import { PerformanceContent } from '@/components/performances/PerformanceContent'
@@ -138,7 +139,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
                                     {production.premiere_date && (
                                         <span className="text-sm flex items-center">
                                             <Calendar className="mr-1.5 h-4 w-4" />
-                                            {new Date(production.premiere_date).toLocaleDateString()}
+                                            {format(new Date(production.premiere_date), 'dd/MM/yyyy')}
                                         </span>
                                     )}
                                     <span className="text-sm text-neutral-500">

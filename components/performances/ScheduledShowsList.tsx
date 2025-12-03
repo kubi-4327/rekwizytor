@@ -7,8 +7,8 @@ import Link from 'next/link'
 import { useTimeFormat } from '@/hooks/useTimeFormat'
 import { ScheduledShowDetailsModal } from './ScheduledShowDetailsModal'
 import { isAfter, subHours, format } from 'date-fns'
-import { pl, enUS } from 'date-fns/locale'
-import { useTranslations, useLocale } from 'next-intl'
+
+import { useTranslations } from 'next-intl'
 
 type ScheduledShow = Database['public']['Tables']['scene_checklists']['Row']
 
@@ -21,8 +21,6 @@ type Props = {
 
 export function ScheduledShowsList({ scheduledShows, productionTitle, performanceId, performanceColor }: Props) {
     const t = useTranslations('ScheduledShowsList')
-    const locale = useLocale()
-    const dateLocale = locale === 'pl' ? pl : enUS
     const { formatTime } = useTimeFormat()
     const [selectedShowDate, setSelectedShowDate] = useState<string | null>(null)
 
@@ -83,7 +81,7 @@ export function ScheduledShowsList({ scheduledShows, productionTitle, performanc
                         <div className="flex items-center text-white font-medium">
                             <Clock className={`mr-2 h-4 w-4 ${isNearest ? 'text-ai-secondary' : 'text-neutral-500'}`} />
                             <span>
-                                {format(new Date(date), 'd MMM', { locale: dateLocale })}
+                                {format(new Date(date), 'dd/MM/yyyy')}
                             </span>
                             <span className="mx-2 text-neutral-600">•</span>
                             <span>{formatTime(date)}</span>

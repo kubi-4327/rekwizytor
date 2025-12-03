@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { format } from 'date-fns'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { ClipboardList, Calendar, Settings, Power, RotateCcw, X, AlertTriangle } from 'lucide-react'
@@ -27,7 +28,7 @@ type Props = {
 export function ActiveChecklistsList({ initialChecklists }: Props) {
     const t = useTranslations('Checklists')
     const router = useRouter()
-    const supabase = createClient()
+    const [supabase] = useState(() => createClient())
     const [managingShowId, setManagingShowId] = useState<string | null>(null)
     const [isResetting, setIsResetting] = useState(false)
 
@@ -196,9 +197,9 @@ export function ActiveChecklistsList({ initialChecklists }: Props) {
                                     )}
                                     <div className="flex items-center text-xs text-neutral-400 bg-neutral-800/50 px-2 py-1 rounded-md">
                                         <Calendar className="h-3 w-3 mr-1.5" />
-                                        {new Date(show.showDate).toLocaleDateString()}
+                                        {format(new Date(show.showDate), 'dd/MM/yyyy')}
                                         <span className="mx-1.5 text-neutral-600">|</span>
-                                        {new Date(show.showDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        {format(new Date(show.showDate), 'HH:mm')}
                                     </div>
                                 </div>
                                 <h3

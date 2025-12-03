@@ -5,6 +5,7 @@ import { Calendar, Clock, Users, X, Edit2 } from 'lucide-react'
 import { useTimeFormat } from '@/hooks/useTimeFormat'
 import { AddToCalendar } from '@/components/ui/AddToCalendar'
 import { useTranslations } from 'next-intl'
+import { format } from 'date-fns'
 
 type ScheduledShow = Database['public']['Tables']['scene_checklists']['Row']
 
@@ -68,7 +69,7 @@ export function ScheduledShowDetailsModal({ isOpen, onClose, showDate, shows, pr
                     <div className="space-y-4">
                         <div className="flex items-center gap-3 text-neutral-300">
                             <Calendar className="h-5 w-5 text-neutral-500" />
-                            <span>{dateObj.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                            <span>{format(dateObj, 'dd/MM/yyyy')}</span>
                         </div>
                         <div className="flex items-center gap-3 text-neutral-300">
                             <Clock className="h-5 w-5 text-neutral-500" />

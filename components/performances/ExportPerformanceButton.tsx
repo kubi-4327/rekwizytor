@@ -7,6 +7,7 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { useTranslations } from 'next-intl'
 import { loadPdfFonts, loadAppLogo } from '@/utils/pdfUtils'
+import { format } from 'date-fns'
 
 type Performance = Database['public']['Tables']['performances']['Row']
 type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] & {
@@ -65,7 +66,7 @@ export function ExportPerformanceButton({ production, items, user, variant = 'de
             // 1. Header Info (Top Right)
             doc.setFontSize(8)
             doc.setTextColor(100)
-            const dateStr = new Date().toLocaleString('pl-PL')
+            const dateStr = format(new Date(), 'dd/MM/yyyy HH:mm')
             const userStr = user?.full_name || user?.email || 'Unknown User'
 
             doc.text(`${t('generatedOn')}: ${dateStr}`, pageWidth - margin, yPos, { align: 'right' })

@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { format } from 'date-fns'
 import { LiveChecklist } from '@/components/checklists/LiveChecklist'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -77,7 +78,7 @@ export default async function ChecklistPage({ params }: Props) {
                             <div className="flex items-center text-sm text-neutral-400 space-x-4">
                                 <span className="flex items-center">
                                     <Calendar className="h-3 w-3 mr-1.5" />
-                                    {showDate.toLocaleDateString()}
+                                    {format(showDate, 'dd/MM/yyyy')}
                                 </span>
                                 <span className="flex items-center">
                                     <Clock className="h-3 w-3 mr-1.5" />

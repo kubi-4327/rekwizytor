@@ -34,6 +34,42 @@
         "save": "Save",
         "cancel": "Cancel"
     },
+    "Greeting": {
+        "morning": [
+            "Ready for a new day?",
+            "Coffee already drunk?",
+            "Have a productive morning!",
+            "Let's start this day productively.",
+            "What's the plan for today?"
+        ],
+        "afternoon": [
+            "How is your day going?",
+            "Everything under control?",
+            "A break or keep going?",
+            "How are the props?",
+            "Have a nice afternoon!"
+        ],
+        "evening": [
+            "How was your day?",
+            "Still working?",
+            "Have a peaceful evening.",
+            "Time to wrap up the day?",
+            "Resting or working?"
+        ],
+        "timeGreeting": {
+            "morning": "Good morning",
+            "afternoon": "Hello",
+            "evening": "Good evening",
+            "hello": "Hello"
+        },
+        "easterEgg": [
+            "Remember not to tighten the jar!",
+            "Enjoy your tea ☕",
+            "Weren't you sick? 🤔",
+            "Have a nice day, just no stress!",
+            "Rest a bit, work isn't going anywhere."
+        ]
+    },
     "Dashboard": {
         "title": "Dashboard",
         "subtitle": "Welcome to Rekwizytor. What would you like to do today?",
@@ -257,7 +293,8 @@
         "itemsStaged": "Items Staged",
         "returnToDashboard": "Return to Dashboard",
         "cancel": "Cancel",
-        "cancelLiveView": "Cancel Live View"
+        "cancelLiveView": "Cancel Live View",
+        "unassigned": "Unassigned"
     },
     "ChecklistPage": {
         "backToPerformance": "Back to Performance",

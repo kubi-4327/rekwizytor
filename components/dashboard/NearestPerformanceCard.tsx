@@ -4,7 +4,6 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Calendar, ArrowRight, Clock } from 'lucide-react'
 import { format, differenceInDays, isToday } from 'date-fns'
-import { pl } from 'date-fns/locale'
 
 interface Performance {
     id: string
@@ -76,7 +75,7 @@ export function NearestPerformanceCard({ performance }: NearestPerformanceCardPr
                 <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center gap-2 text-neutral-300 text-sm">
                         <Calendar className="h-4 w-4" />
-                        {premiereDate ? format(premiereDate, 'd MMMM yyyy', { locale: pl }) : 'TBD'}
+                        {premiereDate ? format(premiereDate, 'dd/MM/yyyy') : 'TBD'}
                     </div>
 
                     <Link

@@ -34,6 +34,42 @@
         "save": "Zapisz",
         "cancel": "Anuluj"
     },
+    "Greeting": {
+        "morning": [
+            "Gotowy na nowy dzień?",
+            "Kawa już wypita?",
+            "Owocnego poranka!",
+            "Zacznijmy ten dzień produktywnie.",
+            "Co dzisiaj w planach?"
+        ],
+        "afternoon": [
+            "Jak mija dzień?",
+            "Wszystko pod kontrolą?",
+            "Chwila przerwy czy działamy dalej?",
+            "Jak tam rekwizyty?",
+            "Miłego popołudnia!"
+        ],
+        "evening": [
+            "Jak minął dzień?",
+            "Jeszcze pracujesz?",
+            "Spokojnego wieczoru.",
+            "Czas na podsumowanie dnia?",
+            "Odpoczywasz czy działasz?"
+        ],
+        "timeGreeting": {
+            "morning": "Dzień dobry",
+            "afternoon": "Cześć",
+            "evening": "Dobry wieczór",
+            "hello": "Witaj"
+        },
+        "easterEgg": [
+            "Pamiętaj nie dokręcać słoika!",
+            "Smacznej herbatki ☕",
+            "A Ty nie byłaś chora? 🤔",
+            "Miłego dnia, tylko bez stresu!",
+            "Odpocznij chwilę, robota nie zając."
+        ]
+    },
     "Dashboard": {
         "title": "Pulpit",
         "subtitle": "Witaj w Rekwizytorze. Co chcesz dzisiaj zrobić?",
@@ -268,7 +304,8 @@
         "itemsStaged": "Przedmioty na Scenie",
         "returnToDashboard": "Powrót do Ekranu Głównego",
         "cancel": "Anuluj",
-        "cancelLiveView": "Anuluj Live View"
+        "cancelLiveView": "Anuluj Live View",
+        "unassigned": "Nieprzypisane"
     },
     "ChecklistPage": {
         "backToPerformance": "Powrót do Spektakli",

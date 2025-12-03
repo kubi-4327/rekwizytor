@@ -8,6 +8,7 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { useTranslations } from 'next-intl'
 import { loadPdfFonts, loadAppLogo } from '@/utils/pdfUtils'
+import { format } from 'date-fns'
 
 type Item = Database['public']['Tables']['items']['Row']
 
@@ -40,7 +41,7 @@ export function ExportButton({ items }: ExportButtonProps) {
                 [t('columns.name')]: item.name,
                 [t('columns.notes')]: item.notes || '',
                 [t('columns.status')]: item.performance_status || 'Unassigned',
-                [t('generatedOn')]: item.created_at ? new Date(item.created_at).toLocaleDateString() : ''
+                [t('generatedOn')]: item.created_at ? format(new Date(item.created_at), 'dd/MM/yyyy') : ''
             }))
 
             const ws = XLSX.utils.json_to_sheet(data)
@@ -81,7 +82,7 @@ export function ExportButton({ items }: ExportButtonProps) {
 
             yPos += 10
             doc.setFontSize(11)
-            doc.text(`${t('generatedOn')} ${new Date().toLocaleDateString()}`, 14, yPos)
+            doc.text(`${t('generatedOn')} ${format(new Date(), 'dd/MM/yyyy')}`, 14, yPos)
 
             const tableData = items.map(item => [
                 item.name,

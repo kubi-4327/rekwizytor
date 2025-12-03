@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { format } from 'date-fns'
 import { ArrowLeft, Info, FileText, Shield, Github, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import packageJson from '@/package.json'
@@ -56,7 +57,7 @@ export default function AboutPage() {
                             </div>
                             <div className="flex justify-between py-2 border-b border-neutral-800">
                                 <span>{t('buildDate')}</span>
-                                <span className="text-white">{new Date().toLocaleDateString()}</span>
+                                <span className="text-white">{format(new Date(), 'dd/MM/yyyy')}</span>
                             </div>
                             <div className="flex justify-between py-2">
                                 <span>{t('environment')}</span>

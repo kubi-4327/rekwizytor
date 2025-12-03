@@ -70,9 +70,7 @@ export default async function Home() {
 
       <div className="space-y-2">
         <Greeting name={displayName} />
-        <p className="text-neutral-400">
-          {t('subtitle')}
-        </p>
+
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">

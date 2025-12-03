@@ -1,9 +1,10 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import Link from 'next/link'
 import { MessageSquare, FileText, ArrowRight } from 'lucide-react'
 import { format } from 'date-fns'
+import { pl, enUS } from 'date-fns/locale'
 
 interface NoteMention {
     id: string
@@ -26,6 +27,8 @@ interface UserMentionsListProps {
 
 export function UserMentionsList({ mentions }: UserMentionsListProps) {
     const t = useTranslations('Dashboard')
+    const locale = useLocale()
+    const dateLocale = locale === 'pl' ? pl : enUS
 
     if (!mentions || mentions.length === 0) {
         return (
@@ -76,7 +79,7 @@ export function UserMentionsList({ mentions }: UserMentionsListProps) {
                             </div>
                             <div className="flex items-center gap-4">
                                 <span className="text-xs text-neutral-600 whitespace-nowrap">
-                                    {format(new Date(mention.created_at), 'MMM d')}
+                                    {format(new Date(mention.created_at), 'MMM d', { locale: dateLocale })}
                                 </span>
                                 <ArrowRight className="h-4 w-4 text-neutral-600 group-hover:text-white transition-colors" />
                             </div>
