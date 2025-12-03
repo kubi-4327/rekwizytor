@@ -57,7 +57,7 @@ export default async function Home() {
     .from('items')
     .select('*', { count: 'exact', head: true })
     .is('deleted_at', null)
-    .eq('status', 'in_maintenance')
+    .eq('performance_status', 'in_maintenance')
 
   const { count: unassigned } = await supabase
     .from('items')
@@ -136,7 +136,7 @@ export default async function Home() {
           </section>
 
           <section>
-            <UpcomingPerformances performances={upcomingPerformances || []} />
+            <UpcomingPerformances performances={upcomingPerformances?.filter(p => p.premiere_date) as any || []} />
           </section>
 
           <section>
