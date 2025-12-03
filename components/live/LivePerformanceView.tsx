@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/client'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
-import { CheckCircle2, Circle, ArrowRight, Menu, X, Clock, Calendar, PauseCircle, User } from 'lucide-react'
+import { CheckCircle2, Circle, ArrowRight, Menu, X, Clock, Calendar, PauseCircle, User, AlertTriangle } from 'lucide-react'
 import NextImage from 'next/image'
 import { ItemIcon } from '@/components/ui/ItemIcon'
 import { format } from 'date-fns'
@@ -66,6 +66,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
     const router = useRouter()
 
     const [showCancelConfirmation, setShowCancelConfirmation] = useState(false)
+    const [connectionError, setConnectionError] = useState<string | null>(null)
 
     // Sort checklists by scene number
     const sortedChecklists = useMemo(() => {
@@ -308,7 +309,16 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                     ))
                 }
             )
-            .subscribe()
+            .subscribe((status, err) => {
+                if (status === 'SUBSCRIBED') {
+                    setConnectionError(null)
+                } else if (status === 'CHANNEL_ERROR') {
+                    console.error('Error subscribing to live performance channel:', err)
+                    setConnectionError('Błąd połączenia z serwerem (Realtime). Zmiany mogą nie być widoczne.')
+                } else if (status === 'TIMED_OUT') {
+                    setConnectionError('Przekroczono limit czasu połączenia. Odśwież stronę.')
+                }
+            })
 
         return () => {
             supabase.removeChannel(channel)
@@ -651,6 +661,21 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
 
     return (
         <div className="fixed inset-0 z-[100] md:static md:z-0 md:inset-auto flex h-[100dvh] md:h-[calc(100vh-4rem)] bg-black text-white overflow-hidden">
+            {/* Connection Error Overlay */}
+            {connectionError && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-md">
+                    <div className="bg-red-500/90 backdrop-blur-sm text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-in slide-in-from-top-2">
+                        <AlertTriangle className="w-5 h-5 shrink-0" />
+                        <p className="text-sm font-medium flex-1">{connectionError}</p>
+                        <button
+                            onClick={() => setConnectionError(null)}
+                            className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
             {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
                 <div
