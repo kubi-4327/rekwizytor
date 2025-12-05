@@ -85,6 +85,7 @@
         "quickActions": "Quick Actions",
         "manageProduction": "Manage Production",
         "recentMentions": "Recent Mentions",
+        "noMentions": "You haven't been mentioned in any notes recently.",
         "mentionedIn": "Mentioned in \"{title}\"",
         "inventoryStats": "Inventory Statistics",
         "totalItems": "Total Items",
@@ -115,6 +116,7 @@
         "lists": "Lists",
         "notes": "Notes",
         "groups": "Groups",
+        "search": "Search",
         "more": "More"
     },
     "Groups": {

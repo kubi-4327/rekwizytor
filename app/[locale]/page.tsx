@@ -127,17 +127,21 @@ export default async function Home() {
         <Greeting name={displayName} />
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Main Column (2/3 width on large screens) */}
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid gap-6 lg:grid-cols-12">
+        {/* Main Column (8/12 width on large screens) */}
+        <div className="lg:col-span-8 space-y-6">
           <section>
-            <h2 className="text-lg font-medium text-white mb-4">{t('nearestPerformance')}</h2>
             <NearestPerformanceCard performance={nearestPerformance} />
           </section>
 
-          <section>
-            <UpcomingPerformances performances={upcomingPerformances?.filter(p => p.premiere_date) as any || []} />
-          </section>
+          <div className="grid gap-6 md:grid-cols-2">
+            <section>
+              <UpcomingPerformances performances={upcomingPerformances?.filter(p => p.premiere_date) as any || []} />
+            </section>
+            <section>
+              <ActiveChecklistsStatus checklists={activeChecklists} />
+            </section>
+          </div>
 
           <section>
             <h2 className="text-lg font-medium text-white mb-4">{t('quickActions')}</h2>
@@ -145,18 +149,14 @@ export default async function Home() {
           </section>
         </div>
 
-        {/* Sidebar Column (1/3 width on large screens) */}
-        <div className="space-y-8">
+        {/* Sidebar Column (4/12 width on large screens) */}
+        <div className="lg:col-span-4 space-y-6">
           <section>
             <InventoryStats
               totalItems={totalItems || 0}
               inMaintenance={inMaintenance || 0}
               unassigned={unassigned || 0}
             />
-          </section>
-
-          <section>
-            <ActiveChecklistsStatus checklists={activeChecklists} />
           </section>
 
           <section>

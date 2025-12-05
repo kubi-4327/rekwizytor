@@ -1,7 +1,7 @@
 'use client'
 
 import { Link, usePathname, useRouter } from '@/i18n/routing'
-import { Theater, Box, Layers, ClipboardList, Settings, LogOut, Sparkles, Notebook, Tag, CheckCircle2 } from 'lucide-react'
+import { Theater, Box, Layers, ClipboardList, Settings, LogOut, Sparkles, Notebook, Tag, CheckCircle2, Search } from 'lucide-react'
 import { clsx } from 'clsx'
 import { createClient } from '@/utils/supabase/client'
 import { useTranslations } from 'next-intl'
@@ -47,7 +47,19 @@ export function Sidebar() {
                     </Link>
                 </div>
                 <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
-                    <nav className="mt-5 flex-1 space-y-1 px-2">
+                    <div className="px-2 mb-2">
+                        <button
+                            onClick={() => document.dispatchEvent(new Event('open-command-palette'))}
+                            className="group flex w-full items-center px-2 py-2 text-sm font-medium text-neutral-400 rounded-md hover:text-white transition-colors duration-200"
+                        >
+                            <Search className="mr-3 h-6 w-6 text-neutral-500 group-hover:text-white transition-colors duration-200 flex-shrink-0" />
+                            <span className="flex-1 text-left">{t('search')}</span>
+                            <kbd className="hidden lg:inline-flex h-5 items-center gap-1 rounded border border-neutral-700 bg-neutral-800 px-1.5 font-mono text-[10px] font-medium text-neutral-400 opacity-100">
+                                <span className="text-xs">⌘K</span>
+                            </kbd>
+                        </button>
+                    </div>
+                    <nav className="mt-1 flex-1 space-y-1 px-2">
                         {navigation.map((item) => {
                             const isActive = pathname.startsWith(item.href) && !navigation.some(nav =>
                                 nav !== item &&
@@ -63,14 +75,14 @@ export function Sidebar() {
                                         isActive
                                             ? 'text-burgundy-main'
                                             : 'text-neutral-400 hover:text-white',
-                                        'group relative flex items-center px-2 py-2 text-sm font-medium rounded-r-md transition-colors duration-200'
+                                        'group relative flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200'
                                     )}
                                 >
                                     <AnimatePresence>
                                         {isActive && (
                                             <motion.div
                                                 layoutId="sidebar-active"
-                                                className="absolute inset-0 bg-burgundy-main/10 border-l-4 border-burgundy-main rounded-r-md"
+                                                className="absolute inset-0 bg-burgundy-main/10 border-l-4 border-burgundy-main rounded-md"
                                                 initial={{ opacity: 0 }}
                                                 animate={{ opacity: 1 }}
                                                 exit={{ opacity: 0 }}

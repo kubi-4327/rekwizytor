@@ -2,7 +2,7 @@
 
 import { Link } from '@/i18n/routing'
 import { usePathname } from 'next/navigation'
-import { Box, Layers, ClipboardList, Menu, Tag, Notebook } from 'lucide-react'
+import { Box, Layers, ClipboardList, Menu, Tag, Notebook, Search } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useState } from 'react'
 import { MobileMenu } from './layout/MobileMenu'
@@ -19,6 +19,7 @@ export function BottomNav() {
         { name: t('productions'), href: '/performances', icon: Layers },
         { name: t('notes'), href: '/notes', icon: Notebook },
         { name: t('checklists'), href: '/checklists', icon: ClipboardList },
+        { name: t('search'), href: '/search', icon: Search }, // href is dummy for 'search'
         { name: t('more'), href: '/more', icon: Menu }, // href is dummy for 'more'
     ]
 
@@ -41,6 +42,22 @@ export function BottomNav() {
                                 <button
                                     key={item.name}
                                     onClick={() => setIsMobileMenuOpen(true)}
+                                    className={clsx(
+                                        'text-neutral-500 hover:text-white',
+                                        'relative flex flex-col items-center justify-center w-full h-full py-1 transition-colors'
+                                    )}
+                                >
+                                    <item.icon className="h-6 w-6 mb-1 relative z-10" />
+                                    <span className="text-[10px] font-medium relative z-10">{item.name}</span>
+                                </button>
+                            )
+                        }
+
+                        if (item.href === '/search') {
+                            return (
+                                <button
+                                    key={item.name}
+                                    onClick={() => document.dispatchEvent(new Event('open-command-palette'))}
                                     className={clsx(
                                         'text-neutral-500 hover:text-white',
                                         'relative flex flex-col items-center justify-center w-full h-full py-1 transition-colors'

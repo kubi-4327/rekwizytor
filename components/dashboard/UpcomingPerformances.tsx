@@ -1,10 +1,8 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { Calendar, ArrowRight } from 'lucide-react'
+import { Calendar, ArrowRight, Clock } from 'lucide-react'
 import Link from 'next/link'
-import { formatDistanceToNow } from 'date-fns'
-import { pl, enUS } from 'date-fns/locale'
 import { useLocale } from 'next-intl'
 
 interface Performance {
@@ -22,7 +20,6 @@ interface UpcomingPerformancesProps {
 export function UpcomingPerformances({ performances }: UpcomingPerformancesProps) {
     const t = useTranslations('Dashboard')
     const locale = useLocale()
-    const dateLocale = locale === 'pl' ? pl : enUS
 
     const getTimeUntil = (date: string) => {
         const performanceDate = new Date(date)
@@ -33,33 +30,42 @@ export function UpcomingPerformances({ performances }: UpcomingPerformancesProps
         const diffTime = performanceDate.getTime() - today.getTime()
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
-        if (diffDays === 0) return t('today')
-        if (diffDays === 1) return t('tomorrow')
-        return t('daysUntil', { days: diffDays })
+        if (diffDays === 0) return { text: t('today'), urgent: true }
+        if (diffDays === 1) return { text: t('tomorrow'), urgent: true }
+        return { text: t('daysUntil', { days: diffDays }), urgent: diffDays <= 7 }
+    }
+
+    const formatDate = (date: string) => {
+        return new Date(date).toLocaleDateString(locale, {
+            day: 'numeric',
+            month: 'short'
+        })
     }
 
     if (!performances || performances.length === 0) {
         return (
-            <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm p-6">
+            <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm p-6 h-full">
                 <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-action-primary" />
                     {t('upcomingPerformances')}
                 </h3>
-                <p className="text-sm text-neutral-400">{t('noUpcomingPerformances')}</p>
+                <div className="flex flex-col items-center justify-center h-40 text-neutral-500">
+                    <Calendar className="h-10 w-10 mb-2 opacity-20" />
+                    <p className="text-sm">{t('noUpcomingPerformances')}</p>
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm p-6">
+        <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm p-6 h-full">
             <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-action-primary" />
                 {t('upcomingPerformances')}
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2">
                 {performances.map((performance) => {
-                    const timeUntil = getTimeUntil(performance.premiere_date)
-                    const isUrgent = timeUntil === t('today') || timeUntil === t('tomorrow')
+                    const { text: timeUntil, urgent } = getTimeUntil(performance.premiere_date)
 
                     return (
                         <Link
@@ -67,22 +73,35 @@ export function UpcomingPerformances({ performances }: UpcomingPerformancesProps
                             href={`/performances/${performance.id}`}
                             className="block group"
                         >
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-neutral-800/50 hover:bg-neutral-800 transition-colors">
-                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    <div
-                                        className="w-1 h-10 rounded-full flex-shrink-0"
-                                        style={{ backgroundColor: performance.color || '#6366f1' }}
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-white truncate">
+                            <div className="flex items-center gap-4 p-3 rounded-xl bg-neutral-800/30 border border-transparent hover:border-neutral-700 hover:bg-neutral-800/50 transition-all duration-200">
+                                <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-neutral-900 border border-neutral-800 flex-shrink-0">
+                                    <span className="text-xs text-neutral-500 uppercase font-medium">
+                                        {new Date(performance.premiere_date).toLocaleDateString(locale, { month: 'short' }).replace('.', '')}
+                                    </span>
+                                    <span className="text-lg font-bold text-white">
+                                        {new Date(performance.premiere_date).getDate()}
+                                    </span>
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div
+                                            className="w-2 h-2 rounded-full"
+                                            style={{ backgroundColor: performance.color || '#6366f1' }}
+                                        />
+                                        <h4 className="text-sm font-medium text-white truncate group-hover:text-action-primary transition-colors">
                                             {performance.title}
-                                        </p>
-                                        <p className={`text-xs ${isUrgent ? 'text-yellow-400 font-medium' : 'text-neutral-400'}`}>
-                                            {timeUntil}
-                                        </p>
+                                        </h4>
+                                    </div>
+                                    <div className={`flex items-center gap-1.5 text-xs ${urgent ? 'text-yellow-400' : 'text-neutral-400'}`}>
+                                        <Clock className="h-3 w-3" />
+                                        <span>{timeUntil}</span>
                                     </div>
                                 </div>
-                                <ArrowRight className="h-4 w-4 text-neutral-400 group-hover:text-white group-hover:translate-x-1 transition-all flex-shrink-0" />
+
+                                <div className="p-2 rounded-full text-neutral-500 group-hover:text-white group-hover:bg-neutral-700/50 transition-all">
+                                    <ArrowRight className="h-4 w-4" />
+                                </div>
                             </div>
                         </Link>
                     )

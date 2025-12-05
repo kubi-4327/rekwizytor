@@ -20,7 +20,7 @@ export function ActiveChecklistsStatus({ checklists }: ActiveChecklistsStatusPro
 
     if (!checklists || checklists.length === 0) {
         return (
-            <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm p-6">
+            <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm p-6 h-full flex flex-col justify-center">
                 <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
                     <CheckSquare className="h-5 w-5 text-action-primary" />
                     {t('activeChecklists')}
@@ -38,12 +38,12 @@ export function ActiveChecklistsStatus({ checklists }: ActiveChecklistsStatusPro
     }
 
     return (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm p-6">
+        <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm p-6 h-full flex flex-col">
             <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
                 <CheckSquare className="h-5 w-5 text-action-primary" />
                 {t('activeChecklists')}
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-4 flex-1">
                 {checklists.map((checklist) => {
                     const progress = checklist.total > 0
                         ? Math.round((checklist.completed / checklist.total) * 100)
