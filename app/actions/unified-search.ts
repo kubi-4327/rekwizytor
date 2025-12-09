@@ -103,6 +103,7 @@ export async function unifiedSearch(
         // Simple FTS search (fast, no AI cost)
         const { data, error } = await supabase.rpc('search_global', {
             query_text: query,
+            match_threshold: 0.5,
             match_count: matchCount,
             fuzzy_threshold: 0.3
         })
@@ -131,7 +132,9 @@ export async function unifiedSearch(
                 // Fallback to FTS
                 const { data: ftsData } = await supabase.rpc('search_global', {
                     query_text: query,
-                    match_count: matchCount
+                    match_threshold: 0.5,
+                    match_count: matchCount,
+                    fuzzy_threshold: 0.3
                 })
                 results = (ftsData as SearchResult[]) || []
             } else {
@@ -142,7 +145,9 @@ export async function unifiedSearch(
             // Fallback to FTS
             const { data: ftsData } = await supabase.rpc('search_global', {
                 query_text: query,
-                match_count: matchCount
+                match_threshold: 0.5,
+                match_count: matchCount,
+                fuzzy_threshold: 0.3
             })
             results = (ftsData as SearchResult[]) || []
         }
