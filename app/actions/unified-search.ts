@@ -92,50 +92,68 @@ export async function unifiedSearch(
         }
     }
 ): Promise<UnifiedSearchResult> {
-    const supabase = await createClient()
+    try {
+        console.log('[unifiedSearch] Starting search with query:', query, 'options:', JSON.stringify(options))
 
-    const matchCount = options?.matchCount ?? 30
-    const strategy = classifyQuery(query)
+        const supabase = await createClient()
+        console.log('[unifiedSearch] Supabase client created')
 
-    let results: SearchResult[] = []
+        const matchCount = options?.matchCount ?? 30
+        const strategy = classifyQuery(query)
+        console.log('[unifiedSearch] Strategy:', strategy, 'matchCount:', matchCount)
 
-    if (strategy === 'fts') {
-        // Simple FTS search (fast, no AI cost)
-        try {
-            console.log('[unifiedSearch] Starting FTS search with query:', query)
-            const { data, error } = await supabase.rpc('search_global', {
-                query_text: query,
-                match_threshold: 0.5,
-                match_count: matchCount,
-                fuzzy_threshold: 0.3
-            })
+        let results: SearchResult[] = []
 
-            if (error) {
-                console.error('[unifiedSearch] FTS search RPC error:', JSON.stringify(error))
-                return { results: [], strategy, queryClassification: 'fts-only' }
+        if (strategy === 'fts') {
+            // Simple FTS search (fast, no AI cost)
+            try {
+                console.log('[unifiedSearch] Starting FTS search with query:', query)
+                const { data, error } = await supabase.rpc('search_global', {
+                    query_text: query,
+                    match_threshold: 0.5,
+                    match_count: matchCount,
+                    fuzzy_threshold: 0.3
+                })
+
+                if (error) {
+                    console.error('[unifiedSearch] FTS search RPC error:', JSON.stringify(error))
+                    return { results: [], strategy, queryClassification: 'fts-only' }
+                }
+
+                console.log('[unifiedSearch] FTS search returned', data?.length ?? 0, 'results')
+                results = (data as SearchResult[]) || []
+            } catch (ftsError) {
+                console.error('[unifiedSearch] FTS search exception:', ftsError)
+                return { results: [], strategy, queryClassification: 'fts-error' }
             }
+        } else {
+            // Hybrid search with embeddings
+            try {
+                const queryEmbedding = await generateEmbedding(query, TaskType.RETRIEVAL_QUERY)
 
-            console.log('[unifiedSearch] FTS search returned', data?.length ?? 0, 'results')
-            results = (data as SearchResult[]) || []
-        } catch (ftsError) {
-            console.error('[unifiedSearch] FTS search exception:', ftsError)
-            return { results: [], strategy, queryClassification: 'fts-error' }
-        }
-    } else {
-        // Hybrid search with embeddings
-        try {
-            const queryEmbedding = await generateEmbedding(query, TaskType.RETRIEVAL_QUERY)
+                const { data, error } = await supabase.rpc('search_global_hybrid', {
+                    query_text: query,
+                    query_embedding: JSON.stringify(queryEmbedding),
+                    match_threshold: 0.4,
+                    match_count: matchCount,
+                    fuzzy_threshold: 0.3
+                })
 
-            const { data, error } = await supabase.rpc('search_global_hybrid', {
-                query_text: query,
-                query_embedding: JSON.stringify(queryEmbedding),
-                match_threshold: 0.4,
-                match_count: matchCount,
-                fuzzy_threshold: 0.3
-            })
-
-            if (error) {
-                console.error('Hybrid search error:', error)
+                if (error) {
+                    console.error('Hybrid search error:', error)
+                    // Fallback to FTS
+                    const { data: ftsData } = await supabase.rpc('search_global', {
+                        query_text: query,
+                        match_threshold: 0.5,
+                        match_count: matchCount,
+                        fuzzy_threshold: 0.3
+                    })
+                    results = (ftsData as SearchResult[]) || []
+                } else {
+                    results = (data as SearchResult[]) || []
+                }
+            } catch (embeddingError) {
+                console.error('Embedding generation error:', embeddingError)
                 // Fallback to FTS
                 const { data: ftsData } = await supabase.rpc('search_global', {
                     query_text: query,
@@ -144,81 +162,80 @@ export async function unifiedSearch(
                     fuzzy_threshold: 0.3
                 })
                 results = (ftsData as SearchResult[]) || []
-            } else {
-                results = (data as SearchResult[]) || []
             }
-        } catch (embeddingError) {
-            console.error('Embedding generation error:', embeddingError)
-            // Fallback to FTS
-            const { data: ftsData } = await supabase.rpc('search_global', {
-                query_text: query,
-                match_threshold: 0.5,
-                match_count: matchCount,
-                fuzzy_threshold: 0.3
-            })
-            results = (ftsData as SearchResult[]) || []
         }
-    }
 
-    // Apply filters
-    if (options?.entityTypeFilter?.length) {
-        results = results.filter(r => options.entityTypeFilter!.includes(r.entity_type))
-    }
+        // Apply filters
+        if (options?.entityTypeFilter?.length) {
+            results = results.filter(r => options.entityTypeFilter!.includes(r.entity_type))
+        }
 
-    if (options?.statusFilter?.length) {
-        results = results.filter(r => {
-            const status = r.metadata?.status
-            return status && options.statusFilter!.includes(status)
-        })
-    }
-
-    // Advanced filters
-    if (options?.filters) {
-        const { dateFrom, dateTo, location, category, groupId } = options.filters
-
-        if (dateFrom || dateTo) {
+        if (options?.statusFilter?.length) {
             results = results.filter(r => {
-                const date = r.metadata?.date || r.metadata?.created_at
-                if (!date) return false
-                const d = new Date(date).getTime()
-                const from = dateFrom ? new Date(dateFrom).getTime() : 0
-                const to = dateTo ? new Date(dateTo).getTime() : Infinity
-                return d >= from && d <= to
+                const status = r.metadata?.status
+                return status && options.statusFilter!.includes(status)
             })
         }
 
-        if (location) {
-            results = results.filter(r => {
-                const loc = r.metadata?.location_name || r.metadata?.location
-                return loc && typeof loc === 'string' && loc.toLowerCase().includes(location.toLowerCase())
+        // Advanced filters
+        if (options?.filters) {
+            const { dateFrom, dateTo, location, category, groupId } = options.filters
+
+            if (dateFrom || dateTo) {
+                results = results.filter(r => {
+                    const date = r.metadata?.date || r.metadata?.created_at
+                    if (!date) return false
+                    const d = new Date(date).getTime()
+                    const from = dateFrom ? new Date(dateFrom).getTime() : 0
+                    const to = dateTo ? new Date(dateTo).getTime() : Infinity
+                    return d >= from && d <= to
+                })
+            }
+
+            if (location) {
+                results = results.filter(r => {
+                    const loc = r.metadata?.location_name || r.metadata?.location
+                    return loc && typeof loc === 'string' && loc.toLowerCase().includes(location.toLowerCase())
+                })
+            }
+
+            if (category) {
+                results = results.filter(r => {
+                    const cat = r.metadata?.category
+                    return cat && typeof cat === 'string' && cat.toLowerCase().includes(category.toLowerCase())
+                })
+            }
+
+            if (groupId) {
+                results = results.filter(r => r.metadata?.group_id === groupId)
+            }
+        }
+
+        // Apply sorting
+        if (options?.sortBy === 'newest') {
+            results.sort((a, b) => {
+                const dateA = new Date(a.metadata?.created_at || 0).getTime()
+                const dateB = new Date(b.metadata?.created_at || 0).getTime()
+                return dateB - dateA
             })
         }
 
-        if (category) {
-            results = results.filter(r => {
-                const cat = r.metadata?.category
-                return cat && typeof cat === 'string' && cat.toLowerCase().includes(category.toLowerCase())
-            })
+        console.log('[unifiedSearch] Returning', results.length, 'results')
+        return {
+            results,
+            strategy,
+            queryClassification: strategy === 'fts' ? 'simple-query' : 'semantic-query'
         }
-
-        if (groupId) {
-            results = results.filter(r => r.metadata?.group_id === groupId)
+    } catch (error) {
+        console.error('[unifiedSearch] FATAL ERROR:', error)
+        console.error('[unifiedSearch] Error stack:', error instanceof Error ? error.stack : 'No stack')
+        console.error('[unifiedSearch] Error message:', error instanceof Error ? error.message : String(error))
+        // Return empty results instead of throwing to avoid 500 error
+        return {
+            results: [],
+            strategy: 'fts',
+            queryClassification: 'error'
         }
-    }
-
-    // Apply sorting
-    if (options?.sortBy === 'newest') {
-        results.sort((a, b) => {
-            const dateA = new Date(a.metadata?.created_at || 0).getTime()
-            const dateB = new Date(b.metadata?.created_at || 0).getTime()
-            return dateB - dateA
-        })
-    }
-
-    return {
-        results,
-        strategy,
-        queryClassification: strategy === 'fts' ? 'simple-query' : 'semantic-query'
     }
 }
 
