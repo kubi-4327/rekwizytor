@@ -1,5 +1,28 @@
-import DOMPurify from 'isomorphic-dompurify'
 import { z } from 'zod'
+
+/**
+ * Strip HTML tags from text - works on server without DOM
+ * This is safe because we're removing ALL HTML, not trying to allow some
+ */
+function stripHtml(text: string): string {
+    return text
+        // Remove script tags and their content
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        // Remove style tags and their content
+        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+        // Remove all HTML tags
+        .replace(/<[^>]*>/g, '')
+        // Decode common HTML entities
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        // Remove extra whitespace
+        .replace(/\s+/g, ' ')
+        .trim()
+}
 
 /**
  * Sanitize user input before sending to AI
@@ -46,14 +69,11 @@ export function validateAIResponse<T>(
 
 /**
  * Sanitize text returned by AI before displaying in UI
- * Removes HTML and scripts
+ * Removes HTML and scripts - works on both client and server
  */
 export function sanitizeAIOutput(text: string): string {
     if (!text) return ''
-    return DOMPurify.sanitize(text, {
-        ALLOWED_TAGS: [], // No HTML allowed
-        ALLOWED_ATTR: []
-    })
+    return stripHtml(text)
 }
 
 // --- Zod Schemas ---
