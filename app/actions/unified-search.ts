@@ -101,19 +101,26 @@ export async function unifiedSearch(
 
     if (strategy === 'fts') {
         // Simple FTS search (fast, no AI cost)
-        const { data, error } = await supabase.rpc('search_global', {
-            query_text: query,
-            match_threshold: 0.5,
-            match_count: matchCount,
-            fuzzy_threshold: 0.3
-        })
+        try {
+            console.log('[unifiedSearch] Starting FTS search with query:', query)
+            const { data, error } = await supabase.rpc('search_global', {
+                query_text: query,
+                match_threshold: 0.5,
+                match_count: matchCount,
+                fuzzy_threshold: 0.3
+            })
 
-        if (error) {
-            console.error('FTS search error:', error)
-            return { results: [], strategy, queryClassification: 'fts-only' }
+            if (error) {
+                console.error('[unifiedSearch] FTS search RPC error:', JSON.stringify(error))
+                return { results: [], strategy, queryClassification: 'fts-only' }
+            }
+
+            console.log('[unifiedSearch] FTS search returned', data?.length ?? 0, 'results')
+            results = (data as SearchResult[]) || []
+        } catch (ftsError) {
+            console.error('[unifiedSearch] FTS search exception:', ftsError)
+            return { results: [], strategy, queryClassification: 'fts-error' }
         }
-
-        results = (data as SearchResult[]) || []
     } else {
         // Hybrid search with embeddings
         try {

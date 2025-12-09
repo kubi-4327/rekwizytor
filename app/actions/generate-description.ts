@@ -106,6 +106,10 @@ export async function analyzeItemWithGemini(
         contentParts = [prompt]
     }
 
+    if (!geminiFlash) {
+        throw new Error('Gemini AI not available - GEMINI_API_KEY may be missing')
+    }
+
     const result = await geminiFlash.generateContent(contentParts)
     const responseText = result.response.text()
     const usage = result.response.usageMetadata

@@ -90,6 +90,10 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
             Output ONLY the JSON object.
             `
 
+            if (!geminiFlash) {
+                throw new Error('Gemini AI not available - GEMINI_API_KEY may be missing')
+            }
+
             const result = await geminiFlash.generateContent([
                 prompt,
                 {

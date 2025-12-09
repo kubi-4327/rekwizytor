@@ -112,6 +112,10 @@ export async function smartSearch(query: string) {
                 setTimeout(() => reject(new Error('AI generation timed out')), 15000)
             )
 
+            if (!geminiFlash) {
+                throw new Error('Gemini AI not available - GEMINI_API_KEY may be missing')
+            }
+
             const generationPromise = geminiFlash.generateContent(prompt)
 
             const result: any = await Promise.race([generationPromise, timeoutPromise])
