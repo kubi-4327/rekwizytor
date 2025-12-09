@@ -59,16 +59,17 @@ export async function createThumbnail(file: File, size: number = 300): Promise<B
                     return
                 }
 
-                // Square crop logic
+                // Square crop logic with safety zoom (5%) to avoid edge artifacts
                 const minDimension = Math.min(img.width, img.height)
-                const sx = (img.width - minDimension) / 2
-                const sy = (img.height - minDimension) / 2
+                const cropSize = minDimension * 0.95 // Crop 95% of the center
+                const sx = (img.width - cropSize) / 2
+                const sy = (img.height - cropSize) / 2
 
                 canvas.width = size
                 canvas.height = size
 
                 // Draw cropped and resized image
-                ctx.drawImage(img, sx, sy, minDimension, minDimension, 0, 0, size, size)
+                ctx.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, size, size)
 
                 canvas.toBlob((blob) => {
                     if (blob) {

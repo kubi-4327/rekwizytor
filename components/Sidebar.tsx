@@ -1,6 +1,9 @@
+
 'use client'
 
-import { Link, usePathname, useRouter } from '@/i18n/routing'
+import { useRouter } from '@/i18n/routing'
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { Theater, Box, Layers, ClipboardList, Settings, LogOut, Sparkles, Notebook, Tag, CheckCircle2, Search } from 'lucide-react'
 import { clsx } from 'clsx'
 import { createClient } from '@/utils/supabase/client'
@@ -8,6 +11,7 @@ import { useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import Image from 'next/image'
+import { Button } from '@/components/ui/Button'
 
 export function Sidebar() {
     const pathname = usePathname()
@@ -48,16 +52,18 @@ export function Sidebar() {
                 </div>
                 <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
                     <div className="px-2 mb-2">
-                        <button
-                            onClick={() => document.dispatchEvent(new Event('open-command-palette'))}
-                            className="group flex w-full items-center px-2 py-2 text-sm font-medium text-neutral-400 rounded-md hover:text-white transition-colors duration-200"
+                        <Link
+                            href="/search"
+                            className="flex w-full items-center justify-between rounded-md bg-neutral-800 px-3 py-2 text-sm text-neutral-400 hover:bg-neutral-700 hover:text-white transition-colors"
                         >
-                            <Search className="mr-3 h-6 w-6 text-neutral-500 group-hover:text-white transition-colors duration-200 flex-shrink-0" />
-                            <span className="flex-1 text-left">{t('search')}</span>
-                            <kbd className="hidden lg:inline-flex h-5 items-center gap-1 rounded border border-neutral-700 bg-neutral-800 px-1.5 font-mono text-[10px] font-medium text-neutral-400 opacity-100">
+                            <div className="flex items-center gap-3">
+                                <Search className="h-4 w-4" />
+                                <span>{t('search')}</span>
+                            </div>
+                            <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-neutral-600 bg-neutral-700 px-1.5 font-mono text-[10px] font-medium text-neutral-400">
                                 <span className="text-xs">⌘K</span>
                             </kbd>
-                        </button>
+                        </Link>
                     </div>
                     <nav className="mt-1 flex-1 space-y-1 px-2">
                         {navigation.map((item) => {
@@ -143,13 +149,14 @@ export function Sidebar() {
                             {t('settings')}
                         </span>
                     </Link>
-                    <button
+                    <Button
+                        variant="ghost"
                         onClick={handleSignOut}
-                        className="group flex w-full items-center px-2 py-2 text-sm font-medium text-neutral-400 rounded-md hover:bg-neutral-800 hover:text-white transition-colors"
+                        className="w-full justify-start text-neutral-400 hover:text-white px-2"
+                        leftIcon={<LogOut className="h-5 w-5 text-neutral-500 group-hover:text-white transition-colors" />}
                     >
-                        <LogOut className="mr-3 h-5 w-5 text-neutral-500 group-hover:text-white transition-colors" />
                         {t('signOut')}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

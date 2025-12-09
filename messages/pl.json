@@ -116,9 +116,12 @@
         "signOut": "Wyloguj się",
         "lists": "Listy",
         "notes": "Notatki",
-        "groups": "Grupy",
-        "more": "Więcej",
         "search": "Szukaj",
+        "searchPlaceholder": "Szukaj...",
+        "openGlobalSearchWithContext": "Szukaj w {context}",
+        "groups": "Grupy",
+        "locations": "Lokalizacje",
+        "more": "Więcej",
         "about": "O Aplikacji"
     },
     "Groups": {
@@ -138,7 +141,9 @@
         "subtitle": "Spektakle, próby i archiwa",
         "addProduction": "Dodaj Spektakl",
         "add": "Dodaj",
-        "exportAllSchedule": "Eksportuj do kalendarza"
+        "exportAllSchedule": "Eksportuj do kalendarza",
+        "actions": "Akcje",
+        "generateAllLabels": "Generuj wszystkie etykiety"
     },
     "NewItem": {
         "backToInventory": "Powrót do Magazynu",
@@ -412,6 +417,7 @@
         "allStatuses": "Wszystkie Statusy",
         "statuses": {
             "active": "Aktywny",
+            "draft": "Szkic",
             "upcoming": "Nadchodzący",
             "archived": "Zarchiwizowany",
             "unassigned": "Nieprzypisany",
@@ -541,7 +547,11 @@
         "notesPlaceholder": "Reżyser, inspicjent lub inne szczegóły...",
         "cancel": "Anuluj",
         "saveShow": "Zapisz Spektakl",
-        "unknownError": "Wystąpił nieznany błąd"
+        "unknownError": "Wystąpił nieznany błąd",
+        "importFromUrl": "Importuj ze strony teatru",
+        "import": "Pobierz dane",
+        "datesFound": "Znaleziono {count} terminów do zaplanowania.",
+        "importDescription": "Wklej link do strony spektaklu aby automatycznie uzupełnić dane."
     },
     "ScheduledShowsList": {
         "title": "Zaplanowane Spektakle",
@@ -709,7 +719,9 @@
         "exportTxt": "Eksportuj jako TXT",
         "exportJson": "Eksportuj jako JSON",
         "copied": "Skopiowano do schowka! Możesz teraz wkleić do Notion, Evernote itp.",
-        "loading": "Ładowanie..."
+        "loading": "Ładowanie...",
+        "edit": "Edytuj",
+        "done": "Gotowe"
     },
     "FastAddForm": {
         "sessionSettings": "Ustawienia Sesji",
@@ -763,5 +775,32 @@
         "credits": "Twórcy",
         "creditsText": "Zaprojektowane i zbudowane z ❤️ przez Jakub Pełka.",
         "testVersionWarning": "To jest wersja testowa aplikacji. Niektóre funkcje mogą nie działać poprawnie."
+    },
+    "toast": {
+        "success": {
+            "saved": "Zapisano",
+            "exported": "Wyeksportowano",
+            "labelGenerated": "Etykiety wygenerowane",
+            "updated": "Zaktualizowano",
+            "created": "Utworzono",
+            "deleted": "Usunięto"
+        },
+        "error": {
+            "generic": "Wystąpił błąd",
+            "export": "Nie udało się wyeksportować",
+            "save": "Nie udało się zapisać",
+            "update": "Nie udało się zaktualizować",
+            "delete": "Nie udało się usunąć",
+            "load": "Nie udało się załadować",
+            "network": "Błąd połączenia sieciowego"
+        },
+        "loading": {
+            "saving": "Zapisywanie...",
+            "exporting": "Eksportowanie...",
+            "generating": "Generowanie...",
+            "loading": "Ładowanie...",
+            "processing": "Przetwarzanie...",
+            "deleting": "Usuwanie..."
+        }
     }
 }

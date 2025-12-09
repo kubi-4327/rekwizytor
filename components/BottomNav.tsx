@@ -53,21 +53,7 @@ export function BottomNav() {
                             )
                         }
 
-                        if (item.href === '/search') {
-                            return (
-                                <button
-                                    key={item.name}
-                                    onClick={() => document.dispatchEvent(new Event('open-command-palette'))}
-                                    className={clsx(
-                                        'text-neutral-500 hover:text-white',
-                                        'relative flex flex-col items-center justify-center w-full h-full py-1 transition-colors'
-                                    )}
-                                >
-                                    <item.icon className="h-6 w-6 mb-1 relative z-10" />
-                                    <span className="text-[10px] font-medium relative z-10">{item.name}</span>
-                                </button>
-                            )
-                        }
+
 
                         return (
                             <Link

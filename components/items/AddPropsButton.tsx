@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Plus, Sparkles, PenLine, ChevronDown } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 
 export function AddPropsButton() {
     const t = useTranslations('AddPropsButton')
@@ -25,14 +26,15 @@ export function AddPropsButton() {
 
     return (
         <div className="relative" ref={dropdownRef}>
-            <button
+            <Button
                 onClick={() => setIsOpen(!isOpen)}
-                className="inline-flex items-center justify-center rounded-md bg-action-primary px-4 py-2 text-sm font-medium text-white hover:bg-action-hover focus:outline-none focus:ring-2 focus:ring-action-primary focus:ring-offset-2 focus:ring-offset-neutral-900 transition-colors sm:min-w-[140px] border border-transparent"
+                variant="primary"
+                className="sm:min-w-[140px]"
+                leftIcon={<Plus className="h-4 w-4" />}
+                rightIcon={<ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />}
             >
-                <Plus className="mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">{t('addItem')}</span>
-                <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-            </button>
+            </Button>
 
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-neutral-900 border border-neutral-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">

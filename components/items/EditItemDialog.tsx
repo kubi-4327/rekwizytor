@@ -1,13 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Loader2, Save, Sparkles } from 'lucide-react'
+import { X, Save, Sparkles } from 'lucide-react'
 import { Database } from '@/types/supabase'
+import { Button } from '@/components/ui/Button'
 import { updateItem } from '@/app/actions/update-item'
 import { generateItemDescriptions } from '@/app/actions/generate-description'
 import NextImage from 'next/image'
 import { ItemIcon } from '@/components/ui/ItemIcon'
 import { useRouter } from 'next/navigation'
+import { notify } from '@/utils/notify'
+import { useTranslations } from 'next-intl'
 
 type Item = Database['public']['Tables']['items']['Row']
 type Location = Database['public']['Tables']['locations']['Row']
@@ -26,6 +29,7 @@ export function EditItemDialog({ item, isOpen, onClose, locations, groups }: Pro
     const [isGenerating, setIsGenerating] = useState(false)
     const [aiDescription, setAiDescription] = useState('')
     const router = useRouter()
+    const t = useTranslations('toast')
 
     useEffect(() => {
         if (item) {
@@ -37,6 +41,7 @@ export function EditItemDialog({ item, isOpen, onClose, locations, groups }: Pro
 
     const handleGenerateAI = async () => {
         setIsGenerating(true)
+        const toastId = notify.loading(t('loading.generating'))
         try {
             const result = await generateItemDescriptions(item.id, item.name, item.notes, item.image_url)
             if (result.success && result.data) {
@@ -52,12 +57,15 @@ export function EditItemDialog({ item, isOpen, onClose, locations, groups }: Pro
                 }
 
                 router.refresh()
+                notify.dismiss(toastId)
+                notify.success(t('success.created'))
             } else {
-                alert('Failed to generate descriptions')
+                notify.dismiss(toastId)
+                notify.error(t('error.generic'))
             }
         } catch (error) {
-            console.error('AI Generation error:', error)
-            alert('Error generating descriptions')
+            notify.dismiss(toastId)
+            notify.error(t('error.generic'))
         } finally {
             setIsGenerating(false)
         }
@@ -72,14 +80,14 @@ export function EditItemDialog({ item, isOpen, onClose, locations, groups }: Pro
             const result = await updateItem(item.id, formData)
 
             if (result.error) {
-                alert(result.error)
+                notify.error(result.error)
             } else {
+                notify.success(t('success.updated'))
                 onClose()
                 router.refresh()
             }
         } catch (error) {
-            console.error('Failed to update item:', error)
-            alert('Failed to update item')
+            notify.error(t('error.update'))
         } finally {
             setIsSaving(false)
         }
@@ -90,9 +98,9 @@ export function EditItemDialog({ item, isOpen, onClose, locations, groups }: Pro
             <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
                 <div className="flex items-center justify-between p-4 border-b border-neutral-800 flex-shrink-0">
                     <h2 className="text-lg font-semibold text-white">Edit Item</h2>
-                    <button onClick={onClose} className="text-neutral-400 hover:text-white transition-colors">
+                    <Button variant="ghost" size="icon" onClick={onClose} className="text-neutral-400 hover:text-white">
                         <X className="w-5 h-5" />
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="overflow-y-auto flex-1 p-6">
@@ -197,15 +205,18 @@ export function EditItemDialog({ item, isOpen, onClose, locations, groups }: Pro
                         <div className="bg-neutral-950/50 p-4 rounded-lg border border-neutral-800 space-y-3">
                             <div className="flex items-center justify-between">
                                 <label className="block text-sm font-medium text-ai-secondary">AI Data</label>
-                                <button
+                                <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={handleGenerateAI}
                                     disabled={isGenerating}
-                                    className="text-xs flex items-center gap-1 text-ai-secondary hover:text-ai-secondary/80 transition-colors disabled:opacity-50"
+                                    isLoading={isGenerating}
+                                    leftIcon={<Sparkles className="w-3 h-3" />}
+                                    className="text-ai-secondary hover:text-ai-secondary/80 h-auto p-1 px-2"
                                 >
-                                    {isGenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                                    {isGenerating ? 'Generating...' : 'Generate Descriptions'}
-                                </button>
+                                    Generate Descriptions
+                                </Button>
                             </div>
 
                             <div>
@@ -225,31 +236,22 @@ export function EditItemDialog({ item, isOpen, onClose, locations, groups }: Pro
 
                 <div className="p-4 border-t border-neutral-800 flex-shrink-0 bg-neutral-900 rounded-b-xl">
                     <div className="flex justify-end gap-3">
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
                             onClick={onClose}
-                            className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
                         >
                             Cancel
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="submit"
                             form="edit-item-form"
-                            disabled={isSaving}
-                            className="flex items-center px-4 py-2 rounded-lg text-sm font-medium btn-burgundy text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            variant="primary"
+                            isLoading={isSaving}
+                            leftIcon={<Save className="w-4 h-4" />}
                         >
-                            {isSaving ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    Saving...
-                                </>
-                            ) : (
-                                <>
-                                    <Save className="w-4 h-4 mr-2" />
-                                    Save Changes
-                                </>
-                            )}
-                        </button>
+                            Save Changes
+                        </Button>
                     </div>
                 </div>
             </div>

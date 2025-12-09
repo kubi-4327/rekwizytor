@@ -5,6 +5,8 @@ import "../globals.css";
 import { AppShell } from "@/components/AppShell";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Toaster } from 'react-hot-toast';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,9 +50,12 @@ export default async function LocaleLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${courierPrime.variable} ${boldonse.variable} antialiased`}
       >
-        <NextIntlClientProvider messages={messages}>
-          <AppShell>{children}</AppShell>
-        </NextIntlClientProvider>
+        <Toaster />
+        <ErrorBoundary>
+          <NextIntlClientProvider messages={messages}>
+            <AppShell>{children}</AppShell>
+          </NextIntlClientProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

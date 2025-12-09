@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Download, Loader2, FileText } from 'lucide-react'
+import { Download, FileText } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 import { Database } from '@/types/supabase'
 import { useTranslations } from 'next-intl'
 import { format } from 'date-fns'
@@ -62,33 +63,29 @@ export function ExportPerformanceButton({ production, items, user, variant = 'de
 
     if (variant === 'menu') {
         return (
-            <button
+            <Button
                 onClick={handleExportPDF}
                 disabled={isExporting}
-                className="w-full text-left px-4 py-2.5 text-sm text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="ghost"
+                className="w-full justify-start px-4 py-2.5 text-neutral-300 hover:text-white hover:bg-neutral-800"
+                isLoading={isExporting}
+                leftIcon={!isExporting && <FileText className="w-4 h-4" />}
             >
-                {isExporting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                    <FileText className="w-4 h-4" />
-                )}
-                {isExporting ? 'Generowanie...' : 'Eksportuj PDF'}
-            </button>
+                Eksportuj PDF
+            </Button>
         )
     }
 
     return (
-        <button
+        <Button
             onClick={handleExportPDF}
             disabled={isExporting}
-            className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white border border-neutral-800 rounded-md hover:bg-neutral-900 transition-colors text-center flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="outline"
+            className="border-neutral-800 hover:bg-neutral-900 text-neutral-400 hover:text-white"
+            isLoading={isExporting}
+            leftIcon={!isExporting && <FileText className="w-4 h-4" />}
         >
-            {isExporting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-                <FileText className="w-4 h-4" />
-            )}
-            {isExporting ? 'Generowanie...' : 'Eksportuj PDF'}
-        </button>
+            Eksportuj PDF
+        </Button>
     )
 }

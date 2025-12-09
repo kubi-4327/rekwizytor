@@ -1,7 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { QrCode, Loader2 } from 'lucide-react'
+import { QrCode } from 'lucide-react'
+import { notify } from '@/utils/notify'
+import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 
 interface GroupLabelButtonProps {
     groupId: string
@@ -11,12 +14,14 @@ interface GroupLabelButtonProps {
 
 export function GroupLabelButton({ groupId, groupName, locationName }: GroupLabelButtonProps) {
     const [isGenerating, setIsGenerating] = useState(false)
+    const t = useTranslations('toast')
 
     const handleGenerateLabel = async (e: React.MouseEvent) => {
         e.preventDefault() // Prevent navigation if inside a link
         e.stopPropagation() // Prevent bubbling
 
         setIsGenerating(true)
+        const toastId = notify.loading(t('loading.generating'))
         try {
             const response = await fetch('/api/generate-labels', {
                 method: 'POST',
@@ -44,26 +49,26 @@ export function GroupLabelButton({ groupId, groupName, locationName }: GroupLabe
             document.body.removeChild(a)
             window.URL.revokeObjectURL(url)
 
+            notify.dismiss(toastId)
+            notify.success(t('success.labelGenerated'))
         } catch (error) {
-            console.error("Label generation failed", error)
-            alert("Failed to generate label")
+            notify.dismiss(toastId)
+            notify.error(t('error.generic'))
         } finally {
             setIsGenerating(false)
         }
     }
 
     return (
-        <button
+        <Button
+            variant="ghost"
+            size="icon"
             onClick={handleGenerateLabel}
-            disabled={isGenerating}
-            className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-full transition-colors"
+            isLoading={isGenerating}
+            className="rounded-full"
             title="Generuj etykietę"
         >
-            {isGenerating ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-                <QrCode className="w-4 h-4" />
-            )}
-        </button>
+            {!isGenerating && <QrCode className="w-4 h-4" />}
+        </Button>
     )
 }

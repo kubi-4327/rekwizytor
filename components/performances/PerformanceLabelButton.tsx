@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { QrCode, Loader2 } from 'lucide-react'
+import { QrCode } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 
 interface PerformanceLabelButtonProps {
     performanceId: string
@@ -9,7 +10,7 @@ interface PerformanceLabelButtonProps {
     premiereDate?: string | null
 }
 
-export function PerformanceLabelButton({ performanceId, performanceTitle, premiereDate }: PerformanceLabelButtonProps) {
+export function PerformanceLabelButton({ performanceId, performanceTitle, premiereDate, variant = 'icon' }: PerformanceLabelButtonProps & { variant?: 'icon' | 'menu' }) {
     const [isGenerating, setIsGenerating] = useState(false)
 
     const handleGenerateLabel = async (e: React.MouseEvent) => {
@@ -52,18 +53,32 @@ export function PerformanceLabelButton({ performanceId, performanceTitle, premie
         }
     }
 
+    if (variant === 'menu') {
+        return (
+            <Button
+                onClick={handleGenerateLabel}
+                disabled={isGenerating}
+                variant="ghost"
+                className="w-full justify-start px-4 py-2.5 text-neutral-300 hover:text-white hover:bg-neutral-800 border-t border-neutral-800 rounded-none h-auto"
+                isLoading={isGenerating}
+                leftIcon={!isGenerating && <QrCode className="w-4 h-4" />}
+            >
+                Generuj etykietę
+            </Button>
+        )
+    }
+
     return (
-        <button
+        <Button
             onClick={handleGenerateLabel}
             disabled={isGenerating}
-            className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-full transition-colors"
+            variant="ghost"
+            size="icon"
+            className="rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800"
+            isLoading={isGenerating}
             title="Generuj etykietę"
         >
-            {isGenerating ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-                <QrCode className="w-4 h-4" />
-            )}
-        </button>
+            {!isGenerating && <QrCode className="w-4 h-4" />}
+        </Button>
     )
 }

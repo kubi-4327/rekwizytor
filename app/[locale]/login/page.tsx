@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Loader2, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import LightRays from '@/components/ui/LightRays'
@@ -210,41 +211,40 @@ export default function LoginPage() {
                     )}
 
                     <div className="flex flex-col gap-3">
-                        <button
+                        <Button
                             type="submit"
-                            disabled={loading}
-                            className="flex w-full justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg shadow-white/5"
+                            variant="primary"
+                            isLoading={loading}
+                            className="bg-white text-black hover:bg-neutral-200 shadow-lg shadow-white/5"
                         >
-                            {loading ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                                isSignUp ? t('signUp') : t('signIn')
-                            )}
-                        </button>
+                            {isSignUp ? t('signUp') : t('signIn')}
+                        </Button>
 
-                        <button
+                        <Button
                             type="button"
+                            variant="outline"
                             onClick={fillTestData}
-                            className="flex w-full items-center justify-center rounded-md border border-neutral-800 bg-neutral-900/80 backdrop-blur-sm px-4 py-2 text-sm font-medium text-neutral-300 hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-neutral-900 cursor-pointer"
+                            leftIcon={<Sparkles className="w-4 h-4 text-yellow-500" />}
+                            className="border-neutral-800 bg-neutral-900/80 backdrop-blur-sm text-neutral-300 hover:bg-neutral-800"
                         >
-                            <Sparkles className="mr-2 h-4 w-4 text-yellow-500" />
                             {t('fillTestCredentials')}
-                        </button>
+                        </Button>
                     </div>
                 </form>
 
                 <div className="text-center">
-                    <button
+                    <Button
                         type="button"
+                        variant="link"
                         onClick={() => {
                             setIsSignUp(!isSignUp)
                             setError(null)
                             setMessage(null)
                         }}
-                        className="text-sm text-neutral-400 hover:text-white underline underline-offset-4 cursor-pointer"
+                        className="text-neutral-400 hover:text-white underline-offset-4"
                     >
                         {isSignUp ? t('alreadyHaveAccount') : t('dontHaveAccount')}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

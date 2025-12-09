@@ -70,7 +70,7 @@ export async function extractTopColors(imageUrl: string): Promise<string[]> {
         }
 
         img.onerror = () => {
-            console.error('Failed to load image for color extraction')
+            console.warn('Failed to load image for color extraction (likely CORS or invalid URL)')
             resolve([])
         }
     })

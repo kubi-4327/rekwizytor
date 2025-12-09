@@ -115,7 +115,7 @@ const NoteEditor = forwardRef<NoteEditorRef, {
             }),
             UserMention.configure({
                 HTMLAttributes: {
-                    class: 'mention user-mention bg-burgundy-main/10 dark:bg-burgundy-main/20 text-burgundy-main dark:text-burgundy-light rounded px-1 py-0.5 font-medium cursor-pointer',
+                    class: 'mention user-mention bg-burgundy-main/10 dark:bg-burgundy-main/20 text-burgundy-main dark:text-burgundy-light rounded px-1 py-0.5 font-medium cursor-pointer pointer-events-auto',
                 },
                 suggestion: {
                     char: '@',
@@ -126,7 +126,7 @@ const NoteEditor = forwardRef<NoteEditorRef, {
             }),
             ItemMention.configure({
                 HTMLAttributes: {
-                    class: 'mention item-mention bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300 rounded px-1 py-0.5 font-medium cursor-pointer',
+                    class: 'mention item-mention bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300 rounded px-1 py-0.5 font-medium cursor-pointer pointer-events-auto',
                 },
                 suggestion: {
                     char: '#',
@@ -283,7 +283,9 @@ const NoteEditor = forwardRef<NoteEditorRef, {
                     setHasLocalDraft(false)
                 }
             } catch (e) {
-                console.error('Failed to parse draft', e)
+                // Silent failure for draft parsing - not critical to user experience
+                console.warn('Failed to parse draft, removing stale data', e)
+                localStorage.removeItem(key)
             }
         }
     }, [noteId, serverUpdatedAt, editor]) // Removed initialContent from dependency to avoid re-running on prop change
@@ -351,23 +353,21 @@ const NoteEditor = forwardRef<NoteEditorRef, {
         }
     }, [debouncedContent, onSave, readOnly])
 
-    // Handle clicks on mentions in readOnly mode (or even edit mode if desired, but request said "outside edit mode")
-    // But if we are in readOnly mode, we definitely want navigation.
+    // Handle clicks on mentions in readOnly mode
     useEffect(() => {
-        if (!editor) return
+        if (!editor || !readOnly) return
 
         const handleClick = (e: MouseEvent) => {
-            // Only navigate if readOnly? Or always?
-            // Request: "Poza trybem edycji kliknięcie przenosi do odpowiedniego miejsca"
-            // So only when readOnly (or "outside edit mode").
-            if (!readOnly) return
-
             const target = e.target as HTMLElement
+            // Handle different types of mentions (class names might vary based on how they are rendered)
+            // The renderer uses mergeAttributes which adds the class to the span
             const mention = target.closest('.mention') as HTMLElement
 
             if (mention) {
                 const id = mention.getAttribute('data-id')
                 const type = mention.getAttribute('data-type')
+
+                console.log('Clicked mention:', type, id)
 
                 if (id && type) {
                     e.preventDefault()
@@ -382,9 +382,17 @@ const NoteEditor = forwardRef<NoteEditorRef, {
             }
         }
 
+        // We need to attach to the editor's DOM element
         const dom = editor.view.dom
         dom.addEventListener('click', handleClick)
-        return () => dom.removeEventListener('click', handleClick)
+
+        // Also attach to the parent container just in case Tiptap captures clicks weirdly
+        // specifically for read-only mode where contentEditable is false
+        // But editor.view.dom is the contentEditable div usually.
+
+        return () => {
+            dom.removeEventListener('click', handleClick)
+        }
     }, [editor, readOnly, router])
 
     // Update editable state if readOnly changes

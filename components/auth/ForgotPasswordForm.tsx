@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { Loader2, Mail, ArrowLeft } from 'lucide-react'
+import { Mail, ArrowLeft } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { buttonVariants } from '@/components/ui/button-variants'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
 
@@ -79,24 +81,21 @@ export function ForgotPasswordForm() {
                     </div>
                 )}
 
-                <button
+                <Button
                     type="submit"
-                    disabled={loading}
-                    className="flex w-full justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg shadow-white/5"
+                    variant="primary"
+                    isLoading={loading}
+                    className="w-full bg-white text-black hover:bg-neutral-200 shadow-lg shadow-white/5"
                 >
-                    {loading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        t('sendResetLink')
-                    )}
-                </button>
+                    {t('sendResetLink')}
+                </Button>
 
                 <div className="text-center">
                     <Link
                         href="/login"
-                        className="inline-flex items-center text-sm text-neutral-400 hover:text-white transition-colors"
+                        className={buttonVariants({ variant: 'link', className: "text-neutral-400 hover:text-white" })}
                     >
-                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        <ArrowLeft className="h-4 w-4 mr-2" />
                         {t('backToLogin')}
                     </Link>
                 </div>

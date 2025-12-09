@@ -397,6 +397,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           deleted_at: string | null
+          embedding: string | null
           id: string
           image_url: string | null
           last_show_date: string | null
@@ -412,6 +413,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           deleted_at?: string | null
+          embedding?: string | null
           id?: string
           image_url?: string | null
           last_show_date?: string | null
@@ -427,6 +429,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           deleted_at?: string | null
+          embedding?: string | null
           id?: string
           image_url?: string | null
           last_show_date?: string | null
@@ -742,6 +745,8 @@ export type Database = {
           embedding: string | null
           entity_type: string | null
           id: string | null
+          image_url: string | null
+          metadata: Json | null
           name: string | null
           updated_at: string | null
           url: string | null
@@ -775,37 +780,83 @@ export type Database = {
           similarity: number
         }[]
       }
-      search_global: {
-        Args: {
-          match_count?: number
-          match_threshold?: number
-          query_text: string
-        }
-        Returns: {
-          description: string
-          entity_type: string
-          id: string
-          name: string
-          score: number
-          url: string
-        }[]
-      }
-      search_global_hybrid: {
-        Args: {
-          match_count?: number
-          match_threshold?: number
-          query_embedding: string
-          query_text: string
-        }
-        Returns: {
-          description: string
-          entity_type: string
-          id: string
-          name: string
-          score: number
-          url: string
-        }[]
-      }
+      refresh_search_index: { Args: never; Returns: undefined }
+      search_global:
+        | {
+            Args: {
+              match_count?: number
+              match_threshold?: number
+              query_text: string
+            }
+            Returns: {
+              description: string
+              entity_type: string
+              id: string
+              image_url: string
+              metadata: Json
+              name: string
+              score: number
+              url: string
+            }[]
+          }
+        | {
+            Args: {
+              fuzzy_threshold?: number
+              match_count?: number
+              match_threshold?: number
+              query_text: string
+            }
+            Returns: {
+              description: string
+              entity_type: string
+              id: string
+              image_url: string
+              match_type: string
+              metadata: Json
+              name: string
+              score: number
+              url: string
+            }[]
+          }
+      search_global_hybrid:
+        | {
+            Args: {
+              fuzzy_threshold?: number
+              match_count?: number
+              match_threshold?: number
+              query_embedding: string
+              query_text: string
+            }
+            Returns: {
+              description: string
+              entity_type: string
+              id: string
+              image_url: string
+              match_type: string
+              metadata: Json
+              name: string
+              score: number
+              url: string
+            }[]
+          }
+        | {
+            Args: {
+              match_count?: number
+              match_threshold?: number
+              query_embedding: string
+              query_text: string
+            }
+            Returns: {
+              description: string
+              entity_type: string
+              id: string
+              name: string
+              score: number
+              url: string
+            }[]
+          }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       soft_delete_item: { Args: { item_uuid: string }; Returns: undefined }
     }
     Enums: {

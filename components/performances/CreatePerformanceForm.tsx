@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Loader2, Save, Calendar, Upload, X } from 'lucide-react'
+import { Save, Calendar, Upload, X, Globe, ArrowDownToLine } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 import { compressImage, createThumbnail } from '@/utils/image-processing'
 import { extractTopColors } from '@/utils/colors'
 import Image from 'next/image'
@@ -11,6 +12,8 @@ import DatePicker from 'react-datepicker'
 import "react-datepicker/dist/react-datepicker.css"
 import { pl } from 'date-fns/locale'
 import { useTranslations } from 'next-intl'
+import { scrapePerformance } from '@/app/actions/scrape-performance'
+import { refreshSearchIndex } from '@/app/actions/unified-search'
 
 export function CreatePerformanceForm() {
     const t = useTranslations('CreatePerformanceForm')
@@ -24,6 +27,9 @@ export function CreatePerformanceForm() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [isDragging, setIsDragging] = useState(false)
+    const [scrapeUrl, setScrapeUrl] = useState('')
+    const [isScraping, setIsScraping] = useState(false)
+    const [upcomingDates, setUpcomingDates] = useState<string[]>([])
 
     const router = useRouter()
     const supabase = createClient()
@@ -77,6 +83,17 @@ export function CreatePerformanceForm() {
         }
     }
 
+    const base64ToBlob = (dataURI: string) => {
+        const splitDataURI = dataURI.split(',')
+        const byteString = splitDataURI[0].indexOf('base64') >= 0 ? atob(splitDataURI[1]) : decodeURI(splitDataURI[1])
+        const mimeString = splitDataURI[0].split(':')[1].split(';')[0]
+        const ia = new Uint8Array(byteString.length)
+        for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i)
+        }
+        return new Blob([ia], { type: mimeString })
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
@@ -89,6 +106,7 @@ export function CreatePerformanceForm() {
 
             if (imageFile) {
                 const fileExt = imageFile.name.split('.').pop()
+                // ... (existing upload logic)
                 const fileName = `${Math.random()}.${fileExt}`
                 const thumbnailName = `thumb_${fileName}`
 
@@ -125,6 +143,63 @@ export function CreatePerformanceForm() {
 
                 imageUrl = publicImgUrl
                 thumbnailUrl = publicThumbUrl
+                thumbnailUrl = publicThumbUrl
+            } else if (imagePreview && imagePreview.startsWith('data:')) {
+                // Handle Base64 image from scraper
+                try {
+                    // Convert base64 to blob using manual helper
+                    const blob = base64ToBlob(imagePreview)
+                    const fileExt = blob.type.split('/')[1] || 'jpeg'
+                    const fileName = `${Math.random()}.${fileExt}`
+                    const thumbnailName = `thumb_${fileName}`
+
+                    // Create file from blob
+                    const file = new File([blob], fileName, { type: blob.type })
+
+                    // Compress main image (re-use existing compression logic if possible, or upload directly)
+                    // For safety, let's treat it like a user upload
+                    const compressedBlob = await compressImage(file)
+                    const compressedFile = new File([compressedBlob], fileName, { type: 'image/jpeg' })
+
+                    // Create thumbnail
+                    const thumbnailBlob = await createThumbnail(file, 300)
+                    const thumbnailFile = new File([thumbnailBlob], thumbnailName, { type: 'image/jpeg' })
+
+                    // Upload main image
+                    const { error: uploadError } = await supabase.storage
+                        .from('posters')
+                        .upload(fileName, compressedFile)
+
+                    if (uploadError) throw uploadError
+
+                    // Upload thumbnail
+                    const { error: thumbError } = await supabase.storage
+                        .from('posters')
+                        .upload(thumbnailName, thumbnailFile)
+
+                    if (thumbError) throw thumbError
+
+                    // Get public URLs
+                    const { data: { publicUrl: publicImgUrl } } = supabase.storage
+                        .from('posters')
+                        .getPublicUrl(fileName)
+
+                    const { data: { publicUrl: publicThumbUrl } } = supabase.storage
+                        .from('posters')
+                        .getPublicUrl(thumbnailName)
+
+                    imageUrl = publicImgUrl
+                    thumbnailUrl = publicThumbUrl
+
+                } catch (e) {
+                    console.error('Error uploading scraped image:', e)
+                    // Fallback?? If upload fail, we might just not save image or save base64 (bad idea for DB)
+                    // Let's just log error.
+                }
+            } else if (imagePreview && imagePreview.startsWith('http')) {
+                // Use scraped image URL directly if it's a remote URL
+                imageUrl = imagePreview
+                thumbnailUrl = imagePreview // Or leave null if we don't have a specific thumb
             }
 
             const { data: performanceData, error: insertError } = await supabase
@@ -142,6 +217,18 @@ export function CreatePerformanceForm() {
                 .single()
 
             if (insertError) throw insertError
+
+            // Create Group for the performance
+            const { error: groupError } = await supabase
+                .from('groups')
+                .insert({
+                    name: title,
+                    color: selectedColor
+                })
+
+            if (groupError) {
+                console.error('Error creating group:', groupError)
+            }
 
             // Create Master Note
             if (performanceData) {
@@ -168,6 +255,47 @@ export function CreatePerformanceForm() {
 
             if (insertError) throw insertError
 
+            // Add scheduled shows if any
+            // Add scheduled shows if any
+            if (upcomingDates.length > 0 && performanceData) {
+                // 1. Create a default scene first (required for checklists)
+                const { error: sceneError } = await supabase
+                    .from('scenes')
+                    .insert({
+                        performance_id: performanceData.id,
+                        act_number: 1,
+                        scene_number: 1,
+                        name: 'Scene 1'
+                    })
+
+                if (sceneError) {
+                    console.error('Error creating default scene:', sceneError)
+                } else {
+                    // 2. Create scene_checklists for each date
+                    const checklistsToInsert = upcomingDates.map(dateStr => ({
+                        performance_id: performanceData.id,
+                        show_date: dateStr,
+                        scene_number: '1',
+                        scene_name: 'Scene 1',
+                        type: 'show',
+                        is_active: false
+                    }))
+
+                    const { error: showsError } = await supabase
+                        .from('scene_checklists')
+                        .insert(checklistsToInsert)
+
+                    if (showsError) console.error('Error adding scheduled shows:', showsError)
+                }
+            }
+
+            // Refresh search index
+            try {
+                await refreshSearchIndex()
+            } catch (e) {
+                console.error('Failed to refresh search index:', e)
+            }
+
             router.push('/performances')
             router.refresh()
         } catch (err: unknown) {
@@ -181,9 +309,100 @@ export function CreatePerformanceForm() {
         }
     }
 
+    const handleScrape = async () => {
+        if (!scrapeUrl) return
+        setIsScraping(true)
+        setError(null)
+        setUpcomingDates([])
+
+        try {
+            const result = await scrapePerformance(scrapeUrl)
+
+            if (result.success && result.data) {
+                const data = result.data
+
+                if (data.title) setTitle(data.title)
+
+                const scrapedDesc = data.description || ''
+                if (scrapedDesc) setNotes(scrapedDesc)
+
+                if (data.premiereDate) {
+                    setPremiereDate(data.premiereDate)
+                }
+
+                if (data.imageUrl) {
+                    console.log('[Client] Received image URL from scraper:', data.imageUrl.substring(0, 50) + '...')
+                    setImagePreview(data.imageUrl)
+                    setImageFile(null) // Clear any local file
+
+                    try {
+                        console.log('[Client] Attempting to extract colors...')
+                        const colors = await extractTopColors(data.imageUrl)
+                        console.log('[Client] Extracted colors:', colors)
+                        if (colors.length > 0) {
+                            setExtractedColors(colors)
+                            setSelectedColor(colors[0])
+                        }
+                    } catch (e) {
+                        console.warn('[Client] Could not extract colors from remote image', e)
+                    }
+                } else {
+                    console.log('[Client] No image URL returned from scraper.')
+                }
+
+                if (data.dates && data.dates.length > 0) {
+                    setUpcomingDates(data.dates)
+                }
+            } else {
+                setError(result.error || 'Failed to scrape data')
+            }
+        } catch (err) {
+            console.error(err)
+            setError('Error scraping data')
+        } finally {
+            setIsScraping(false)
+        }
+    }
+
     return (
         <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl">
             <div className="space-y-6 bg-neutral-900/50 p-6 rounded-xl border border-neutral-800">
+                {/* Scraping Section */}
+                <div className="p-4 bg-neutral-950/50 rounded-lg border border-neutral-800 space-y-3">
+                    <label htmlFor="scrapeUrl" className="block text-sm font-medium text-neutral-300 flex items-center gap-2">
+                        <Globe className="w-4 h-4" />
+                        {t('importFromUrl', { defaultMessage: 'Importuj ze strony teatru' })}
+                    </label>
+                    <div className="flex gap-2">
+                        <input
+                            type="url"
+                            id="scrapeUrl"
+                            value={scrapeUrl}
+                            onChange={(e) => setScrapeUrl(e.target.value)}
+                            className="flex-1 rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
+                            placeholder="https://teatr-rozrywki.pl/..."
+                        />
+                        <Button
+                            type="button"
+                            onClick={handleScrape}
+                            disabled={isScraping || !scrapeUrl}
+                            isLoading={isScraping}
+                            variant="secondary"
+                            leftIcon={<ArrowDownToLine className="w-4 h-4" />}
+                        >
+                            {t('import', { defaultMessage: 'Pobierz dane' })}
+                        </Button>
+                    </div>
+                    {upcomingDates.length > 0 && (
+                        <div className="text-xs text-green-400 mt-2">
+                            {t('datesFound', { count: upcomingDates.length, defaultMessage: `Znaleziono ${upcomingDates.length} terminów do zaplanowania.` })}
+                        </div>
+                    )}
+                    <p className="text-xs text-neutral-500">
+                        {t('importDescription', { defaultMessage: 'Wklej link do strony spektaklu aby automatycznie uzupełnić dane.' })}
+                    </p>
+                </div>
+
                 <div>
                     <label htmlFor="title" className="block text-sm font-medium text-neutral-300">
                         {t('showTitle')} <span className="text-red-500">*</span>
@@ -222,6 +441,7 @@ export function CreatePerformanceForm() {
                                         fill
                                         className="object-cover"
                                         unoptimized
+                                        onError={(e) => console.error('[Client] Image preview failed to load:', e)}
                                     />
                                     <button
                                         type="button"
@@ -328,25 +548,22 @@ export function CreatePerformanceForm() {
             )}
 
             <div className="flex justify-end gap-4">
-                <button
+                <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => router.back()}
-                    className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white"
+                    className="text-neutral-400 hover:text-white"
                 >
                     {t('cancel')}
-                </button>
-                <button
+                </Button>
+                <Button
                     type="submit"
-                    disabled={loading}
-                    className="flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="primary"
+                    isLoading={loading}
+                    leftIcon={<Save className="w-4 h-4" />}
                 >
-                    {loading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <Save className="mr-2 h-4 w-4" />
-                    )}
                     {t('saveShow')}
-                </button>
+                </Button>
             </div>
         </form>
     )

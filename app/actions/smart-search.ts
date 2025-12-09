@@ -33,9 +33,8 @@ export async function smartSearch(query: string) {
         sanitizedQuery.toLowerCase().includes(g.name.toLowerCase())
     ).slice(0, 3) || []
 
-    // We pass ALL groups to the AI so it can semantically match (e.g. "syringe" -> "Medical")
-    // instead of relying on strict string matching.
-    const availableGroups = groups || []
+    // We pass limited groups to the AI to avoid huge prompts
+    const availableGroups = groups?.slice(0, 50) || []
 
     // 2. Find similar items using vector search
     const { data: matches, error } = await supabase.rpc('match_items', {
@@ -78,7 +77,7 @@ export async function smartSearch(query: string) {
     Znaleziono te potencjalne pasujące przedmioty w magazynie:
     ${richMatches.map((m) => `- [ID: ${m.id}] ${m.name} | Cechy: ${m.ai_description || m.notes || ''} (Podobieństwo: ${(m.similarity * 100).toFixed(0)}%)`).join('\n') || 'Brak przedmiotów'}
 
-    Dostępne grupy (kategorie) w magazynie:
+    Dostępne grupy (kategorie) w magazynie (top 50):
     ${availableGroups.map((g: { name: string, locations: { name: string } | null }) => `- ${g.name} (Lokalizacja: ${g.locations?.name || 'Nieznana'})`).join('\n') || 'Brak grup'}
 
     Zadanie:
@@ -107,7 +106,15 @@ export async function smartSearch(query: string) {
 
     if (richMatches.length > 0) {
         try {
-            const result = await geminiFlash.generateContent(prompt)
+            // 15 seconds timeout for AI generation
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('AI generation timed out')), 15000)
+            )
+
+            const generationPromise = geminiFlash.generateContent(prompt)
+
+            const result: any = await Promise.race([generationPromise, timeoutPromise])
+
             const responseText = result.response.text()
             console.log('AI Response:', responseText) // Debug log
 
@@ -124,7 +131,17 @@ export async function smartSearch(query: string) {
                 })
             }
 
-            const jsonString = responseText.replace(/```json\n?|\n?```/g, '').trim()
+            // More robust JSON extraction
+            const jsonStart = responseText.indexOf('{')
+            const jsonEnd = responseText.lastIndexOf('}')
+            let jsonString = ''
+
+            if (jsonStart !== -1 && jsonEnd !== -1) {
+                jsonString = responseText.substring(jsonStart, jsonEnd + 1)
+            } else {
+                jsonString = responseText.replace(/```json\n?|\n?```/g, '').trim()
+            }
+
             const rawResponse = JSON.parse(jsonString)
 
             // 2. VALIDATE OUTPUT
@@ -147,6 +164,7 @@ export async function smartSearch(query: string) {
             console.error('AI Agent error:', aiError)
             // Fallback: Return raw vector matches if AI fails
             enrichedResults = matches
+            suggestion = "AI nie odpowiedziało w czasie, wyświetlam wyniki surowe."
         }
     }
 

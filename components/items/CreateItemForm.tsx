@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Loader2, Upload, Save, X, Sparkles } from 'lucide-react'
+import { Upload, Save, X, Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 import Image from 'next/image'
 import { SearchableSelect } from '@/components/ui/SearchableSelect'
 import { useTranslations } from 'next-intl'
@@ -197,25 +198,22 @@ export function CreateItemForm({ groups, locations }: Props) {
             )}
 
             <div className="flex justify-end gap-4">
-                <button
+                <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => router.back()}
-                    className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white"
+                    className="text-neutral-400 hover:text-white"
                 >
                     {t('cancel')}
-                </button>
-                <button
+                </Button>
+                <Button
                     type="submit"
-                    disabled={loading}
-                    className="flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="primary"
+                    isLoading={loading}
+                    leftIcon={<Save className="h-4 w-4" />}
                 >
-                    {loading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <Save className="mr-2 h-4 w-4" />
-                    )}
                     {t('saveItem')}
-                </button>
+                </Button>
             </div>
         </form>
     )

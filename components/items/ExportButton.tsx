@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Download, FileSpreadsheet, FileText, ChevronDown, Loader2 } from 'lucide-react'
+import { Download, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 import { Database } from '@/types/supabase'
 import * as XLSX from 'xlsx'
 import { useTranslations } from 'next-intl'
 import { format } from 'date-fns'
+import { notify } from '@/utils/notify'
 
 type Item = Database['public']['Tables']['items']['Row']
 
@@ -15,6 +17,7 @@ interface ExportButtonProps {
 
 export function ExportButton({ items }: ExportButtonProps) {
     const t = useTranslations('ExportButton')
+    const tToast = useTranslations('toast')
     const [isOpen, setIsOpen] = useState(false)
     const [isExporting, setIsExporting] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
@@ -33,6 +36,7 @@ export function ExportButton({ items }: ExportButtonProps) {
 
     const handleExportExcel = () => {
         setIsExporting(true)
+        const toastId = notify.loading(tToast('loading.exporting'))
         try {
             const data = items.map(item => ({
                 [t('columns.name')]: item.name,
@@ -45,8 +49,11 @@ export function ExportButton({ items }: ExportButtonProps) {
             const wb = XLSX.utils.book_new()
             XLSX.utils.book_append_sheet(wb, ws, "Items")
             XLSX.writeFile(wb, "props_inventory.xlsx")
+            notify.dismiss(toastId)
+            notify.success(tToast('success.exported'))
         } catch (error) {
-            console.error("Export failed", error)
+            notify.dismiss(toastId)
+            notify.error(tToast('error.export'))
         } finally {
             setIsExporting(false)
             setIsOpen(false)
@@ -55,6 +62,7 @@ export function ExportButton({ items }: ExportButtonProps) {
 
     const handleExportPDF = async () => {
         setIsExporting(true)
+        const toastId = notify.loading(tToast('loading.exporting'))
         try {
             const response = await fetch('/api/generate-items-pdf', {
                 method: 'POST',
@@ -75,9 +83,11 @@ export function ExportButton({ items }: ExportButtonProps) {
             a.click()
             document.body.removeChild(a)
             window.URL.revokeObjectURL(url)
+            notify.dismiss(toastId)
+            notify.success(tToast('success.exported'))
         } catch (error) {
-            console.error("Export failed", error)
-            alert("Failed to generate PDF. Please try again.")
+            notify.dismiss(toastId)
+            notify.error(tToast('error.export'))
         } finally {
             setIsExporting(false)
             setIsOpen(false)
@@ -86,15 +96,17 @@ export function ExportButton({ items }: ExportButtonProps) {
 
     return (
         <div className="relative" ref={dropdownRef}>
-            <button
+            <Button
                 onClick={() => setIsOpen(!isOpen)}
                 disabled={isExporting}
-                className="inline-flex items-center justify-center rounded-md border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50 sm:min-w-[140px]"
+                variant="secondary"
+                className="sm:min-w-[140px]"
+                isLoading={isExporting}
+                leftIcon={!isExporting && <Download className="h-4 w-4" />}
+                rightIcon={<ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />}
             >
-                {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                 <span className="hidden sm:inline">{t('export')}</span>
-                <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-            </button>
+            </Button>
 
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-neutral-900 border border-neutral-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">

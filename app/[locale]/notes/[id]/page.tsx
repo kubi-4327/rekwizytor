@@ -4,10 +4,11 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import NoteEditor, { NoteEditorRef } from '@/components/notes/NoteEditor'
-import { ArrowLeft, Share, Copy, Download, ChevronDown } from 'lucide-react'
+import { ArrowLeft, Share, Copy, Download, ChevronDown, Pencil, Check, Folder } from 'lucide-react'
 import Link from 'next/link'
 import { extractMentions } from '@/components/notes/utils'
 import { useTranslations } from 'next-intl'
+import { AnimatePresence, motion } from 'framer-motion'
 
 export default function NoteDetailPage() {
     const t = useTranslations('NoteDetail')
@@ -18,6 +19,7 @@ export default function NoteDetailPage() {
     const [saving, setSaving] = useState(false)
     const [performances, setPerformances] = useState<any[]>([])
     const [showExportMenu, setShowExportMenu] = useState(false)
+    const [isEditing, setIsEditing] = useState(false)
     const supabase = createClient()
     const router = useRouter()
     const editorRef = useRef<NoteEditorRef>(null)
@@ -45,6 +47,8 @@ export default function NoteDetailPage() {
                     console.log('Server empty, using localStorage backup')
                     setNote({ ...serverData, content: localContent })
                     setTitle(serverData.title)
+                    // Auto-enter edit mode for new/empty notes if we restored a draft? 
+                    // Or maybe just let user click edit. Let's stick to strict view mode by default.
                     return
                 } catch (e) {
                     console.error('Failed to parse local draft', e)
@@ -63,7 +67,7 @@ export default function NoteDetailPage() {
 
         // Save on browser close/tab close
         const handleBeforeUnload = () => {
-            if (editorRef.current) {
+            if (editorRef.current && isEditing) {
                 const content = editorRef.current.getJSON()
                 // Synchronous save on unload - use localStorage as backup
                 // Server save will happen via onBlur which triggers before this
@@ -77,7 +81,7 @@ export default function NoteDetailPage() {
 
         window.addEventListener('beforeunload', handleBeforeUnload)
         return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-    }, [id])
+    }, [id, isEditing])
 
     const fetchPerformances = async () => {
         const { data } = await supabase.from('performances').select('id, title').order('title')
@@ -103,16 +107,6 @@ export default function NoteDetailPage() {
                 mention_type: m.type as "item" | "category" | "location" | "user" | "date",
                 mention_label: m.label
             }))
-
-            // Filter out invalid mentions (e.g. dates might not have UUIDs, need to handle that)
-            // For now, assume IDs are UUIDs or valid strings. 
-            // If date, ID is ISO string.
-            // But note_mentions.mentioned_id is UUID.
-            // So dates will fail if I try to insert them into UUID column.
-            // I should change mentioned_id to text or handle dates separately.
-            // The schema has mentioned_id as uuid.
-            // I should probably skip dates for now in the DB relation, or change schema.
-            // Let's filter out dates for the relation table.
 
             const validMentions = mentionsToInsert.filter(m =>
                 m.mention_type !== 'date' &&
@@ -175,8 +169,6 @@ export default function NoteDetailPage() {
     }
 
     const exportNoteMd = () => {
-        // Simple MD export - for now similar to TXT but we could enhance it to handle bold/italic if we parsed marks
-        // Tiptap JSON to MD is complex, but basic text is fine for now.
         const text = getNoteText()
         const element = document.createElement("a");
         const file = new Blob([text], { type: 'text/markdown' });
@@ -194,97 +186,171 @@ export default function NoteDetailPage() {
         alert(t('copied'))
     }
 
+    const toggleEditMode = async () => {
+        if (isEditing) {
+            // Saving... handled by debounce, but let's ensure we are clean
+            if (editorRef.current) {
+                // Should we force a save here?
+                // The editor saves on blur, maybe we relying on that or standard debounce
+                // Let's force a save of the title if it changed?
+                // Title saves on blur of input.
+            }
+        }
+        setIsEditing(!isEditing)
+    }
+
     if (!note) return <div className="p-6">{t('loading')}</div>
 
+    const assignedPerformance = performances.find(p => p.id === note.performance_id)
+
     return (
-        <div className="p-6 w-full">
-            <div className="max-w-3xl mx-auto mb-8">
-                <div className="flex items-center gap-4 mb-4">
-                    <button
-                        onClick={async () => {
-                            // Force save before navigation
-                            if (editorRef.current) {
-                                const content = editorRef.current.getJSON()
-                                await saveNote(content)
-                            }
-                            router.push('/notes')
-                        }}
-                        className="p-2 -ml-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-full transition-colors"
-                    >
-                        <ArrowLeft size={20} />
-                    </button>
+        <div className="w-full relative min-h-screen">
+            {/* Visual Indicator for Edit Mode - a subtle border or background wash could be nice */}
+            <AnimatePresence>
+                {isEditing && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        // Changed inset-0 to inset-4 or similar to give spacing, or attached to container
+                        className="absolute -inset-2 border-[3px] border-amber-500/30 rounded-xl pointer-events-none z-0"
+                    />
+                )}
+            </AnimatePresence>
 
-                    <div className="flex-1"></div>
+            <div className="p-6 w-full relative z-10">
+                <div className="max-w-3xl mx-auto mb-8">
+                    <div className="flex items-center gap-4 mb-4">
+                        <button
+                            onClick={async () => {
+                                // Force save before navigation if editing
+                                if (isEditing && editorRef.current) {
+                                    const content = editorRef.current.getJSON()
+                                    await saveNote(content)
+                                }
+                                router.push('/notes')
+                            }}
+                            className="p-2 -ml-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-full transition-colors"
+                        >
+                            <ArrowLeft size={20} />
+                        </button>
 
-                    <div className="flex items-center gap-2">
-                        <div className="relative group">
-                            <select
-                                value={note.performance_id || ''}
-                                onChange={async (e) => {
-                                    const val = e.target.value || null
-                                    setNote({ ...note, performance_id: val })
-                                    await supabase.from('notes').update({ performance_id: val }).eq('id', id)
-                                }}
-                                className="appearance-none bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-full px-4 py-1.5 text-xs font-medium text-neutral-400 hover:text-white transition-colors cursor-pointer pr-8 focus:outline-none focus:ring-2 focus:ring-neutral-700"
-                            >
-                                <option value="">{t('privateNote')}</option>
-                                {performances.map(p => (
-                                    <option key={p.id} value={p.id}>{p.title}</option>
-                                ))}
-                            </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-500 pointer-events-none" />
-                        </div>
+                        <div className="flex-1"></div>
 
-                        <div className="relative">
+                        <div className="flex items-center gap-2">
+                            {/* Folder/Performance Indicator/Selector */}
+                            {isEditing ? (
+                                <div className="relative group">
+                                    <select
+                                        value={note.performance_id || ''}
+                                        onChange={async (e) => {
+                                            const val = e.target.value || null
+                                            setNote({ ...note, performance_id: val })
+                                            await supabase.from('notes').update({ performance_id: val }).eq('id', id)
+                                        }}
+                                        className="appearance-none bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-full px-4 py-1.5 text-xs font-medium text-neutral-400 hover:text-white transition-colors cursor-pointer pr-8 focus:outline-none focus:ring-2 focus:ring-amber-900/50"
+                                    >
+                                        <option value="">{t('privateNote')}</option>
+                                        {performances.map(p => (
+                                            <option key={p.id} value={p.id}>{p.title}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-500 pointer-events-none" />
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-900/50 border border-neutral-800/50 text-xs font-medium text-neutral-400 cursor-default">
+                                    <Folder size={12} />
+                                    <span>{assignedPerformance ? assignedPerformance.title : t('privateNote')}</span>
+                                </div>
+                            )}
+
+                            {/* View/Edit Toggle */}
                             <button
-                                onClick={() => setShowExportMenu(!showExportMenu)}
-                                className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-full transition-colors"
-                                title="Export"
+                                onClick={toggleEditMode}
+                                className={`
+                                    flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all
+                                    ${isEditing
+                                        ? 'bg-amber-500 text-black hover:bg-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                                        : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white'}
+                                `}
                             >
-                                <Share size={18} />
+                                {isEditing ? (
+                                    <>
+                                        <Check size={14} strokeWidth={3} />
+                                        <span>{t('done')}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Pencil size={14} />
+                                        <span>{t('edit')}</span>
+                                    </>
+                                )}
                             </button>
 
-                            {showExportMenu && (
-                                <div className="absolute right-0 top-full mt-2 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1.5 min-w-[220px] z-50 flex flex-col gap-0.5">
-                                    <button onClick={copyToClipboard} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
-                                        <Copy size={16} />
-                                        {t('copyContent')}
+                            {/* Export Menu (Only in View Mode? Or both? User said "export allowed" in view mode. Probably both is fine, but maybe hide in edit mode to reduce clutter) */}
+                            {!isEditing && (
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowExportMenu(!showExportMenu)}
+                                        className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-full transition-colors"
+                                        title="Export"
+                                    >
+                                        <Share size={18} />
                                     </button>
-                                    <div className="h-px bg-neutral-800 my-1 mx-2" />
-                                    <button onClick={exportNoteMd} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
-                                        <Download size={16} />
-                                        {t('exportMarkdown')}
-                                    </button>
-                                    <button onClick={exportNoteTxt} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
-                                        <Download size={16} />
-                                        {t('exportTxt')}
-                                    </button>
-                                    <button onClick={exportNoteJson} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
-                                        <Download size={16} />
-                                        {t('exportJson')}
-                                    </button>
+
+                                    {showExportMenu && (
+                                        <div className="absolute right-0 top-full mt-2 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1.5 min-w-[220px] z-50 flex flex-col gap-0.5">
+                                            <button onClick={copyToClipboard} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
+                                                <Copy size={16} />
+                                                {t('copyContent')}
+                                            </button>
+                                            <div className="h-px bg-neutral-800 my-1 mx-2" />
+                                            <button onClick={exportNoteMd} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
+                                                <Download size={16} />
+                                                {t('exportMarkdown')}
+                                            </button>
+                                            <button onClick={exportNoteTxt} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
+                                                <Download size={16} />
+                                                {t('exportTxt')}
+                                            </button>
+                                            <button onClick={exportNoteJson} className="flex items-center gap-3 p-2.5 hover:bg-neutral-800 rounded-lg text-left text-sm text-neutral-300 hover:text-white transition-colors">
+                                                <Download size={16} />
+                                                {t('exportJson')}
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
                     </div>
+
+                    {isEditing ? (
+                        <input
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            onBlur={updateTitle}
+                            placeholder={t('untitledNote')}
+                            className="text-4xl font-bold bg-transparent border-none focus:outline-none w-full placeholder:text-neutral-700 text-white"
+                            autoFocus
+                        />
+                    ) : (
+                        <h1 className="text-4xl font-bold text-white mb-2 selection:bg-amber-500/30">
+                            {title || <span className="text-neutral-600 italic">{t('untitledNote')}</span>}
+                        </h1>
+                    )}
+
                 </div>
 
-                <input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    onBlur={updateTitle}
-                    placeholder={t('untitledNote')}
-                    className="text-4xl font-bold bg-transparent border-none focus:outline-none w-full placeholder:text-neutral-700 text-white"
+                <NoteEditor
+                    ref={editorRef}
+                    initialContent={note.content}
+                    noteId={note.id}
+                    serverUpdatedAt={note.updated_at}
+                    onSave={saveNote}
+                    readOnly={!isEditing}
                 />
             </div>
-
-            <NoteEditor
-                ref={editorRef}
-                initialContent={note.content}
-                noteId={note.id}
-                serverUpdatedAt={note.updated_at}
-                onSave={saveNote}
-            />
         </div>
     )
 }
+

@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { Loader2, Lock } from 'lucide-react'
+import { Lock } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 
@@ -140,17 +141,14 @@ export function ChangePasswordForm({ redirectTo = '/settings' }: { redirectTo?: 
                 </div>
             )}
 
-            <button
+            <Button
                 type="submit"
-                disabled={loading}
-                className="flex w-full justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg shadow-white/5"
+                variant="primary"
+                isLoading={loading}
+                className="w-full bg-white text-black hover:bg-neutral-200 shadow-lg shadow-white/5"
             >
-                {loading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    t('updatePassword')
-                )}
-            </button>
+                {t('updatePassword')}
+            </Button>
         </form>
     )
 }

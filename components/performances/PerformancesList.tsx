@@ -1,15 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Filter, LayoutGrid, List as ListIcon, Layers } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Database } from '@/types/supabase'
-import { SearchInput } from '@/components/ui/SearchInput'
+import { ContextSearchTrigger } from '@/components/search/ContextSearchTrigger'
 import { FilterSelect } from '@/components/ui/FilterSelect'
 import { useTranslations } from 'next-intl'
 import { format } from 'date-fns'
-import { PerformanceLabelButton } from './PerformanceLabelButton'
+
 
 type Performance = Database['public']['Tables']['performances']['Row']
 
@@ -54,10 +54,7 @@ const PerformanceListItem = ({ show }: { show: Performance }) => {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                    <h3
-                        className="text-lg font-medium text-white truncate transition-colors"
-                        style={{ color: isHovered && show.color ? show.color : undefined }}
-                    >
+                    <h3 className="text-lg font-medium text-white truncate transition-colors">
                         {show.title}
                     </h3>
                     <div className="flex items-center gap-3 text-sm text-neutral-400 mt-1">
@@ -72,14 +69,7 @@ const PerformanceListItem = ({ show }: { show: Performance }) => {
                 </div>
             </Link>
 
-            {/* Label Button - positioned absolutely on the right */}
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <PerformanceLabelButton
-                    performanceId={show.id}
-                    performanceTitle={show.title}
-                    premiereDate={show.premiere_date}
-                />
-            </div>
+
         </div>
     )
 }
@@ -118,10 +108,7 @@ const PerformanceGridItem = ({ show }: { show: Performance }) => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
                     <div className="absolute bottom-0 left-0 right-0 p-4">
-                        <h3
-                            className="text-lg font-bold text-white leading-tight transition-colors"
-                            style={{ color: isHovered && show.color ? show.color : undefined }}
-                        >
+                        <h3 className="text-lg font-bold text-white leading-tight transition-colors">
                             {show.title}
                         </h3>
                         <div className="flex items-center gap-2 mt-2">
@@ -144,28 +131,31 @@ const PerformanceGridItem = ({ show }: { show: Performance }) => {
                 )}
             </Link>
 
-            {/* Label Button - positioned absolutely in top right corner */}
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                <PerformanceLabelButton
-                    performanceId={show.id}
-                    performanceTitle={show.title}
-                    premiereDate={show.premiere_date}
-                />
-            </div>
+
         </div>
     )
 }
 
 export function PerformancesList({ performances }: Props) {
     const t = useTranslations('PerformancesList')
-    const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'upcoming' | 'archived'>('all')
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
 
+    useEffect(() => {
+        const savedViewMode = localStorage.getItem('performances_view_mode') as 'list' | 'grid'
+        if (savedViewMode) {
+            setViewMode(savedViewMode)
+        }
+    }, [])
+
+    const handleViewModeChange = (mode: 'list' | 'grid') => {
+        setViewMode(mode)
+        localStorage.setItem('performances_view_mode', mode)
+    }
+
     const filteredPerformances = performances.filter(p => {
-        const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase())
         const matchesStatus = statusFilter === 'all' || p.status === statusFilter
-        return matchesSearch && matchesStatus
+        return matchesStatus
     })
 
     return (
@@ -174,11 +164,9 @@ export function PerformancesList({ performances }: Props) {
             <div className="bg-neutral-900/50 p-4 rounded-lg border border-neutral-800 space-y-4">
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="relative flex-1">
-                        <SearchInput
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder={t('searchPlaceholder')}
-                        />
+                        <div className="relative flex-1">
+                            <ContextSearchTrigger context="performance" className="w-full" />
+                        </div>
                     </div>
                 </div>
 
@@ -196,13 +184,13 @@ export function PerformancesList({ performances }: Props) {
 
                     <div className="flex bg-neutral-900 border border-neutral-800 rounded-lg p-1 ml-auto">
                         <button
-                            onClick={() => setViewMode('list')}
+                            onClick={() => handleViewModeChange('list')}
                             className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white'}`}
                         >
                             <ListIcon className="w-4 h-4" />
                         </button>
                         <button
-                            onClick={() => setViewMode('grid')}
+                            onClick={() => handleViewModeChange('grid')}
                             className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white'}`}
                         >
                             <LayoutGrid className="w-4 h-4" />
@@ -220,7 +208,7 @@ export function PerformancesList({ performances }: Props) {
                 </div>
             ) : (
                 /* Grid View */
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {filteredPerformances.map((show) => (
                         <PerformanceGridItem key={show.id} show={show} />
                     ))}

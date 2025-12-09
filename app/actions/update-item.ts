@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { Database } from '@/types/supabase'
+import { refreshSearchIndex } from '@/app/actions/unified-search'
 
 export async function updateItem(itemId: string, formData: FormData) {
     const supabase = await createClient()
@@ -33,5 +34,14 @@ export async function updateItem(itemId: string, formData: FormData) {
     }
 
     revalidatePath('/items')
+    revalidatePath('/items')
+
+    // Trigger search index refresh
+    try {
+        await refreshSearchIndex()
+    } catch (e) {
+        console.error('Failed to refresh search index:', e)
+    }
+
     return { success: true }
 }

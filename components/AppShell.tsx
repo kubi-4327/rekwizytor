@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { usePathname } from 'next/navigation'
 
-import { CommandPalette } from './search/CommandPalette'
+import { SearchShortcut } from './search/SearchShortcut'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
@@ -17,7 +17,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
     return (
         <div className="flex min-h-screen bg-background">
-            <CommandPalette />
+            <SearchShortcut />
             <Sidebar />
             <div className="flex flex-1 flex-col md:pl-64">
                 <main className="flex-1 pb-24 md:pb-0">

@@ -1,17 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { LayoutGrid, List, Filter, Sparkles, Loader2, Layers } from 'lucide-react'
+import { LayoutGrid, List, Filter, Sparkles, Layers } from 'lucide-react'
 import NextImage from 'next/image'
 import { Database } from '@/types/supabase'
 import { ItemIcon } from '@/components/ui/ItemIcon'
 import { useTranslations } from 'next-intl'
-import { smartSearch } from '@/app/actions/smart-search'
 import { getItems } from '@/app/actions/get-items'
 import { EditItemDialog } from './EditItemDialog'
 import { ItemDetailsDialog } from './ItemDetailsDialog'
-import { SearchInput } from '@/components/ui/SearchInput'
+import { ContextSearchTrigger } from '@/components/search/ContextSearchTrigger'
 import { FilterSelect } from '@/components/ui/FilterSelect'
+import { Button } from '@/components/ui/Button'
 
 type Item = Database['public']['Tables']['items']['Row']
 type ItemStatus = Database['public']['Enums']['item_performance_status_enum']
@@ -27,13 +27,13 @@ type Props = {
     locations: Database['public']['Tables']['locations']['Row'][]
     groups: Database['public']['Tables']['groups']['Row'][]
     initialCategoryId?: string
+    initialViewItemId?: string
 }
 
-export function ItemsList({ initialItems, totalCount, locations, groups, initialCategoryId }: Props) {
+export function ItemsList({ initialItems, totalCount, locations, groups, initialCategoryId, initialViewItemId }: Props) {
     const t = useTranslations('ItemsList')
+
     const [view, setView] = useState<'grid' | 'list'>('grid')
-    const [searchMode, setSearchMode] = useState<'classic' | 'smart'>('classic')
-    const [search, setSearch] = useState('')
 
     // Pagination State
     const [items, setItems] = useState<Item[]>(initialItems)
@@ -46,6 +46,17 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
     const [selectedItem, setSelectedItem] = useState<Item | null>(null)
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
     const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false)
+
+    // Handle initial view item from URL
+    useEffect(() => {
+        if (initialViewItemId) {
+            const item = initialItems.find(i => i.id === initialViewItemId)
+            if (item) {
+                setSelectedItem(item)
+                setIsDetailsDialogOpen(true)
+            }
+        }
+    }, [initialViewItemId, initialItems])
 
     const handleItemClick = (item: Item) => {
         setSelectedItem(item)
@@ -64,19 +75,12 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
     const [locationFilter, setLocationFilter] = useState<string>('all')
     const [dateSort, setDateSort] = useState<'newest' | 'oldest'>('newest')
 
-    // Smart Search State
-    const [smartResults, setSmartResults] = useState<SearchResult[]>([])
-    const [smartGroups, setSmartGroups] = useState<{ id: string, name: string }[]>([])
-    const [smartSuggestion, setSmartSuggestion] = useState<string | null>(null)
-    const [isSmartSearching, setIsSmartSearching] = useState(false)
-    const [hasSmartSearched, setHasSmartSearched] = useState(false)
+
 
     // Fetch items when filters change (Classic Mode)
     useEffect(() => {
-        if (searchMode === 'smart') return
-
         // Skip initial fetch if we have initial items and no filters
-        if (page === 1 && items === initialItems && search === '' && categoryFilter === 'all' && locationFilter === 'all' && statusFilter === 'all' && dateSort === 'newest') {
+        if (page === 1 && items === initialItems && categoryFilter === 'all' && locationFilter === 'all' && statusFilter === 'all' && dateSort === 'newest') {
             return
         }
 
@@ -86,7 +90,7 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                 const { items: newItems, count } = await getItems({
                     page: 1,
                     limit: 50,
-                    search: search,
+                    search: '',
                     status: statusFilter,
                     categoryId: categoryFilter,
                     locationId: locationFilter,
@@ -105,7 +109,7 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
         const debounceTimer = setTimeout(fetchFilteredItems, 300)
         return () => clearTimeout(debounceTimer)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [search, categoryFilter, locationFilter, statusFilter, dateSort, searchMode])
+    }, [categoryFilter, locationFilter, statusFilter, dateSort])
 
     const loadMore = async () => {
         if (isLoadingMore || !hasMore) return
@@ -116,7 +120,7 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
             const { items: newItems, count } = await getItems({
                 page: nextPage,
                 limit: 50,
-                search: search,
+                search: '',
                 status: statusFilter,
                 categoryId: categoryFilter,
                 locationId: locationFilter,
@@ -133,34 +137,9 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
         }
     }
 
-    const performSmartSearch = async (query: string) => {
-        if (!query.trim()) return
 
-        setIsSmartSearching(true)
-        setHasSmartSearched(true)
-        setSmartResults([])
-        setSmartGroups([])
-        setSmartSuggestion(null)
 
-        try {
-            const response = await smartSearch(query)
-            if (response.results) {
-                setSmartResults(response.results)
-            }
-            if (response.groups) {
-                setSmartGroups(response.groups)
-            }
-            if (response.suggestion) {
-                setSmartSuggestion(response.suggestion)
-            }
-        } catch (error) {
-            console.error('Search failed:', error)
-        } finally {
-            setIsSmartSearching(false)
-        }
-    }
-
-    const displayItems = searchMode === 'smart' && hasSmartSearched ? smartResults : items
+    const displayItems = items
 
     return (
         <div className="space-y-6">
@@ -168,29 +147,7 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                 {/* Search Bar & Toggle */}
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1">
-                        <SearchInput
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            onSearch={(val) => {
-                                if (searchMode === 'smart') performSmartSearch(val)
-                            }}
-                            placeholder={searchMode === 'smart' ? t('searchPlaceholderSmart') : t('searchPlaceholderClassic')}
-                            isSmart={searchMode === 'smart'}
-                            isSearching={isSmartSearching}
-                            onSmartToggle={() => {
-                                setSearchMode(prev => prev === 'classic' ? 'smart' : 'classic')
-                                setSearch('')
-                                setHasSmartSearched(false)
-                                setSmartResults([])
-                                setSmartSuggestion(null)
-                                // Reset filters when switching modes
-                                if (searchMode === 'smart') {
-                                    setCategoryFilter('all')
-                                    setLocationFilter('all')
-                                    setStatusFilter('all')
-                                }
-                            }}
-                        />
+                        <ContextSearchTrigger context="item" className="w-full" />
                     </div>
                 </div>
 
@@ -203,7 +160,6 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className="w-full sm:w-auto"
-                        disabled={searchMode === 'smart'}
                     >
                         <option value="all">{t('allStatuses')}</option>
                         <option value="active">{t('statuses.active')}</option>
@@ -218,7 +174,6 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                         value={categoryFilter}
                         onChange={(e) => setCategoryFilter(e.target.value)}
                         className="w-full sm:w-auto"
-                        disabled={searchMode === 'smart'}
                     >
                         <option value="all">{t('allCategories')}</option>
                         {groups.map(g => (
@@ -231,7 +186,6 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                         value={locationFilter}
                         onChange={(e) => setLocationFilter(e.target.value)}
                         className="w-full sm:w-auto"
-                        disabled={searchMode === 'smart'}
                     >
                         <option value="all">{t('allLocations')}</option>
                         {locations.map(l => (
@@ -244,7 +198,6 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                         value={dateSort}
                         onChange={(e) => setDateSort(e.target.value as 'newest' | 'oldest')}
                         className="w-full sm:w-auto sm:ml-auto"
-                        disabled={searchMode === 'smart'}
                     >
                         <option value="newest">{t('newestFirst')}</option>
                         <option value="oldest">{t('oldestFirst')}</option>
@@ -268,46 +221,9 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                 </div>
             </div>
 
-            {/* AI Explanation Block & Group Suggestions */}
-            {searchMode === 'smart' && hasSmartSearched && (
-                <div className="space-y-4">
-                    {/* Group Suggestions */}
-                    {smartGroups.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                            {smartGroups.map(group => (
-                                <button
-                                    key={group.id}
-                                    onClick={() => {
-                                        setCategoryFilter(group.id)
-                                        setSearchMode('classic')
-                                        setSearch('')
-                                        setHasSmartSearched(false)
-                                    }}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-ai-primary/10 border border-ai-primary/30 rounded-full text-sm text-ai-secondary hover:bg-ai-primary/20 transition-colors"
-                                >
-                                    <Layers className="w-4 h-4" />
-                                    {t('searchIn')} <strong>{group.name}</strong>
-                                </button>
-                            ))}
-                        </div>
-                    )}
 
-                    {/* AI Results Explanation */}
-                    {smartResults.length > 0 && (
-                        <div className="bg-ai-primary/10 border border-ai-primary/20 p-4 rounded-lg flex items-start gap-3">
-                            <Sparkles className="h-5 w-5 text-ai-secondary flex-shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                                <h4 className="text-sm font-medium text-white">{t('aiAnalysis')}</h4>
-                                <p className="text-sm text-neutral-300">
-                                    {smartResults[0].explanation}
-                                </p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
 
-            {isSmartSearching || isFiltering ? (
+            {isFiltering ? (
                 view === 'grid' ? (
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {[...Array(8)].map((_, i) => (
@@ -438,38 +354,25 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                 </div>
             )}
 
-            {!isSmartSearching && displayItems.length === 0 && (
+            {!isFiltering && displayItems.length === 0 && (
                 <div className="text-center py-12 text-neutral-500 bg-neutral-900/30 rounded-lg border border-neutral-800 border-dashed px-4">
                     <p className="mb-2">{t('noItemsFound')}</p>
-                    {smartSuggestion && (
-                        <div className="mt-4 p-4 bg-ai-secondary/10 border border-ai-secondary/20 rounded-lg text-sm text-ai-secondary inline-flex items-start max-w-lg mx-auto text-left">
-                            <Sparkles className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
-                            <div>
-                                <p className="font-medium mb-1 text-ai-secondary">AI Suggestion:</p>
-                                <p className="text-neutral-300">{smartSuggestion}</p>
-                            </div>
-                        </div>
-                    )}
+
                 </div>
             )}
 
             {/* Load More Button */}
-            {hasMore && searchMode === 'classic' && !isFiltering && (
+            {hasMore && !isFiltering && (
                 <div className="flex justify-center pt-8 pb-4">
-                    <button
+                    <Button
                         onClick={loadMore}
                         disabled={isLoadingMore}
-                        className="px-6 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                        variant="secondary"
+                        isLoading={isLoadingMore}
+                        className="rounded-full px-6"
                     >
-                        {isLoadingMore ? (
-                            <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                {t('loading')}
-                            </>
-                        ) : (
-                            t('loadMore')
-                        )}
-                    </button>
+                        {t('loadMore')}
+                    </Button>
                 </div>
             )}
 

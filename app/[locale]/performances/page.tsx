@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { PerformancesList } from '@/components/performances/PerformancesList'
 import { getTranslations } from 'next-intl/server'
 
-import { ExportAllScheduleButton } from '@/components/performances/ExportAllScheduleButton'
+import { PerformancesListActions } from '@/components/performances/PerformancesListActions'
+import { buttonVariants } from '@/components/ui/button-variants'
 
 export default async function PerformancesPage() {
     const supabase = await createClient()
@@ -39,10 +40,10 @@ export default async function PerformancesPage() {
                     </p>
                 </div>
                 <div className="flex flex-row gap-2 w-full sm:w-auto justify-end">
-                    <ExportAllScheduleButton scheduledShows={allScheduledShows || []} />
+                    <PerformancesListActions scheduledShows={allScheduledShows || []} performances={performances || []} />
                     <Link
                         href="/performances/new"
-                        className="inline-flex items-center justify-center rounded-md bg-action-primary px-4 py-2 text-sm font-medium text-white hover:bg-action-hover focus:outline-none focus:ring-2 focus:ring-action-primary focus:ring-offset-2 focus:ring-offset-neutral-900 sm:flex-none sm:w-auto sm:min-w-[140px] border border-transparent"
+                        className={buttonVariants({ variant: "primary", className: "sm:w-auto sm:min-w-[140px]" })}
                     >
                         <Plus className="sm:mr-2 h-4 w-4" />
                         <span className="hidden sm:inline">{t('addProduction')}</span>

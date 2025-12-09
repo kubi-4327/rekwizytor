@@ -3,7 +3,7 @@
 import { Fragment, useState, useEffect } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import {
-    X, Loader2, Tag, Box, Package, Layers, Archive, ShoppingBag,
+    X, Tag, Box, Package, Layers, Archive, ShoppingBag,
     Armchair, Sofa, Lamp, Bed, DoorOpen, Frame,
     Hammer, Wrench, Ruler, Paintbrush, Palette, Scissors, Axe,
     Tv, Radio, Mic, Speaker, Camera, Video, Laptop, Smartphone, Watch, Plug, Battery,
@@ -15,12 +15,16 @@ import {
     Sword, Shield, Target,
     Book, Newspaper, Scroll, FileText, Pen,
     Car, Bike, Truck, Plane, Ship,
-    Ghost, Skull, Crown, Gem, Gift, Key
+    Ghost, Skull, Crown, Gem, Gift, Key,
+    Sun, TreeDeciduous, Lock, Apple, Headphones, Star,
+    Lightbulb, Zap, Hourglass, Map, Compass, Anchor,
+    Warehouse, Container, HardHat, PaintBucket, Brush
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/types/supabase'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/Button'
 
 type Group = Database['public']['Tables']['groups']['Row']
 
@@ -38,6 +42,8 @@ const ICONS = [
     { name: 'Archive', icon: Archive },
     { name: 'Layers', icon: Layers },
     { name: 'ShoppingBag', icon: ShoppingBag },
+    { name: 'Warehouse', icon: Warehouse },
+    { name: 'Container', icon: Container },
 
     // Furniture & Decor
     { name: 'Armchair', icon: Armchair },
@@ -46,6 +52,8 @@ const ICONS = [
     { name: 'Bed', icon: Bed },
     { name: 'DoorOpen', icon: DoorOpen },
     { name: 'Frame', icon: Frame },
+    { name: 'Lightbulb', icon: Lightbulb },
+    { name: 'Hourglass', icon: Hourglass },
 
     // Tools & Construction
     { name: 'Hammer', icon: Hammer },
@@ -55,6 +63,9 @@ const ICONS = [
     { name: 'Palette', icon: Palette },
     { name: 'Scissors', icon: Scissors },
     { name: 'Axe', icon: Axe },
+    { name: 'HardHat', icon: HardHat },
+    { name: 'PaintBucket', icon: PaintBucket },
+    { name: 'Brush', icon: Brush },
 
     // Electronics
     { name: 'Tv', icon: Tv },
@@ -68,12 +79,15 @@ const ICONS = [
     { name: 'Watch', icon: Watch },
     { name: 'Plug', icon: Plug },
     { name: 'Battery', icon: Battery },
+    { name: 'Headphones', icon: Headphones },
+    { name: 'Zap', icon: Zap },
 
     // Kitchen & Food
     { name: 'Utensils', icon: Utensils },
     { name: 'Wine', icon: Wine },
     { name: 'Coffee', icon: Coffee },
     { name: 'ChefHat', icon: ChefHat },
+    { name: 'Apple', icon: Apple },
 
     // Clothing & Accessories
     { name: 'Shirt', icon: Shirt },
@@ -105,6 +119,10 @@ const ICONS = [
     { name: 'Tent', icon: Tent },
     { name: 'Flame', icon: Flame },
     { name: 'Snowflake', icon: Snowflake },
+    { name: 'Sun', icon: Sun },
+    { name: 'TreeDeciduous', icon: TreeDeciduous },
+    { name: 'Map', icon: Map },
+    { name: 'Compass', icon: Compass },
 
     // Weapons & Action
     { name: 'Sword', icon: Sword },
@@ -119,6 +137,7 @@ const ICONS = [
     { name: 'Pen', icon: Pen },
     { name: 'Gift', icon: Gift },
     { name: 'Key', icon: Key },
+    { name: 'Lock', icon: Lock },
 
     // Vehicles
     { name: 'Car', icon: Car },
@@ -126,16 +145,20 @@ const ICONS = [
     { name: 'Truck', icon: Truck },
     { name: 'Plane', icon: Plane },
     { name: 'Ship', icon: Ship },
+    { name: 'Anchor', icon: Anchor },
+
+    // Misc
+    { name: 'Star', icon: Star },
 ]
 
 const KEYWORD_MAPPINGS: Record<string, string[]> = {
     'meble': ['Armchair', 'Sofa', 'Bed', 'Lamp', 'Frame'],
     'krzesło': ['Armchair', 'Sofa'],
     'stół': ['Frame', 'Box'], // No direct table icon, using generic
-    'oświetlenie': ['Lamp', 'Plug', 'Sun'],
-    'narzędzia': ['Hammer', 'Wrench', 'Ruler', 'Axe'],
-    'budowa': ['Hammer', 'Wrench', 'Paintbrush'],
-    'elektronika': ['Tv', 'Radio', 'Laptop', 'Smartphone', 'Plug'],
+    'oświetlenie': ['Lamp', 'Plug', 'Sun', 'Lightbulb'],
+    'narzędzia': ['Hammer', 'Wrench', 'Ruler', 'Axe', 'Brush', 'PaintBucket', 'HardHat'],
+    'budowa': ['Hammer', 'Wrench', 'Paintbrush', 'HardHat'],
+    'elektronika': ['Tv', 'Radio', 'Laptop', 'Smartphone', 'Plug', 'Zap'],
     'audio': ['Mic', 'Speaker', 'Headphones', 'Music', 'Radio'],
     'wideo': ['Camera', 'Video', 'Tv', 'Clapperboard'],
     'kuchnia': ['Utensils', 'ChefHat', 'Coffee', 'Wine'],
@@ -145,21 +168,21 @@ const KEYWORD_MAPPINGS: Record<string, string[]> = {
     'kostiumy': ['Shirt', 'Crown', 'Glasses', 'Gem'],
     'medyczne': ['Stethoscope', 'Syringe', 'Thermometer', 'Skull'],
     'szpital': ['Bed', 'Stethoscope', 'Syringe'],
-    'muzyka': ['Music', 'Guitar', 'Drum', 'Mic'],
+    'muzyka': ['Music', 'Guitar', 'Drum', 'Mic', 'Headphones'],
     'instrumenty': ['Guitar', 'Drum', 'Music'],
     'biuro': ['Briefcase', 'Book', 'Pen', 'FileText', 'Laptop'],
     'dokumenty': ['FileText', 'Newspaper', 'Scroll', 'Archive'],
     'papier': ['FileText', 'Book', 'Scroll'],
     'broń': ['Sword', 'Shield', 'Target', 'Axe'],
     'wojsko': ['Sword', 'Shield', 'Tent', 'Target'],
-    'pojazdy': ['Car', 'Truck', 'Bike', 'Plane', 'Ship'],
-    'transport': ['Truck', 'Car', 'Box', 'Package'],
-    'plener': ['Tent', 'Tree', 'Flower', 'Leaf', 'Sun'],
-    'przyroda': ['Flower', 'Leaf', 'Feather', 'Flame'],
-    'magazyn': ['Box', 'Package', 'Archive', 'Layers'],
-    'pudła': ['Box', 'Package', 'Archive'],
-    'różne': ['Box', 'Star', 'Ghost', 'Gift'],
-    'ozdoby': ['Gem', 'Crown', 'Frame', 'Flower'],
+    'pojazdy': ['Car', 'Truck', 'Bike', 'Plane', 'Ship', 'Anchor'],
+    'transport': ['Truck', 'Car', 'Box', 'Package', 'Container'],
+    'plener': ['Tent', 'TreeDeciduous', 'Flower', 'Leaf', 'Sun', 'Map', 'Compass'],
+    'przyroda': ['Flower', 'Leaf', 'Feather', 'Flame', 'TreeDeciduous', 'Sun'],
+    'magazyn': ['Box', 'Package', 'Archive', 'Layers', 'Warehouse', 'Container'],
+    'pudła': ['Box', 'Package', 'Archive', 'Container'],
+    'różne': ['Box', 'Star', 'Ghost', 'Gift', 'Hourglass'],
+    'ozdoby': ['Gem', 'Crown', 'Frame', 'Flower', 'Star'],
     'klucze': ['Key', 'Lock'],
 }
 
@@ -257,13 +280,15 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
                         >
                             <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 border border-neutral-800">
                                 <div className="absolute right-4 top-4">
-                                    <button
+                                    <Button
                                         type="button"
-                                        className="rounded-md text-neutral-400 hover:text-white focus:outline-none"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-neutral-400 hover:text-white"
                                         onClick={onClose}
                                     >
                                         <X className="h-6 w-6" aria-hidden="true" />
-                                    </button>
+                                    </Button>
                                 </div>
 
                                 <div className="mt-3 sm:mt-5">
@@ -332,28 +357,23 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
                                 </div>
 
                                 <div className="mt-5 sm:mt-6 flex gap-3">
-                                    <button
+                                    <Button
                                         type="button"
-                                        className="inline-flex w-full justify-center rounded-md bg-neutral-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600"
+                                        variant="secondary"
                                         onClick={onClose}
+                                        className="w-full"
                                     >
                                         Cancel
-                                    </button>
-                                    <button
+                                    </Button>
+                                    <Button
                                         type="button"
-                                        className="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-black shadow-sm hover:bg-neutral-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                        variant="primary" // Changed to primary to utilize white/black contrast or consistent burgundy
                                         onClick={handleSave}
-                                        disabled={isSaving}
+                                        isLoading={isSaving}
+                                        className="w-full bg-white text-black hover:bg-neutral-200" // Overriding to match original 'white' style or sticking to primary? Original was white. Let's stick to user request of "Unify". But maybe user likes the white button here? Let's use primary (Burgundy) for consistency as requested.
                                     >
-                                        {isSaving ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                Saving...
-                                            </>
-                                        ) : (
-                                            'Save Changes'
-                                        )}
-                                    </button>
+                                        Save Changes
+                                    </Button>
                                 </div>
                             </Dialog.Panel>
                         </Transition.Child>

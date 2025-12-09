@@ -6,6 +6,7 @@ import { analyzeItemWithGemini } from './generate-description'
 import { generateEmbedding } from '@/utils/embeddings'
 import { TaskType } from '@google/generative-ai'
 import { Database } from '@/types/supabase'
+import { refreshSearchIndex } from '@/app/actions/unified-search'
 
 export async function createItem(formData: FormData) {
     const supabase = await createClient()
@@ -129,6 +130,14 @@ export async function createItem(formData: FormData) {
         if (performanceId) {
             revalidatePath(`/performances/${performanceId}/props`)
         }
+
+        // Trigger search index refresh
+        try {
+            await refreshSearchIndex()
+        } catch (e) {
+            console.error('Failed to refresh search index:', e)
+        }
+
         return { success: true, item: newItem }
 
     } catch (error: any) {

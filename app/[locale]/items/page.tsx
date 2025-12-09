@@ -16,6 +16,8 @@ export default async function ItemsPage({ searchParams }: Props) {
     const t = await getTranslations('Items')
 
     const groupId = typeof resolvedSearchParams.groupId === 'string' ? resolvedSearchParams.groupId : undefined
+    const viewItemId = typeof resolvedSearchParams.view === 'string' ? resolvedSearchParams.view : undefined
+    const locationId = typeof resolvedSearchParams.locationId === 'string' ? resolvedSearchParams.locationId : undefined
 
     let query = supabase
         .from('items')
@@ -26,6 +28,9 @@ export default async function ItemsPage({ searchParams }: Props) {
 
     if (groupId) {
         query = query.eq('group_id', groupId)
+    }
+    if (locationId) {
+        query = query.eq('location_id', locationId)
     }
 
     const { data: items, count } = await query.range(0, 49)
@@ -57,6 +62,7 @@ export default async function ItemsPage({ searchParams }: Props) {
                 locations={locations || []}
                 groups={groups || []}
                 initialCategoryId={groupId}
+                initialViewItemId={viewItemId}
             />
         </div>
     )

@@ -8,6 +8,7 @@ import { compressImage, createThumbnail } from '@/utils/image-processing'
 import { extractTopColors } from '@/utils/colors'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
+import { refreshSearchIndex } from '@/app/actions/unified-search'
 
 type Performance = {
     id: string
@@ -155,6 +156,13 @@ export function EditPerformanceForm({ performance }: Props) {
 
             if (updateError) throw updateError
 
+            // Refresh search index
+            try {
+                await refreshSearchIndex()
+            } catch (e) {
+                console.error('Failed to refresh search index:', e)
+            }
+
             router.push(`/performances/${performance.id}`)
             router.refresh()
         } catch (err: unknown) {
@@ -179,6 +187,13 @@ export function EditPerformanceForm({ performance }: Props) {
                 .eq('id', performance.id)
 
             if (deleteError) throw deleteError
+
+            // Refresh search index
+            try {
+                await refreshSearchIndex()
+            } catch (e) {
+                console.error('Failed to refresh search index:', e)
+            }
 
             router.push('/performances')
             router.refresh()

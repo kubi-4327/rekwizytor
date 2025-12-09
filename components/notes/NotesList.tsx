@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import { SearchInput } from '@/components/ui/SearchInput'
+import { Button } from '@/components/ui/Button'
 import { extractTextFromContent } from './utils'
 import { useTranslations } from 'next-intl'
 
@@ -129,13 +130,14 @@ export default function NotesList({ performanceId }: { performanceId?: string })
                     <p className="text-neutral-400 text-xs sm:text-sm mt-1">{t('subtitle')}</p>
                 </div>
                 <div className="flex justify-end w-full sm:w-auto">
-                    <button
+                    <Button
                         onClick={createNote}
-                        className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-md hover:bg-neutral-200 transition-colors font-medium text-sm w-full sm:w-auto sm:min-w-[140px] border border-transparent justify-center"
+                        variant="primary"
+                        className="w-full sm:w-auto sm:min-w-[140px]"
+                        leftIcon={<Plus size={16} />}
                     >
-                        <Plus size={16} />
-                        <span>{t('newNote')}</span>
-                    </button>
+                        {t('newNote')}
+                    </Button>
                 </div>
             </div>
 

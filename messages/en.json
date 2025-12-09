@@ -116,7 +116,10 @@
         "lists": "Lists",
         "notes": "Notes",
         "groups": "Groups",
+        "locations": "Locations",
         "search": "Search",
+        "searchPlaceholder": "Search...",
+        "openGlobalSearchWithContext": "Search in {context}",
         "more": "More"
     },
     "Groups": {
@@ -135,7 +138,9 @@
         "subtitle": "Shows, rehearsals, and archives",
         "addProduction": "Add Production",
         "add": "Add",
-        "exportAllSchedule": "Export All Schedule"
+        "exportAllSchedule": "Export All Schedule",
+        "actions": "Actions",
+        "generateAllLabels": "Generate All Labels"
     },
     "NewItem": {
         "backToInventory": "Back to Inventory",
@@ -409,6 +414,7 @@
         "allStatuses": "All Statuses",
         "statuses": {
             "active": "Active",
+            "draft": "Draft",
             "upcoming": "Upcoming",
             "archived": "Archived",
             "unassigned": "Unassigned",
@@ -538,7 +544,11 @@
         "notesPlaceholder": "Director, stage manager, or other details...",
         "cancel": "Cancel",
         "saveShow": "Save Show",
-        "unknownError": "An unknown error occurred"
+        "unknownError": "An unknown error occurred",
+        "importFromUrl": "Import from theater website",
+        "import": "Fetch data",
+        "datesFound": "Found {count} scheduled dates.",
+        "importDescription": "Paste the performance page link to automatically fill the data."
     },
     "ScheduledShowsList": {
         "title": "Scheduled Shows",
@@ -706,7 +716,9 @@
         "exportTxt": "Export as TXT",
         "exportJson": "Export as JSON",
         "copied": "Copied to clipboard! You can now paste into Notion, Evernote, etc.",
-        "loading": "Loading..."
+        "loading": "Loading...",
+        "edit": "Edit",
+        "done": "Done"
     },
     "FastAddForm": {
         "sessionSettings": "Session Settings",
@@ -760,5 +772,32 @@
         "credits": "Credits",
         "creditsText": "Designed and built with ❤️ by Jakub Pełka.",
         "testVersionWarning": "This is a test version of the application. Some features may not work correctly."
+    },
+    "toast": {
+        "success": {
+            "saved": "Saved",
+            "exported": "Exported",
+            "labelGenerated": "Labels generated",
+            "updated": "Updated",
+            "created": "Created",
+            "deleted": "Deleted"
+        },
+        "error": {
+            "generic": "An error occurred",
+            "export": "Export failed",
+            "save": "Save failed",
+            "update": "Update failed",
+            "delete": "Delete failed",
+            "load": "Load failed",
+            "network": "Network connection error"
+        },
+        "loading": {
+            "saving": "Saving...",
+            "exporting": "Exporting...",
+            "generating": "Generating...",
+            "loading": "Loading...",
+            "processing": "Processing...",
+            "deleting": "Deleting..."
+        }
     }
 }
