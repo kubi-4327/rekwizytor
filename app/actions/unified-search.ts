@@ -83,6 +83,13 @@ export async function unifiedSearch(
         entityTypeFilter?: string[]
         statusFilter?: string[]
         sortBy?: 'relevance' | 'newest'
+        filters?: {
+            dateFrom?: string
+            dateTo?: string
+            location?: string
+            category?: string
+            groupId?: string
+        }
     }
 ): Promise<UnifiedSearchResult> {
     const supabase = await createClient()
@@ -153,10 +160,47 @@ export async function unifiedSearch(
         })
     }
 
+    // Advanced filters
+    if (options?.filters) {
+        const { dateFrom, dateTo, location, category, groupId } = options.filters
+
+        if (dateFrom || dateTo) {
+            results = results.filter(r => {
+                const date = r.metadata?.date || r.metadata?.created_at
+                if (!date) return false
+                const d = new Date(date).getTime()
+                const from = dateFrom ? new Date(dateFrom).getTime() : 0
+                const to = dateTo ? new Date(dateTo).getTime() : Infinity
+                return d >= from && d <= to
+            })
+        }
+
+        if (location) {
+            results = results.filter(r => {
+                const loc = r.metadata?.location_name || r.metadata?.location
+                return loc && typeof loc === 'string' && loc.toLowerCase().includes(location.toLowerCase())
+            })
+        }
+
+        if (category) {
+            results = results.filter(r => {
+                const cat = r.metadata?.category
+                return cat && typeof cat === 'string' && cat.toLowerCase().includes(category.toLowerCase())
+            })
+        }
+
+        if (groupId) {
+            results = results.filter(r => r.metadata?.group_id === groupId)
+        }
+    }
+
     // Apply sorting
     if (options?.sortBy === 'newest') {
-        // Note: We don't have updated_at in results, so this would need additional data
-        // For now, we keep relevance sorting
+        results.sort((a, b) => {
+            const dateA = new Date(a.metadata?.created_at || 0).getTime()
+            const dateB = new Date(b.metadata?.created_at || 0).getTime()
+            return dateB - dateA
+        })
     }
 
     return {

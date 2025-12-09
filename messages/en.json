@@ -140,7 +140,12 @@
         "add": "Add",
         "exportAllSchedule": "Export All Schedule",
         "actions": "Actions",
-        "generateAllLabels": "Generate All Labels"
+        "generateAllLabels": "Generate All Labels",
+        "statuses": {
+            "active": "Active",
+            "upcoming": "Upcoming",
+            "archived": "Archived"
+        }
     },
     "NewItem": {
         "backToInventory": "Back to Inventory",

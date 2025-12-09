@@ -65,7 +65,8 @@ export async function smartSearch(query: string) {
         const fullItem = fullItems?.find(item => item.id === match.id)
         return {
             ...match,
-            ...fullItem
+            ...fullItem,
+            entity_type: 'item' as const // Force entity_type for SearchResult compatibility
         }
     }) || []
 
@@ -162,8 +163,8 @@ export async function smartSearch(query: string) {
 
         } catch (aiError) {
             console.error('AI Agent error:', aiError)
-            // Fallback: Return raw vector matches if AI fails
-            enrichedResults = matches
+            // Fallback: Return raw vector matches (rich data) if AI fails
+            enrichedResults = richMatches
             suggestion = "AI nie odpowiedziało w czasie, wyświetlam wyniki surowe."
         }
     }

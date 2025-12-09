@@ -322,7 +322,7 @@ const extractTextFromTipTap = (json: any): string => {
 // --- Main Component ---
 
 interface SearchResultCardProps {
-    item: SearchResult
+    item: SearchResult & { explanation?: string } // Add explanation type
     aiMode?: boolean
 }
 
@@ -332,14 +332,21 @@ export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
 
     const itemConfig = getEntityConfig(item)
     const ItemIcon = itemConfig.icon
-    const description = item.entity_type === 'note'
+
+    // Prefer explanation in description if available
+    const descriptionText = item.explanation || item.description
+
+    const description = item.entity_type === 'note' && !item.explanation
         ? extractTextFromTipTap(item.description)
-        : item.description
+        : descriptionText
 
     // Fix URL for items
-    const itemUrl = item.entity_type === 'item'
-        ? `/items?view=${item.id}`
-        : item.url
+    let itemUrl = ''
+    if (item.entity_type === 'item') {
+        itemUrl = `/items?view=${item.id}`
+    } else {
+        itemUrl = item.url || '#' // Fallback to avoid crash
+    }
 
     const itemColor = item.entity_type === 'performance' && item.metadata?.color
         ? item.metadata.color
@@ -384,6 +391,11 @@ export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
                                 {item.match_type === 'vector' ? 'Semantic' : 'Fuzzy'}
                             </span>
                         )}
+                        {item.explanation && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border bg-burgundy-main/20 text-burgundy-light border-burgundy-main/30">
+                                AI MATCH
+                            </span>
+                        )}
                         {item.metadata?.status && (
                             <span className="px-2 py-1 rounded-md bg-black/40 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider text-white border border-white/10">
                                 {item.metadata.status}
@@ -399,7 +411,10 @@ export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
                     </h3>
 
                     {description && (
-                        <p className="text-sm font-medium text-neutral-300/80 line-clamp-2 leading-relaxed">
+                        <p className={clsx(
+                            "text-sm font-medium line-clamp-2 leading-relaxed",
+                            item.explanation ? "text-purple-200/90" : "text-neutral-300/80"
+                        )}>
                             {description}
                         </p>
                     )}
@@ -409,6 +424,14 @@ export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
                         <div className="mt-3 flex items-center gap-2 text-xs font-mono text-green-400 bg-green-900/20 px-2 py-1 rounded w-fit">
                             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
                             Next: {new Date(item.metadata.next_show).toLocaleDateString()}
+                        </div>
+                    )}
+
+                    {/* Group Specifics: Location */}
+                    {item.entity_type === 'group' && (
+                        <div className="mt-3 flex items-center gap-2 text-xs font-mono text-orange-400 bg-orange-900/20 px-2 py-1 rounded w-fit">
+                            <MapPin className="w-3 h-3" />
+                            {item.metadata?.location_name || <span className="opacity-50 italic">No location</span>}
                         </div>
                     )}
                 </div>

@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import { SearchInput } from '@/components/ui/SearchInput'
+import { ContextSearchTrigger } from '@/components/search/ContextSearchTrigger'
 import { Button } from '@/components/ui/Button'
 import { extractTextFromContent } from './utils'
 import { useTranslations } from 'next-intl'
@@ -142,13 +143,18 @@ export default function NotesList({ performanceId }: { performanceId?: string })
             </div>
 
             {/* Search Section */}
-            <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-2 sm:p-4 max-w-full overflow-hidden">
-                <SearchInput
-                    placeholder={t('searchPlaceholder')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-neutral-900 border-neutral-700 w-full"
-                />
+            <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-2 sm:p-4 max-w-full overflow-hidden flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                    <SearchInput
+                        placeholder={t('searchPlaceholder')}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="bg-neutral-900 border-neutral-700 w-full"
+                    />
+                </div>
+                <div className="w-full sm:w-1/3">
+                    <ContextSearchTrigger context="note" />
+                </div>
             </div>
 
             {loading ? (

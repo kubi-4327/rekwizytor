@@ -143,7 +143,12 @@
         "add": "Dodaj",
         "exportAllSchedule": "Eksportuj do kalendarza",
         "actions": "Akcje",
-        "generateAllLabels": "Generuj wszystkie etykiety"
+        "generateAllLabels": "Generuj wszystkie etykiety",
+        "statuses": {
+            "active": "Aktywne",
+            "upcoming": "Nadchodzące",
+            "archived": "Zarchiwizowane"
+        }
     },
     "NewItem": {
         "backToInventory": "Powrót do Magazynu",

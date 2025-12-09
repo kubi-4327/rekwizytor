@@ -11,39 +11,20 @@ import {
     Loader2,
     StickyNote,
     Sparkles,
-    ClipboardList,
     Command as CommandIcon,
-    MoreHorizontal,
     Zap,
     Brain,
-    ChevronDown,
-    Check,
     X,
-    Filter,
-    // Quick action icons
-    Calendar,
-    Pencil,
-    History,
-    Link2,
-    Copy,
-    List,
-    QrCode,
-    Share2,
-    Download,
-    Tag,
-    Play,
-    ArrowRightLeft,
-    ExternalLink
+    ArrowRight,
+    ChevronDown
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useTranslations } from 'next-intl'
-import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { unifiedSearch, type SearchResult, type SearchStrategy } from '@/app/actions/unified-search'
 import { smartSearch } from '@/app/actions/smart-search'
 import { SearchResultCard, getEntityConfig } from '@/components/search/SearchResultCard'
-
-
+import { SearchFilters } from '@/components/search/SearchFilters'
 
 export default function SearchPage() {
     const router = useRouter()
@@ -57,13 +38,17 @@ export default function SearchPage() {
     const [loading, setLoading] = React.useState(false)
     const [searchStrategy, setSearchStrategy] = React.useState<SearchStrategy>('fts')
 
-    // Filter state
+    // Enhanced Filter State
     const initialType = searchParams.get('type')
     const [entityTypeFilter, setEntityTypeFilter] = React.useState<string[]>(
         initialType ? initialType.split(',') : []
     )
-    const [statusFilter, setStatusFilter] = React.useState<string[]>([])
-    const [sortBy, setSortBy] = React.useState<'relevance' | 'newest'>('relevance')
+
+    // We consolidate other filters into a single state object for SearchFilters component
+    const [detailedFilters, setDetailedFilters] = React.useState<import('@/components/search/SearchFilters').FilterState>({
+        status: [],
+        sortBy: 'relevance'
+    })
 
     // AI mode state
     const [aiMode, setAiMode] = React.useState(false)
@@ -71,30 +56,16 @@ export default function SearchPage() {
     const [aiSuggestion, setAiSuggestion] = React.useState<string | null>(null)
     const [aiResults, setAiResults] = React.useState<any[]>([])
 
-    // Dropdown state
-    const [openDropdown, setOpenDropdown] = React.useState<'entity' | 'status' | 'sort' | null>(null)
-
     const t = useTranslations('Navigation')
-    const tItems = useTranslations('ItemsList')
 
     const entityTypes = React.useMemo(() => [
+        { value: 'all', label: 'All', icon: Sparkles }, // Pseudo-type for "All"
         { value: 'performance', label: t('productions'), icon: Layers },
         { value: 'item', label: t('items'), icon: Box },
         { value: 'group', label: t('groups'), icon: Box },
         { value: 'location', label: t('locations'), icon: MapPin },
         { value: 'note', label: t('notes'), icon: StickyNote },
     ], [t])
-
-    const statusOptions = React.useMemo(() => [
-        { value: 'active', label: tItems('statuses.active') },
-        { value: 'draft', label: tItems('statuses.draft') },
-        { value: 'in_maintenance', label: tItems('statuses.in_maintenance') },
-    ], [tItems])
-
-    const sortOptions = React.useMemo(() => [
-        { value: 'relevance', label: tItems('bestMatch') },
-        { value: 'newest', label: tItems('newestFirst') },
-    ], [tItems])
 
     // Search logic using unified search
     const search = React.useCallback(async (q: string, currentResults?: SearchResult[]) => {
@@ -113,10 +84,17 @@ export default function SearchPage() {
 
         try {
             const response = await unifiedSearch(q, {
-                matchCount: 20, // Reduced for faster initial load
+                matchCount: 20,
                 entityTypeFilter: entityTypeFilter.length > 0 ? entityTypeFilter : undefined,
-                statusFilter: statusFilter.length > 0 ? statusFilter : undefined,
-                sortBy
+                statusFilter: detailedFilters.status.length > 0 ? detailedFilters.status : undefined,
+                sortBy: detailedFilters.sortBy,
+                filters: {
+                    dateFrom: detailedFilters.dateFrom,
+                    dateTo: detailedFilters.dateTo,
+                    location: detailedFilters.location,
+                    category: detailedFilters.category,
+                    groupId: detailedFilters.groupId
+                }
             })
 
             setResults(response.results)
@@ -127,41 +105,56 @@ export default function SearchPage() {
         } finally {
             setLoading(false)
         }
-    }, [entityTypeFilter, statusFilter, sortBy])
+    }, [entityTypeFilter, detailedFilters])
 
     // AI Search handler
-    const handleAISearch = React.useCallback(async () => {
-        if (!query.trim()) return
-
-        setAiMode(true)
+    const performAiSearch = React.useCallback(async (q: string) => {
+        if (!q.trim()) return
         setAiLoading(true)
         setAiSuggestion(null)
         setAiResults([])
-
         try {
-            const response = await smartSearch(query)
-            if (response.results) {
-                setAiResults(response.results)
-            }
-            if (response.suggestion) {
-                setAiSuggestion(response.suggestion)
-            }
+            const response = await smartSearch(q)
+            if (response.results) setAiResults(response.results)
+            if (response.suggestion) setAiSuggestion(response.suggestion)
         } catch (err) {
             console.error('AI Search error:', err)
         } finally {
             setAiLoading(false)
         }
-    }, [query])
+    }, [])
 
-    // Exit AI mode
-    const exitAiMode = () => {
-        setAiMode(false)
-        setAiSuggestion(null)
-        setAiResults([])
+    // Toggle AI Mode
+    const toggleAiMode = () => {
+        const newMode = !aiMode
+        setAiMode(newMode)
+        if (!newMode) {
+            // Clear everything when turning off
+            setQuery('')
+            setResults([])
+            setStaleResults([])
+            setAiResults([])
+            setAiSuggestion(null)
+            // Remove query param
+            const params = new URLSearchParams(searchParams.toString())
+            params.delete('q')
+            window.history.replaceState(null, '', `?${params.toString()}`)
+        }
+        // NOTE: We do NOT auto-trigger AI search on toggle anymore, waiting for user confirmation (Enter/Click)
     }
 
-    // Debounce search - reduced for snappier response
+    // Handle Input Keys
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && aiMode) {
+            e.preventDefault()
+            performAiSearch(query)
+        }
+    }
+
+    // Debounce search (Standard Mode ONLY)
     React.useEffect(() => {
+        if (aiMode) return // Start AI search only manually
+
         if (query.trim() === '') {
             setResults([])
             setStaleResults([])
@@ -169,59 +162,46 @@ export default function SearchPage() {
             return
         }
 
-        // Show loading state immediately if query exists
+        // Determine which search to run
         setLoading(true)
-
         const timer = setTimeout(() => {
-            if (query && !aiMode) search(query, results)
-        }, 150) // Faster debounce for snappier UX
+            search(query, results)
+        }, 150)
         return () => clearTimeout(timer)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [query, aiMode])
 
-    // Re-search when filters change
+    // Re-search when filters change (only relevant for normal search)
     React.useEffect(() => {
         if (query.trim() && !aiMode) {
             search(query, results)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [entityTypeFilter, statusFilter, sortBy])
+    }, [entityTypeFilter, detailedFilters])
 
-
-    // Update URL with DEBOUNCE to prevent SecurityError
+    // Update URL logic to rely on `type` param mapping
     React.useEffect(() => {
         const timer = setTimeout(() => {
+            // ... (URL sync logic remains the same)
             const params = new URLSearchParams(searchParams.toString())
-            if (query) {
-                params.set('q', query)
-            } else {
-                params.delete('q')
-            }
+            if (query) params.set('q', query)
+            else params.delete('q')
+
+            // Sync type param
+            if (entityTypeFilter.length > 0) params.set('type', entityTypeFilter.join(','))
+            else params.delete('type')
 
             const newSearch = params.toString()
             const currentSearch = searchParams.toString()
 
-            // Only update if actually changed to avoid History API loops
             if (newSearch !== currentSearch) {
-                // If we have params, add ?, otherwise use just the pathname
                 const newUrl = newSearch ? `?${newSearch}` : window.location.pathname
                 window.history.replaceState(null, '', newUrl)
             }
-        }, 500) // 500ms delay to prevent excessive updates
-
+        }, 500)
         return () => clearTimeout(timer)
-    }, [query, searchParams])
+    }, [query, entityTypeFilter, searchParams])
 
-    // Close dropdowns when clicking outside
-    React.useEffect(() => {
-        const handleClick = () => setOpenDropdown(null)
-        if (openDropdown) {
-            document.addEventListener('click', handleClick)
-            return () => document.removeEventListener('click', handleClick)
-        }
-    }, [openDropdown])
-
-    // Group results by entity type
     const displayResults = aiMode ? aiResults : (loading && staleResults.length > 0 ? staleResults : results)
     const grouped = displayResults.reduce((acc, item) => {
         const type = item.entity_type
@@ -230,24 +210,29 @@ export default function SearchPage() {
         return acc
     }, {} as Record<string, typeof displayResults>)
 
-    // Helper functions moved to SearchResultCard component but we need `entityTypes` for filters which is defined above.
-    // The `getEntityConfig` was used for filters potentially?
-    // Wait, the dropdown filter uses `entityTypes` array defined at top of file, so it's fine.
-    // However, `extractTextFromTipTap` might be needed if I didn't verify its usage elsewhere?
-    // It was only used for description extraction inside the map loop.
-    // So we can safely remove `getEntityConfig`, `getEntityActions`, `extractTextFromTipTap` from here as they are in the component now.
-
     const hasActiveQuery = query.length > 0
     const showStale = loading && staleResults.length > 0
 
-    // Toggle filter value
-    const toggleFilter = (filter: string[], setFilter: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
-        if (filter.includes(value)) {
-            setFilter(filter.filter(v => v !== value))
+    // Handle Tab Selection
+    const handleTypeSelect = (type: string) => {
+        if (type === 'all') {
+            setEntityTypeFilter([])
         } else {
-            setFilter([...filter, value])
+            setEntityTypeFilter([type])
         }
+        // Reset specific filters when switching types
+        setDetailedFilters(prev => ({
+            ...prev,
+            status: [],
+            dateFrom: undefined,
+            dateTo: undefined,
+            location: undefined,
+            category: undefined,
+            groupId: undefined
+        }))
     }
+
+    const currentEntityType = entityTypeFilter.length === 1 ? entityTypeFilter[0] : null
 
     return (
         <div className="min-h-screen bg-background relative overflow-hidden flex flex-col">
@@ -268,238 +253,197 @@ export default function SearchPage() {
                 >
                     <div className="w-full max-w-3xl relative space-y-3">
                         {/* Main Search Input */}
-                        <div className="relative group">
-                            <div className="absolute -inset-0.5 bg-gradient-to-r from-neutral-700 to-neutral-800 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-                            <div className={clsx(
-                                "relative flex items-center bg-[#1e1e1e] border rounded-xl shadow-2xl overflow-hidden transition-all duration-300",
-                                aiMode ? "border-burgundy-main/50 ring-1 ring-burgundy-main/30" : "border-white/5 focus-within:border-white/20 focus-within:ring-1 focus-within:ring-white/10"
-                            )}>
-                                {aiMode ? (
-                                    <Brain className="ml-4 h-5 w-5 text-burgundy-light" />
-                                ) : (
-                                    <Search className="ml-4 h-5 w-5 text-neutral-500" />
-                                )}
+                        <motion.div
+                            initial={{ y: -20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ duration: 0.4, ease: "easeInOut", type: "tween" }}
+                            className="max-w-4xl mx-auto space-y-4"
+                        >
+                            {/* Search Input */}
+                            <div className="relative group z-30">
+                                {/* AI Glow Effect */}
+                                <AnimatePresence>
+                                    {aiMode && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.8 }}
+                                            transition={{ duration: 0.5, ease: "easeOut" }}
+                                            className="absolute -inset-20 bg-burgundy-main/30 rounded-full blur-[80px] pointer-events-none z-0"
+                                            style={{
+                                                background: `radial-gradient(circle, rgba(120, 0, 0, 0.4) 0%, rgba(120, 0, 0, 0) 70%)`
+                                            }}
+                                        />
+                                    )}
+                                </AnimatePresence>
+
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-20">
+                                    <Search className={clsx("h-6 w-6 transition-colors", aiMode ? "text-burgundy-light" : "text-neutral-400 group-focus-within:text-white")} />
+                                </div>
                                 <input
                                     type="text"
                                     value={query}
-                                    onChange={(e) => {
-                                        setQuery(e.target.value)
-                                        if (aiMode) exitAiMode()
-                                    }}
-                                    placeholder={aiMode ? "Ask AI anything about your props..." : "Search..."}
-                                    className="w-full bg-transparent py-3 px-3 text-lg text-white placeholder:text-neutral-600 outline-none font-medium"
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    // Add Enter key listener
+                                    onKeyDown={handleKeyDown}
+                                    placeholder={aiMode ? "Ask AI anything..." : t('searchPlaceholder')}
+                                    className={clsx(
+                                        "block w-full rounded-2xl border text-lg placeholder-neutral-500 focus:ring-0 transition-all font-medium shadow-2xl backdrop-blur-xl relative z-10",
+                                        "pl-14 pr-14 py-4",
+                                        aiMode
+                                            ? "bg-black/40 border-burgundy-main/50 text-white focus:border-burgundy-main"
+                                            : "bg-neutral-900/50 border-neutral-800 text-white focus:border-white/20 focus:bg-neutral-900"
+                                    )}
                                     autoFocus
                                 />
-                                <div className="mr-4 flex items-center gap-2">
-                                    {(loading || aiLoading) ? (
-                                        <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />
-                                    ) : aiMode ? (
+
+                                {/* Right side actions */}
+                                <div className="absolute inset-y-0 right-0 pr-4 flex items-center gap-2 z-20">
+                                    {/* Loading State */}
+                                    {(loading || aiLoading) && (
+                                        <Loader2 className={clsx("h-5 w-5 animate-spin", aiMode ? "text-burgundy-light" : "text-neutral-500")} />
+                                    )}
+
+                                    {/* Clear Button */}
+                                    {!(loading || aiLoading) && query && !aiMode && (
                                         <button
-                                            onClick={exitAiMode}
-                                            className="text-xs text-neutral-500 hover:text-white transition-colors"
+                                            onClick={() => setQuery('')}
+                                            className="text-neutral-500 hover:text-white transition-colors"
                                         >
                                             <X className="h-4 w-4" />
                                         </button>
-                                    ) : (
-                                        <>
-                                            {query && (
-                                                <button
-                                                    onClick={() => setQuery('')}
-                                                    className="text-neutral-500 hover:text-white transition-colors mr-1"
-                                                >
-                                                    <X className="h-4 w-4" />
-                                                </button>
-                                            )}
-                                            {/* Search strategy indicator */}
-                                            {hasActiveQuery && !loading && (
-                                                <div className={clsx(
-                                                    "flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded",
-                                                    searchStrategy === 'hybrid'
-                                                        ? "bg-purple-500/20 text-purple-300"
-                                                        : "bg-neutral-700/50 text-neutral-400"
-                                                )}>
-                                                    {searchStrategy === 'hybrid' ? (
-                                                        <>
-                                                            <Zap className="h-2.5 w-2.5" />
-                                                            AI
-                                                        </>
-                                                    ) : (
-                                                        'FTS'
-                                                    )}
-                                                </div>
-                                            )}
-                                            <div className="hidden md:flex items-center gap-1 text-xs text-neutral-600 font-mono bg-white/5 px-2 py-1 rounded">
-                                                <CommandIcon className="h-3 w-3" /> K
+                                    )}
+
+                                    {/* AI Send Button - Explicit Trigger */}
+                                    {aiMode && !aiLoading && query.trim().length > 0 && (
+                                        <button
+                                            onClick={() => performAiSearch(query)}
+                                            className="p-1.5 rounded-full bg-burgundy-main text-white hover:bg-burgundy-main/80 transition-all shadow-lg hover:scale-105"
+                                            title="Ask AI"
+                                        >
+                                            <ArrowRight className="h-4 w-4" />
+                                        </button>
+                                    )}
+
+                                    {/* Search strategy indicator (Standard Mode Only) */}
+                                    {hasActiveQuery && !loading && !aiMode && (
+                                        <div className={clsx(
+                                            "hidden sm:flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded",
+                                            searchStrategy === 'hybrid'
+                                                ? "bg-purple-500/20 text-purple-300"
+                                                : "bg-neutral-700/50 text-neutral-400"
+                                        )}>
+                                            {searchStrategy === 'hybrid' ? <Zap className="h-2.5 w-2.5" /> : 'FTS'}
+                                        </div>
+                                    )}
+
+                                    {/* Shortcut Hint */}
+                                    <div className="hidden md:flex items-center gap-1 text-xs text-neutral-600 font-mono bg-white/5 px-2 py-1 rounded">
+                                        <CommandIcon className="h-3 w-3" /> K
+                                    </div>
+                                </div>
+
+                                {/* Standard Focused Glow Effect (Blue/Purple) - Only when NOT in AI mode */}
+                                {!aiMode && (
+                                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition duration-500 pointer-events-none" />
+                                )}
+                            </div>
+
+                            {/* Secondary Row: Entity Dropdown & Filters */}
+                            <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full relative z-40">
+
+                                {/* Entity Type Dropdown */}
+                                <div className="relative group shrink-0">
+                                    <button
+                                        disabled={aiMode}
+                                        className={clsx(
+                                            "flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg",
+                                            aiMode
+                                                ? "bg-neutral-800 text-neutral-500 cursor-not-allowed opacity-50"
+                                                : "bg-white text-black hover:bg-neutral-200"
+                                        )}
+                                    >
+                                        {/* Dynamic Icon based on selection */}
+                                        {(() => {
+                                            const active = entityTypes.find(t => t.value === (currentEntityType || 'all'))
+                                            const Icon = active?.icon || Sparkles
+                                            return <Icon className="h-4 w-4" />
+                                        })()}
+
+                                        <span>
+                                            {entityTypes.find(t => t.value === (currentEntityType || 'all'))?.label}
+                                        </span>
+                                        {!aiMode && <ChevronDown className="h-3 w-3 ml-1 opacity-50" />}
+                                    </button>
+
+                                    {/* Dropdown Menu - Safe Hover Bridge */}
+                                    {!aiMode && (
+                                        <div className="absolute top-full left-0 pt-2 w-48 hidden group-hover:block z-50 animate-in fade-in slide-in-from-top-2">
+                                            <div className="bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl overflow-hidden p-1">
+                                                {entityTypes.map(({ value, label, icon: Icon }) => (
+                                                    <button
+                                                        key={value}
+                                                        onClick={() => handleTypeSelect(value)}
+                                                        className={clsx(
+                                                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left",
+                                                            (currentEntityType || 'all') === value
+                                                                ? "bg-white/10 text-white font-medium"
+                                                                : "text-neutral-400 hover:bg-white/5 hover:text-white"
+                                                        )}
+                                                    >
+                                                        <Icon className="h-4 w-4" />
+                                                        {label}
+                                                    </button>
+                                                ))}
                                             </div>
-                                        </>
+                                        </div>
                                     )}
                                 </div>
-                            </div>
-                        </div>
 
-                        {/* Secondary Row: Filters & AI Button */}
-                        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-                            {/* Entity Type Filter */}
-                            <div className="relative">
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        setOpenDropdown(openDropdown === 'entity' ? null : 'entity')
-                                    }}
-                                    className={clsx(
-                                        "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors whitespace-nowrap",
-                                        entityTypeFilter.length > 0
-                                            ? "bg-blue-500/10 border-blue-500/30 text-blue-300"
-                                            : "bg-neutral-900/50 border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800"
-                                    )}
-                                >
-                                    <Filter className="h-3 w-3" />
-                                    <span>{entityTypeFilter.length > 0 ? `${entityTypeFilter.length} Types` : 'All Types'}</span>
-                                    <ChevronDown className={clsx("h-3 w-3 transition-transform", openDropdown === 'entity' && "rotate-180")} />
-                                </button>
-
-                                {openDropdown === 'entity' && (
-                                    <div
-                                        className="absolute top-full left-0 mt-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl z-50 min-w-[160px] py-1 animate-in fade-in slide-in-from-top-1 duration-150"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        {entityTypes.map(({ value, label, icon: Icon }) => (
-                                            <button
-                                                key={value}
-                                                onClick={() => toggleFilter(entityTypeFilter, setEntityTypeFilter, value)}
-                                                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-neutral-800 transition-colors"
+                                {/* Dynamic Filters Area (Only show when NOT in AI mode) */}
+                                {!aiMode && (
+                                    <div className="flex-1 w-full md:w-auto">
+                                        <AnimatePresence mode="wait">
+                                            <motion.div
+                                                key={currentEntityType || 'all'}
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: -10 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="flex items-center flex-wrap gap-2"
                                             >
-                                                <Icon className="h-4 w-4 text-neutral-500" />
-                                                <span className="flex-1 text-neutral-300">{label}</span>
-                                                {entityTypeFilter.includes(value) && (
-                                                    <Check className="h-4 w-4 text-blue-400" />
-                                                )}
-                                            </button>
-                                        ))}
-                                        {entityTypeFilter.length > 0 && (
-                                            <>
-                                                <div className="h-px bg-neutral-800 my-1" />
-                                                <button
-                                                    onClick={() => setEntityTypeFilter([])}
-                                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors"
-                                                >
-                                                    Clear all
-                                                </button>
-                                            </>
+                                                <SearchFilters
+                                                    entityType={currentEntityType}
+                                                    filters={detailedFilters}
+                                                    onChange={setDetailedFilters}
+                                                />
+                                            </motion.div>
+                                        </AnimatePresence>
+                                    </div>
+                                )}
+
+                                {/* AI Toggle Switch (Far Right) */}
+                                <div className="ml-auto pl-4 flex items-center gap-3 shrink-0">
+                                    <span className={clsx("text-xs font-bold uppercase tracking-wider transition-colors hidden sm:block", aiMode ? "text-burgundy-light" : "text-neutral-500")}>
+                                        AI Mode
+                                    </span>
+                                    <button
+                                        onClick={toggleAiMode}
+                                        className={clsx(
+                                            "relative h-6 w-11 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-burgundy-main/50 focus:ring-offset-2 focus:ring-offset-black",
+                                            aiMode ? "bg-burgundy-main" : "bg-neutral-800"
                                         )}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Status Filter */}
-                            <div className="relative">
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        setOpenDropdown(openDropdown === 'status' ? null : 'status')
-                                    }}
-                                    className={clsx(
-                                        "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors whitespace-nowrap",
-                                        statusFilter.length > 0
-                                            ? "bg-green-500/10 border-green-500/30 text-green-300"
-                                            : "bg-neutral-900/50 border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800"
-                                    )}
-                                >
-                                    <span>{statusFilter.length > 0 ? `${statusFilter.length} Statuses` : 'All Statuses'}</span>
-                                    <ChevronDown className={clsx("h-3 w-3 transition-transform", openDropdown === 'status' && "rotate-180")} />
-                                </button>
-
-                                {openDropdown === 'status' && (
-                                    <div
-                                        className="absolute top-full left-0 mt-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl z-50 min-w-[160px] py-1 animate-in fade-in slide-in-from-top-1 duration-150"
-                                        onClick={(e) => e.stopPropagation()}
                                     >
-                                        {statusOptions.map(({ value, label }) => (
-                                            <button
-                                                key={value}
-                                                onClick={() => toggleFilter(statusFilter, setStatusFilter, value)}
-                                                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-neutral-800 transition-colors"
-                                            >
-                                                <span className="flex-1 text-neutral-300">{label}</span>
-                                                {statusFilter.includes(value) && (
-                                                    <Check className="h-4 w-4 text-green-400" />
-                                                )}
-                                            </button>
-                                        ))}
-                                        {statusFilter.length > 0 && (
-                                            <>
-                                                <div className="h-px bg-neutral-800 my-1" />
-                                                <button
-                                                    onClick={() => setStatusFilter([])}
-                                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors"
-                                                >
-                                                    Clear all
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                )}
+                                        <motion.div
+                                            className="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-sm"
+                                            animate={{ x: aiMode ? 20 : 0 }}
+                                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                        />
+                                    </button>
+                                </div>
                             </div>
 
-                            {/* Sort Dropdown */}
-                            <div className="relative">
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        setOpenDropdown(openDropdown === 'sort' ? null : 'sort')
-                                    }}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-900/50 border border-neutral-800 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors whitespace-nowrap"
-                                >
-                                    <span>{sortOptions.find(o => o.value === sortBy)?.label}</span>
-                                    <ChevronDown className={clsx("h-3 w-3 transition-transform", openDropdown === 'sort' && "rotate-180")} />
-                                </button>
-
-                                {openDropdown === 'sort' && (
-                                    <div
-                                        className="absolute top-full left-0 mt-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl z-50 min-w-[140px] py-1 animate-in fade-in slide-in-from-top-1 duration-150"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        {sortOptions.map(({ value, label }) => (
-                                            <button
-                                                key={value}
-                                                onClick={() => {
-                                                    setSortBy(value as 'relevance' | 'newest')
-                                                    setOpenDropdown(null)
-                                                }}
-                                                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-neutral-800 transition-colors"
-                                            >
-                                                <span className="flex-1 text-neutral-300">{label}</span>
-                                                {sortBy === value && (
-                                                    <Check className="h-4 w-4 text-white" />
-                                                )}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="w-px h-6 bg-neutral-800 mx-1"></div>
-
-                            {/* AI Search Button */}
-                            <button
-                                onClick={handleAISearch}
-                                disabled={!query.trim() || aiLoading}
-                                className={clsx(
-                                    "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-bold uppercase tracking-wider whitespace-nowrap ml-auto transition-all",
-                                    aiMode
-                                        ? "bg-burgundy-main text-white border-burgundy-main"
-                                        : "bg-burgundy-main/10 text-burgundy-light border-burgundy-main/20 hover:bg-burgundy-main hover:text-white",
-                                    (!query.trim() || aiLoading) && "opacity-50 cursor-not-allowed"
-                                )}
-                            >
-                                {aiLoading ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Sparkles className="h-4 w-4" />
-                                )}
-                                <span>{aiMode ? 'AI Active' : 'Ask AI'}</span>
-                            </button>
-                        </div>
+                        </motion.div>
                     </div>
                 </motion.div>
 
@@ -536,12 +480,14 @@ export default function SearchPage() {
                             className="w-full pb-20 space-y-8"
                         >
                             {/* No Results State */}
-                            {displayResults.length === 0 && !loading && (
+                            {displayResults.length === 0 && !loading && !aiLoading && (
                                 <div className="text-center py-20">
-                                    <p className="text-xl font-bold text-neutral-600">No results found for "{query}"</p>
+                                    <p className="text-xl font-bold text-neutral-600">
+                                        {aiMode ? "AI couldn't find anything related to that." : `No results found for "${query}"`}
+                                    </p>
                                     {!aiMode && (
                                         <button
-                                            onClick={handleAISearch}
+                                            onClick={() => { toggleAiMode() }}
                                             className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-burgundy-main/10 text-burgundy-light border border-burgundy-main/20 hover:bg-burgundy-main hover:text-white transition-colors text-sm font-medium"
                                         >
                                             <Sparkles className="h-4 w-4" />
@@ -555,11 +501,7 @@ export default function SearchPage() {
                             {(Object.entries(grouped) as [string, (SearchResult | any)[]][]).map(([type, items]) => {
                                 // Use the first item to determine config for the group header
                                 const firstItem = items[0] as SearchResult
-                                const config = getEntityConfig(firstItem) // We need to import this or define it.
-                                // Ah, I removed `getEntityConfig` from this file!
-                                // I need to import it from SearchResultCard or similar if I exported it.
-                                // In `SearchResultCard.tsx`, I exported `getEntityConfig`.
-                                // So I need to update the import above as well.
+                                const config = getEntityConfig(firstItem)
                                 const Icon = config.icon
 
                                 return (
@@ -591,6 +533,6 @@ export default function SearchPage() {
                     )}
                 </AnimatePresence>
             </div>
-        </div>
+        </div >
     )
 }

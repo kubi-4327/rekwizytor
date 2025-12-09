@@ -32,12 +32,14 @@ export function ContextSearchTrigger({ context, placeholder, className = '' }: P
             onClick={handleClick}
             className={`cursor-pointer relative group ${className}`}
         >
-            <div className="flex items-center w-full h-10 px-3 rounded-md border border-neutral-800 bg-neutral-950 text-neutral-400 hover:border-neutral-700 hover:text-neutral-300 transition-colors">
-                <Search className="h-4 w-4 mr-2 opacity-50" />
-                <span className="text-sm select-none">
+            <div className="flex items-center w-full h-10 px-3 rounded-md border border-neutral-800 bg-neutral-950 text-neutral-400 hover:border-neutral-700 hover:text-neutral-300 transition-colors overflow-hidden">
+                <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center mr-2 opacity-50">
+                    <Search className="h-4 w-4" />
+                </div>
+                <span className="text-sm leading-none truncate select-none transform translate-y-[1px]">
                     {placeholder || t('searchPlaceholder')}
                 </span>
-                <div className="ml-auto hidden sm:flex gap-1">
+                <div className="ml-auto hidden sm:flex gap-1 flex-shrink-0">
                     <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-neutral-800 bg-neutral-900 px-1.5 font-mono text-[10px] font-medium text-neutral-400 opacity-100">
                         <span className="text-xs">⌘</span>K
                     </kbd>
