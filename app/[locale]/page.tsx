@@ -75,7 +75,7 @@ export default async function Home() {
       .from('items')
       .select('*', { count: 'exact', head: true })
       .is('deleted_at', null)
-      .is('performance_id', null),
+      .eq('performance_status', 'unassigned'),
 
     // Fetch Active Checklists
     supabase
