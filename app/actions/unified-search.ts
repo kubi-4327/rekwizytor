@@ -93,21 +93,16 @@ export async function unifiedSearch(
     }
 ): Promise<UnifiedSearchResult> {
     try {
-        console.log('[unifiedSearch] Starting search with query:', query, 'options:', JSON.stringify(options))
-
         const supabase = await createClient()
-        console.log('[unifiedSearch] Supabase client created')
 
         const matchCount = options?.matchCount ?? 30
         const strategy = classifyQuery(query)
-        console.log('[unifiedSearch] Strategy:', strategy, 'matchCount:', matchCount)
 
         let results: SearchResult[] = []
 
         if (strategy === 'fts') {
             // Simple FTS search (fast, no AI cost)
             try {
-                console.log('[unifiedSearch] Starting FTS search with query:', query)
                 const { data, error } = await supabase.rpc('search_global', {
                     query_text: query,
                     match_threshold: 0.5,
@@ -116,11 +111,10 @@ export async function unifiedSearch(
                 })
 
                 if (error) {
-                    console.error('[unifiedSearch] FTS search RPC error:', JSON.stringify(error))
+                    console.error('[unifiedSearch] FTS search error:', error)
                     return { results: [], strategy, queryClassification: 'fts-only' }
                 }
 
-                console.log('[unifiedSearch] FTS search returned', data?.length ?? 0, 'results')
                 results = (data as SearchResult[]) || []
             } catch (ftsError) {
                 console.error('[unifiedSearch] FTS search exception:', ftsError)
@@ -220,16 +214,13 @@ export async function unifiedSearch(
             })
         }
 
-        console.log('[unifiedSearch] Returning', results.length, 'results')
         return {
             results,
             strategy,
             queryClassification: strategy === 'fts' ? 'simple-query' : 'semantic-query'
         }
     } catch (error) {
-        console.error('[unifiedSearch] FATAL ERROR:', error)
-        console.error('[unifiedSearch] Error stack:', error instanceof Error ? error.stack : 'No stack')
-        console.error('[unifiedSearch] Error message:', error instanceof Error ? error.message : String(error))
+        console.error('[unifiedSearch] Fatal error:', error)
         // Return empty results instead of throwing to avoid 500 error
         return {
             results: [],
