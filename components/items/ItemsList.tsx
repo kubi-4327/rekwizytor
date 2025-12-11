@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { LayoutGrid, List, Filter, Sparkles, Layers } from 'lucide-react'
+import { LayoutGrid, List, Sparkles, Layers } from 'lucide-react'
 import NextImage from 'next/image'
 import { Database } from '@/types/supabase'
 import { ItemIcon } from '@/components/ui/ItemIcon'
@@ -9,8 +9,7 @@ import { useTranslations } from 'next-intl'
 import { getItems } from '@/app/actions/get-items'
 import { EditItemDialog } from './EditItemDialog'
 import { ItemDetailsDialog } from './ItemDetailsDialog'
-import { ContextSearchTrigger } from '@/components/search/ContextSearchTrigger'
-import { FilterSelect } from '@/components/ui/FilterSelect'
+import { MorphingSearchBar } from '@/components/search/MorphingSearchBar'
 import { Button } from '@/components/ui/Button'
 import { FilterBar } from '@/components/ui/FilterBar'
 import { Box } from 'lucide-react'
@@ -18,10 +17,7 @@ import { Box } from 'lucide-react'
 type Item = Database['public']['Tables']['items']['Row']
 type ItemStatus = Database['public']['Enums']['item_performance_status_enum']
 
-type SearchResult = Item & {
-    explanation?: string
-    matchType?: 'exact' | 'close' | 'alternative'
-}
+
 
 type Props = {
     initialItems: Item[]
@@ -71,47 +67,13 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
         setIsEditDialogOpen(true)
     }
 
-    // Filters
-    const [statusFilter, setStatusFilter] = useState<string>('all')
-    const [categoryFilter, setCategoryFilter] = useState<string>(initialCategoryId || 'all')
-    const [locationFilter, setLocationFilter] = useState<string>('all')
-    const [dateSort, setDateSort] = useState<'newest' | 'oldest'>('newest')
 
 
 
-    // Fetch items when filters change (Classic Mode)
+    // Simplified Pagination (no filters)
     useEffect(() => {
-        // Skip initial fetch if we have initial items and no filters
-        if (page === 1 && items === initialItems && categoryFilter === 'all' && locationFilter === 'all' && statusFilter === 'all' && dateSort === 'newest') {
-            return
-        }
-
-        const fetchFilteredItems = async () => {
-            setIsFiltering(true)
-            try {
-                const { items: newItems, count } = await getItems({
-                    page: 1,
-                    limit: 50,
-                    search: '',
-                    status: statusFilter,
-                    categoryId: categoryFilter,
-                    locationId: locationFilter,
-                    sort: dateSort
-                })
-                setItems(newItems)
-                setPage(1)
-                setHasMore(newItems.length < count)
-            } catch (error) {
-                console.error('Failed to fetch items:', error)
-            } finally {
-                setIsFiltering(false)
-            }
-        }
-
-        const debounceTimer = setTimeout(fetchFilteredItems, 300)
-        return () => clearTimeout(debounceTimer)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [categoryFilter, locationFilter, statusFilter, dateSort])
+        // Reset items on initial render or if needed
+    }, [])
 
     const loadMore = async () => {
         if (isLoadingMore || !hasMore) return
@@ -123,10 +85,6 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                 page: nextPage,
                 limit: 50,
                 search: '',
-                status: statusFilter,
-                categoryId: categoryFilter,
-                locationId: locationFilter,
-                sort: dateSort
             })
 
             setItems(prev => [...prev, ...newItems])
@@ -148,74 +106,22 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
             <FilterBar>
                 {/* Search Bar & Toggle */}
                 <div className="flex-1 w-full xl:w-auto min-w-[300px]">
-                    <ContextSearchTrigger context="item" className="w-full" />
+                    <MorphingSearchBar mode="trigger" context="item" className="w-full" />
                 </div>
 
                 {/* Filters */}
                 <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                    <div className="hidden xl:flex items-center text-neutral-500 mr-2">
-                        <Filter className="w-4 h-4" />
-                    </div>
-
-                    {/* Status Filter */}
-                    <FilterSelect
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="flex-1 sm:flex-none"
-                    >
-                        <option value="all">{t('allStatuses')}</option>
-                        <option value="active">{t('statuses.active')}</option>
-                        <option value="upcoming">{t('statuses.upcoming')}</option>
-                        <option value="archived">{t('statuses.archived')}</option>
-                        <option value="unassigned">{t('statuses.unassigned')}</option>
-                        <option value="in_maintenance">{t('statuses.in_maintenance')}</option>
-                    </FilterSelect>
-
-                    {/* Category Filter */}
-                    <FilterSelect
-                        value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="flex-1 sm:flex-none"
-                    >
-                        <option value="all">{t('allCategories')}</option>
-                        {groups.map(g => (
-                            <option key={g.id} value={g.id}>{g.name}</option>
-                        ))}
-                    </FilterSelect>
-
-                    {/* Location Filter */}
-                    <FilterSelect
-                        value={locationFilter}
-                        onChange={(e) => setLocationFilter(e.target.value)}
-                        className="flex-1 sm:flex-none"
-                    >
-                        <option value="all">{t('allLocations')}</option>
-                        {locations.map(l => (
-                            <option key={l.id} value={l.id}>{l.name}</option>
-                        ))}
-                    </FilterSelect>
-
-                    {/* Date Sort */}
-                    <FilterSelect
-                        value={dateSort}
-                        onChange={(e) => setDateSort(e.target.value as 'newest' | 'oldest')}
-                        className="flex-1 sm:flex-none"
-                    >
-                        <option value="newest">{t('newestFirst')}</option>
-                        <option value="oldest">{t('oldestFirst')}</option>
-                    </FilterSelect>
-
                     {/* View Toggle */}
-                    <div className="flex bg-neutral-900 border border-neutral-800 rounded-lg p-1 ml-auto">
+                    <div className="flex bg-white/5 border border-white/5 rounded-xl p-1 ml-auto">
                         <button
                             onClick={() => setView('grid')}
-                            className={`p-2 rounded-md transition-all ${view === 'grid' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+                            className={`p-2 rounded-lg transition-all ${view === 'grid' ? 'bg-white/10 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
                         >
                             <LayoutGrid className="h-4 w-4" />
                         </button>
                         <button
                             onClick={() => setView('list')}
-                            className={`p-2 rounded-md transition-all ${view === 'list' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+                            className={`p-2 rounded-lg transition-all ${view === 'list' ? 'bg-white/10 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
                         >
                             <List className="h-4 w-4" />
                         </button>
@@ -287,13 +193,9 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                                     {item.name}
                                 </h3>
                                 <p className="mt-1 text-sm text-neutral-400 line-clamp-1">
-                                    {'explanation' in item ? (item as SearchResult).explanation : (item.notes || t('noNotes'))}
+                                    {item.notes || t('noNotes')}
                                 </p>
-                                {item.ai_description && (
-                                    <p className="mt-1 text-xs text-blue-400/70 line-clamp-1 font-mono">
-                                        AI: {item.ai_description}
-                                    </p>
-                                )}
+
                             </div>
                         </div>
                     ))}
@@ -326,7 +228,7 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                                 <div>
                                     <h3 className="text-base font-bold text-white truncate group-hover:text-blue-200 transition-colors">{item.name}</h3>
                                     <p className="text-xs text-neutral-400 truncate mt-0.5">
-                                        {'explanation' in item ? (item as SearchResult).explanation : item.notes}
+                                        {item.notes}
                                     </p>
                                 </div>
                                 <div className="hidden md:flex items-center gap-2 justify-end">

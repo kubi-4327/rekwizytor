@@ -128,7 +128,14 @@
     "Groups": {
         "title": "Grupy",
         "subtitle": "Przeglądaj i zarządzaj grupami rekwizytów.",
-        "allGroups": "Wszystkie Grupy"
+        "allGroups": "Wszystkie Grupy",
+        "editGroup": "Edytuj Grupę",
+        "name": "Nazwa",
+        "icon": "Ikona",
+        "searchIcons": "Szukaj ikon (np. pudło, krzesło)...",
+        "suggested": "Sugerowane",
+        "cancel": "Anuluj",
+        "save": "Zapisz Zmiany"
     },
     "Items": {
         "title": "Magazyn Rekwizytów",

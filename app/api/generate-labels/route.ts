@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
                 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
                 const url = group.short_id
                     ? `${baseUrl}/g/${group.short_id}`
-                    : `${baseUrl}/pl/items?groupId=${group.id}`
+                    : `${baseUrl}/pl/groups?highlight=${group.id}`
 
                 return await QRCode.toDataURL(url, {
                     errorCorrectionLevel: 'L', // Lower error correction for less dense QR code

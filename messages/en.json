@@ -126,7 +126,14 @@
     "Groups": {
         "title": "Groups",
         "subtitle": "Browse and manage prop groups.",
-        "allGroups": "All Groups"
+        "allGroups": "All Groups",
+        "editGroup": "Edit Group",
+        "name": "Name",
+        "icon": "Icon",
+        "searchIcons": "Search icons (e.g. box, chair)...",
+        "suggested": "Suggested",
+        "cancel": "Cancel",
+        "save": "Save Changes"
     },
     "Items": {
         "title": "Props Inventory",

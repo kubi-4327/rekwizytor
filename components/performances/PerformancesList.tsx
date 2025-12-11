@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Filter, LayoutGrid, List as ListIcon, Layers, Calendar, ChevronRight } from 'lucide-react'
+import { LayoutGrid, List as ListIcon, Layers, Calendar, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Database } from '@/types/supabase'
-import { ContextSearchTrigger } from '@/components/search/ContextSearchTrigger'
-import { FilterSelect } from '@/components/ui/FilterSelect'
+import { MorphingSearchBar } from '@/components/search/MorphingSearchBar'
 import { useTranslations } from 'next-intl'
 import { format } from 'date-fns'
 import { FilterBar } from '@/components/ui/FilterBar'
@@ -167,7 +166,6 @@ const PerformanceGridItem = ({ show }: { show: Performance }) => {
 
 export function PerformancesList({ performances }: Props) {
     const t = useTranslations('PerformancesList')
-    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'upcoming' | 'archived'>('all')
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
 
     useEffect(() => {
@@ -182,39 +180,24 @@ export function PerformancesList({ performances }: Props) {
         localStorage.setItem('performances_view_mode', mode)
     }
 
-    const filteredPerformances = performances.filter(p => {
-        const matchesStatus = statusFilter === 'all' || p.status === statusFilter
-        return matchesStatus
-    })
+    const filteredPerformances = performances
 
     return (
         <div className="space-y-8">
             {/* Filter Bar */}
             <FilterBar>
                 <div className="flex-1 w-full xl:w-auto min-w-[300px]">
-                    <ContextSearchTrigger context="performance" className="w-full" />
+                    <MorphingSearchBar mode="trigger" context="performance" className="w-full" />
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                    <FilterSelect
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'upcoming' | 'archived')}
-                        icon={<Filter className="w-4 h-4 text-neutral-400" />}
-                        className="flex-1 xl:flex-none xl:min-w-[180px]"
-                    >
-                        <option value="all">{t('allStatus')}</option>
-                        <option value="active">{t('statuses.active')}</option>
-                        <option value="upcoming">{t('statuses.upcoming')}</option>
-                        <option value="archived">{t('statuses.archived')}</option>
-                    </FilterSelect>
-
-                    <div className="flex bg-neutral-900 border border-neutral-800 rounded-lg p-1">
+                    <div className="flex bg-white/5 border border-white/5 rounded-xl p-1">
                         <button
                             onClick={() => handleViewModeChange('list')}
                             className={clsx(
-                                "p-2 rounded-md transition-all",
+                                "p-2 rounded-lg transition-all",
                                 viewMode === 'list'
-                                    ? 'bg-neutral-800 text-white shadow-sm'
+                                    ? 'bg-white/10 text-white shadow-sm'
                                     : 'text-neutral-500 hover:text-neutral-300'
                             )}
                         >
@@ -223,9 +206,9 @@ export function PerformancesList({ performances }: Props) {
                         <button
                             onClick={() => handleViewModeChange('grid')}
                             className={clsx(
-                                "p-2 rounded-md transition-all",
+                                "p-2 rounded-lg transition-all",
                                 viewMode === 'grid'
-                                    ? 'bg-neutral-800 text-white shadow-sm'
+                                    ? 'bg-white/10 text-white shadow-sm'
                                     : 'text-neutral-500 hover:text-neutral-300'
                             )}
                         >
@@ -270,7 +253,7 @@ export function PerformancesList({ performances }: Props) {
                         <Layers className="w-8 h-8 text-neutral-600" />
                     </div>
                     <p className="text-xl font-bold text-neutral-500">{t('noPerformancesFound')}</p>
-                    <p className="text-neutral-600 mt-2">Try adjusting your filters or search query.</p>
+                    <p className="text-neutral-600 mt-2">Try adjusting your filters.</p>
                 </div>
             )}
         </div>

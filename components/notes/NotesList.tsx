@@ -6,8 +6,7 @@ import { Plus, FileText, Trash2, ChevronDown, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
-import { SearchInput } from '@/components/ui/SearchInput'
-import { ContextSearchTrigger } from '@/components/search/ContextSearchTrigger'
+import { MorphingSearchBar } from '@/components/search/MorphingSearchBar'
 import { Button } from '@/components/ui/Button'
 import { extractTextFromContent } from './utils'
 import { useTranslations } from 'next-intl'
@@ -20,7 +19,7 @@ export default function NotesList({ performanceId }: { performanceId?: string })
     const [notes, setNotes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
-    const [searchQuery, setSearchQuery] = useState('')
+
     const supabase = createClient()
     const router = useRouter()
 
@@ -87,13 +86,7 @@ export default function NotesList({ performanceId }: { performanceId?: string })
     }
 
     // Filter notes
-    const filteredNotes = notes.filter(note => {
-        if (!searchQuery) return true
-        const text = extractTextFromContent(note.content).toLowerCase()
-        const title = note.title.toLowerCase()
-        const query = searchQuery.toLowerCase()
-        return title.includes(query) || text.includes(query)
-    })
+    const filteredNotes = notes
 
     // Group notes
     const groupedNotes = filteredNotes.reduce((acc: any, note: any) => {
@@ -148,16 +141,8 @@ export default function NotesList({ performanceId }: { performanceId?: string })
 
             {/* Filter Bar */}
             <FilterBar>
-                <div className="flex-1 w-full min-w-[300px]">
-                    <SearchInput
-                        placeholder={t('searchPlaceholder')}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="bg-neutral-900 border-neutral-700 w-full"
-                    />
-                </div>
-                <div className="w-full xl:w-1/3">
-                    <ContextSearchTrigger context="note" className="w-full" />
+                <div className="w-full">
+                    <MorphingSearchBar mode="trigger" context="note" className="w-full" />
                 </div>
             </FilterBar>
 

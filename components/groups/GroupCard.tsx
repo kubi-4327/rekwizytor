@@ -30,7 +30,7 @@ export function GroupCard({ group, subgroupCount = 0, href }: GroupCardProps) {
         <>
             <Link
                 href={href}
-                className="group relative flex flex-col p-4 bg-neutral-900/50 border border-neutral-800 rounded-xl hover:bg-neutral-800/50 hover:border-neutral-700 transition-all duration-200"
+                className="group relative flex flex-col p-4 bg-neutral-900/40 backdrop-blur-sm border border-neutral-800 rounded-xl hover:bg-neutral-900/60 hover:border-neutral-700 hover:scale-[1.02] transition-all duration-300 shadow-sm hover:shadow-md"
             >
                 <div className="flex items-start justify-between mb-2">
                     <div className="p-2 bg-neutral-800 rounded-lg text-neutral-400 group-hover:text-white group-hover:bg-neutral-700 transition-colors">

@@ -26,6 +26,7 @@ import { unifiedSearch, type SearchResult, type SearchStrategy } from '@/app/act
 import { smartSearch } from '@/app/actions/smart-search'
 import { SearchResultCard, getEntityConfig } from '@/components/search/SearchResultCard'
 import { SearchFilters } from '@/components/search/SearchFilters'
+import { MorphingSearchBar } from '@/components/search/MorphingSearchBar'
 
 export default function SearchPage() {
     const router = useRouter()
@@ -56,6 +57,21 @@ export default function SearchPage() {
     const [aiLoading, setAiLoading] = React.useState(false)
     const [aiSuggestion, setAiSuggestion] = React.useState<string | null>(null)
     const [aiResults, setAiResults] = React.useState<any[]>([])
+
+    // Type dropdown state for mobile
+    const [isTypeDropdownOpen, setIsTypeDropdownOpen] = React.useState(false)
+    const typeDropdownRef = React.useRef<HTMLDivElement>(null)
+
+    // Close dropdown on click outside
+    React.useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target as Node)) {
+                setIsTypeDropdownOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
 
     const t = useTranslations('Navigation')
 
@@ -261,73 +277,16 @@ export default function SearchPage() {
                             className="max-w-4xl mx-auto space-y-4"
                         >
                             {/* Search Input */}
-                            <div className="relative group z-30">
-                                {/* AI Glow Effect */}
-                                <AnimatePresence>
-                                    {aiMode && (
-                                        <motion.div
-                                            initial={{ opacity: 0, scale: 0.8 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.8 }}
-                                            transition={{ duration: 0.5, ease: "easeOut" }}
-                                            className="absolute -inset-20 bg-burgundy-main/30 rounded-full blur-[80px] pointer-events-none z-0"
-                                            style={{
-                                                background: `radial-gradient(circle, rgba(120, 0, 0, 0.4) 0%, rgba(120, 0, 0, 0) 70%)`
-                                            }}
-                                        />
-                                    )}
-                                </AnimatePresence>
-
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-20">
-                                    <Search className={clsx("h-6 w-6 transition-colors", aiMode ? "text-burgundy-light" : "text-neutral-400 group-focus-within:text-white")} />
-                                </div>
-                                <input
-                                    type="text"
-                                    value={query}
-                                    onChange={(e) => setQuery(e.target.value)}
-                                    // Add Enter key listener
-                                    onKeyDown={handleKeyDown}
-                                    placeholder={aiMode ? "Ask AI anything..." : t('searchPlaceholder')}
-                                    className={clsx(
-                                        "block w-full rounded-2xl border text-lg placeholder-neutral-500 focus:ring-0 transition-all font-medium shadow-2xl backdrop-blur-xl relative z-10",
-                                        "pl-14 pr-14 py-4",
-                                        aiMode
-                                            ? "bg-black/40 border-burgundy-main/50 text-white focus:border-burgundy-main"
-                                            : "bg-neutral-900/50 border-neutral-800 text-white focus:border-white/20 focus:bg-neutral-900"
-                                    )}
-                                    autoFocus
-                                />
-
-                                {/* Right side actions */}
-                                <div className="absolute inset-y-0 right-0 pr-4 flex items-center gap-2 z-20">
-                                    {/* Loading State */}
-                                    {(loading || aiLoading) && (
-                                        <Loader2 className={clsx("h-5 w-5 animate-spin", aiMode ? "text-burgundy-light" : "text-neutral-500")} />
-                                    )}
-
-                                    {/* Clear Button */}
-                                    {!(loading || aiLoading) && query && !aiMode && (
-                                        <button
-                                            onClick={() => setQuery('')}
-                                            className="text-neutral-500 hover:text-white transition-colors"
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </button>
-                                    )}
-
-                                    {/* AI Send Button - Explicit Trigger */}
-                                    {aiMode && !aiLoading && query.trim().length > 0 && (
-                                        <button
-                                            onClick={() => performAiSearch(query)}
-                                            className="p-1.5 rounded-full bg-burgundy-main text-white hover:bg-burgundy-main/80 transition-all shadow-lg hover:scale-105"
-                                            title="Ask AI"
-                                        >
-                                            <ArrowRight className="h-4 w-4" />
-                                        </button>
-                                    )}
-
-                                    {/* Search strategy indicator (Standard Mode Only) */}
-                                    {hasActiveQuery && !loading && !aiMode && (
+                            <MorphingSearchBar
+                                mode="input"
+                                query={query}
+                                onQueryChange={setQuery}
+                                onSubmit={aiMode ? () => performAiSearch(query) : undefined}
+                                aiMode={aiMode}
+                                loading={loading || aiLoading}
+                                autoFocus={true}
+                                rightContent={
+                                    hasActiveQuery && !loading && !aiMode && (
                                         <div className={clsx(
                                             "hidden sm:flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded",
                                             searchStrategy === 'hybrid'
@@ -336,26 +295,17 @@ export default function SearchPage() {
                                         )}>
                                             {searchStrategy === 'hybrid' ? <Zap className="h-2.5 w-2.5" /> : 'FTS'}
                                         </div>
-                                    )}
-
-                                    {/* Shortcut Hint */}
-                                    <div className="hidden md:flex items-center gap-1 text-xs text-neutral-600 font-mono bg-white/5 px-2 py-1 rounded">
-                                        <CommandIcon className="h-3 w-3" /> K
-                                    </div>
-                                </div>
-
-                                {/* Standard Focused Glow Effect (Blue/Purple) - Only when NOT in AI mode */}
-                                {!aiMode && (
-                                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition duration-500 pointer-events-none" />
-                                )}
-                            </div>
+                                    )
+                                }
+                            />
 
                             {/* Secondary Row: Entity Dropdown & Filters */}
                             <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full relative z-40">
 
                                 {/* Entity Type Dropdown */}
-                                <div className="relative group shrink-0">
+                                <div className="relative shrink-0" ref={typeDropdownRef}>
                                     <button
+                                        onClick={() => !aiMode && setIsTypeDropdownOpen(!isTypeDropdownOpen)}
                                         disabled={aiMode}
                                         className={clsx(
                                             "flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg",
@@ -374,31 +324,47 @@ export default function SearchPage() {
                                         <span>
                                             {entityTypes.find(t => t.value === (currentEntityType || 'all'))?.label}
                                         </span>
-                                        {!aiMode && <ChevronDown className="h-3 w-3 ml-1 opacity-50" />}
+                                        {!aiMode && (
+                                            <ChevronDown className={clsx(
+                                                "h-3 w-3 ml-1 opacity-50 transition-transform duration-200",
+                                                isTypeDropdownOpen ? "rotate-180" : ""
+                                            )} />
+                                        )}
                                     </button>
 
-                                    {/* Dropdown Menu - Safe Hover Bridge */}
-                                    {!aiMode && (
-                                        <div className="absolute top-full left-0 pt-2 w-48 hidden group-hover:block z-50 animate-in fade-in slide-in-from-top-2">
-                                            <div className="bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl overflow-hidden p-1">
-                                                {entityTypes.map(({ value, label, icon: Icon }) => (
-                                                    <button
-                                                        key={value}
-                                                        onClick={() => handleTypeSelect(value)}
-                                                        className={clsx(
-                                                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left",
-                                                            (currentEntityType || 'all') === value
-                                                                ? "bg-white/10 text-white font-medium"
-                                                                : "text-neutral-400 hover:bg-white/5 hover:text-white"
-                                                        )}
-                                                    >
-                                                        <Icon className="h-4 w-4" />
-                                                        {label}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
+                                    {/* Dropdown Menu */}
+                                    <AnimatePresence>
+                                        {!aiMode && isTypeDropdownOpen && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                transition={{ duration: 0.1 }}
+                                                className="absolute top-full left-0 pt-2 w-48 z-50 origin-top-left"
+                                            >
+                                                <div className="bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl overflow-hidden p-1">
+                                                    {entityTypes.map(({ value, label, icon: Icon }) => (
+                                                        <button
+                                                            key={value}
+                                                            onClick={() => {
+                                                                handleTypeSelect(value)
+                                                                setIsTypeDropdownOpen(false)
+                                                            }}
+                                                            className={clsx(
+                                                                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left",
+                                                                (currentEntityType || 'all') === value
+                                                                    ? "bg-white/10 text-white font-medium"
+                                                                    : "text-neutral-400 hover:bg-white/5 hover:text-white"
+                                                            )}
+                                                        >
+                                                            <Icon className="h-4 w-4" />
+                                                            {label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
 
                                 {/* Dynamic Filters Area (Only show when NOT in AI mode) */}

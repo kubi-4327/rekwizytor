@@ -2,9 +2,12 @@
 
 import { Database } from '@/types/supabase'
 import { GroupCard } from './GroupCard'
-import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { ChevronDown, ChevronRight, MapPin, FileText } from 'lucide-react'
+import { FilterBar } from '@/components/ui/FilterBar'
+import { MorphingSearchBar } from '@/components/search/MorphingSearchBar'
+import { Button } from '@/components/ui/Button'
 
 type Group = Database['public']['Tables']['groups']['Row'] & {
     locations: { name: string } | null
@@ -17,7 +20,34 @@ interface GroupsListProps {
 
 export function GroupsList({ groups, currentParentId }: GroupsListProps) {
     const pathname = usePathname()
+    const searchParams = useSearchParams()
+    const highlightId = searchParams.get('highlight')
     const [expandedLocations, setExpandedLocations] = useState<Record<string, boolean>>({})
+
+    // Handle highlight logic
+    useEffect(() => {
+        if (highlightId && groups.length > 0) {
+            const targetGroup = groups.find(g => g.id === highlightId)
+            if (targetGroup) {
+                // 1. Expand location
+                const locationName = targetGroup.locations?.name || 'Unassigned'
+                setExpandedLocations(prev => ({ ...prev, [locationName]: true }))
+
+                // 2. Scroll to element after a brief delay to allow expansion
+                setTimeout(() => {
+                    const element = document.getElementById(`group-${highlightId}`)
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                        // Optional: Add a temporary flash effect class
+                        element.classList.add('ring-2', 'ring-white', 'ring-offset-2', 'ring-offset-black')
+                        setTimeout(() => {
+                            element.classList.remove('ring-2', 'ring-white', 'ring-offset-2', 'ring-offset-black')
+                        }, 2000)
+                    }
+                }, 100)
+            }
+        }
+    }, [highlightId, groups])
 
     // Filter groups to show only children of current parent
     const currentLevelGroups = groups.filter(g => g.parent_id === currentParentId)
@@ -105,16 +135,22 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
 
     return (
         <div className="space-y-8">
-            <div className="flex justify-end">
-                <button
-                    onClick={handleGenerateAllLabels}
-                    disabled={isGenerating}
-                    className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-md transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    <FileText className="w-4 h-4" />
-                    {isGenerating ? 'Generating...' : 'Generate All Labels'}
-                </button>
-            </div>
+            <FilterBar>
+                <div className="flex-1 w-full xl:w-auto min-w-[300px]">
+                    <MorphingSearchBar mode="trigger" context="group" className="w-full" />
+                </div>
+                <div className="flex items-center gap-3">
+                    <Button
+                        onClick={handleGenerateAllLabels}
+                        disabled={isGenerating}
+                        variant="secondary"
+                        isLoading={isGenerating}
+                        leftIcon={<FileText className="w-4 h-4" />}
+                    >
+                        Generate All Labels
+                    </Button>
+                </div>
+            </FilterBar>
             {sortedLocations.map(location => (
                 <div key={location} className="space-y-4">
                     <button
@@ -136,12 +172,13 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
                             {groupedByLocation[location].map(group => {
                                 const childrenCount = groups.filter(g => g.parent_id === group.id).length
                                 return (
-                                    <GroupCard
-                                        key={group.id}
-                                        group={group}
-                                        subgroupCount={childrenCount}
-                                        href={`/items?groupId=${group.id}`}
-                                    />
+                                    <div key={group.id} id={`group-${group.id}`} className="transition-all duration-300">
+                                        <GroupCard
+                                            group={group}
+                                            subgroupCount={childrenCount}
+                                            href={`/items?groupId=${group.id}`}
+                                        />
+                                    </div>
                                 )
                             })}
                         </div>
