@@ -2,7 +2,8 @@ import { createClient } from '@/utils/supabase/server'
 import { GroupsList } from '@/components/groups/GroupsList'
 import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
-import { ChevronRight, Home } from 'lucide-react'
+import { ChevronRight, Home, FolderTree } from 'lucide-react'
+import { PageHeader } from '@/components/ui/PageHeader'
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -40,14 +41,12 @@ export default async function GroupsPage({ searchParams }: Props) {
 
     return (
         <div className="p-4 md:p-10 space-y-6 max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-xl font-bold text-white">{t('title')}</h1>
-                    <p className="text-neutral-400 text-sm mt-1">
-                        {t('subtitle')}
-                    </p>
-                </div>
-            </div>
+            <PageHeader
+                title={t('title')}
+                subtitle={t('subtitle')}
+                icon={<FolderTree className="w-6 h-6 text-white" />}
+                iconColor="text-blue-400"
+            />
 
 
 

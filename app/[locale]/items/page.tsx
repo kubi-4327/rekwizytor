@@ -4,6 +4,8 @@ import { createClient } from '@/utils/supabase/server'
 import { ItemsList } from '@/components/items/ItemsList'
 import { AddPropsButton } from '@/components/items/AddPropsButton'
 import { ExportButton } from '@/components/items/ExportButton'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { Box } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
 type Props = {
@@ -40,21 +42,17 @@ export default async function ItemsPage({ searchParams }: Props) {
 
     return (
         <div className="p-4 md:p-10 space-y-6 max-w-7xl mx-auto">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-                <div>
-                    <h1 className="text-xl font-bold text-white">{t('title')}</h1>
-                    <p className="text-neutral-400 text-sm mt-1">
-                        {t('subtitle')}
-                    </p>
-                </div>
+            <PageHeader
+                title={t('title')}
+                subtitle={t('subtitle')}
+                icon={<Box className="h-6 w-6" />}
+                iconColor="text-blue-400 bg-blue-400/10 border-blue-400/20"
+            >
                 <div className="flex gap-2 ml-auto">
                     <ExportButton items={items || []} />
-
-
-
                     <AddPropsButton />
                 </div>
-            </div>
+            </PageHeader>
 
             <ItemsList
                 initialItems={items || []}

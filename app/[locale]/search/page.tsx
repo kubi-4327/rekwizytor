@@ -16,7 +16,8 @@ import {
     Brain,
     X,
     ArrowRight,
-    ChevronDown
+    ChevronDown,
+    LayoutGrid
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useTranslations } from 'next-intl'
@@ -59,7 +60,7 @@ export default function SearchPage() {
     const t = useTranslations('Navigation')
 
     const entityTypes = React.useMemo(() => [
-        { value: 'all', label: 'All', icon: Sparkles }, // Pseudo-type for "All"
+        { value: 'all', label: 'All', icon: LayoutGrid }, // Pseudo-type for "All"
         { value: 'performance', label: t('productions'), icon: Layers },
         { value: 'item', label: t('items'), icon: Box },
         { value: 'group', label: t('groups'), icon: Box },

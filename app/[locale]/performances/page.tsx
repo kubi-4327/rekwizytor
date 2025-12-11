@@ -1,8 +1,9 @@
 import { createClient } from '@/utils/supabase/server'
-import { Plus } from 'lucide-react'
+import { Plus, Layers } from 'lucide-react'
 import Link from 'next/link'
 import { PerformancesList } from '@/components/performances/PerformancesList'
 import { getTranslations } from 'next-intl/server'
+import { PageHeader } from '@/components/ui/PageHeader'
 
 import { PerformancesListActions } from '@/components/performances/PerformancesListActions'
 import { buttonVariants } from '@/components/ui/button-variants'
@@ -32,13 +33,12 @@ export default async function PerformancesPage() {
 
     return (
         <div className="p-4 md:p-10 space-y-6 max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-xl font-bold text-white">{t('title')}</h1>
-                    <p className="text-neutral-400 text-sm mt-1">
-                        {t('subtitle')}
-                    </p>
-                </div>
+            <PageHeader
+                title={t('title')}
+                subtitle={t('subtitle')}
+                icon={<Layers className="h-6 w-6" />}
+                iconColor="text-purple-400 bg-purple-400/10 border-purple-400/20"
+            >
                 <div className="flex flex-row gap-2 w-full sm:w-auto justify-end">
                     <PerformancesListActions scheduledShows={allScheduledShows || []} performances={performances || []} />
                     <Link
@@ -49,7 +49,7 @@ export default async function PerformancesPage() {
                         <span className="hidden sm:inline">{t('addProduction')}</span>
                     </Link>
                 </div>
-            </div>
+            </PageHeader>
 
             <PerformancesList performances={performances || []} />
         </div>

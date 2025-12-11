@@ -11,6 +11,9 @@ import { ContextSearchTrigger } from '@/components/search/ContextSearchTrigger'
 import { Button } from '@/components/ui/Button'
 import { extractTextFromContent } from './utils'
 import { useTranslations } from 'next-intl'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { FilterBar } from '@/components/ui/FilterBar'
+import { motion } from 'framer-motion'
 
 export default function NotesList({ performanceId }: { performanceId?: string }) {
     const t = useTranslations('NotesList')
@@ -123,13 +126,14 @@ export default function NotesList({ performanceId }: { performanceId?: string })
     })
 
     return (
-        <div className="space-y-4 overflow-x-hidden max-w-full">
+        <div className="space-y-8">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-                <div>
-                    <h1 className="text-xl font-bold text-white">{t('title')}</h1>
-                    <p className="text-neutral-400 text-xs sm:text-sm mt-1">{t('subtitle')}</p>
-                </div>
+            <PageHeader
+                title={t('title')}
+                subtitle={t('subtitle')}
+                icon={<FileText className="h-6 w-6" />}
+                iconColor="text-amber-400 bg-amber-400/10 border-amber-400/20"
+            >
                 <div className="flex justify-end w-full sm:w-auto">
                     <Button
                         onClick={createNote}
@@ -140,11 +144,11 @@ export default function NotesList({ performanceId }: { performanceId?: string })
                         {t('newNote')}
                     </Button>
                 </div>
-            </div>
+            </PageHeader>
 
-            {/* Search Section */}
-            <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-2 sm:p-4 max-w-full overflow-hidden flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
+            {/* Filter Bar */}
+            <FilterBar>
+                <div className="flex-1 w-full min-w-[300px]">
                     <SearchInput
                         placeholder={t('searchPlaceholder')}
                         value={searchQuery}
@@ -152,83 +156,109 @@ export default function NotesList({ performanceId }: { performanceId?: string })
                         className="bg-neutral-900 border-neutral-700 w-full"
                     />
                 </div>
-                <div className="w-full sm:w-1/3">
-                    <ContextSearchTrigger context="note" />
+                <div className="w-full xl:w-1/3">
+                    <ContextSearchTrigger context="note" className="w-full" />
                 </div>
-            </div>
+            </FilterBar>
 
             {loading ? (
-                <div className="text-center py-10 text-zinc-500">{t('loading')}</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[...Array(6)].map((_, i) => (
+                        <div key={i} className="h-32 rounded-xl bg-neutral-900/40 border border-neutral-800 animate-pulse" />
+                    ))}
+                </div>
             ) : notes.length === 0 ? (
-                <div className="text-center py-10 text-zinc-500">{t('noNotes')}</div>
+                <div className="text-center py-20 bg-neutral-900/20 rounded-2xl border border-neutral-800/50 border-dashed">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-800/50 mb-4 text-neutral-600">
+                        <FileText className="w-8 h-8" />
+                    </div>
+                    <p className="text-xl font-bold text-neutral-500">{t('noNotes')}</p>
+                    <p className="text-neutral-600 mt-2">Create a new note to get started.</p>
+                </div>
             ) : (
-                <div className="space-y-6">
+                <div className="space-y-8">
                     {sortedGroups.map((group: any) => (
-                        <div key={group.id} className="space-y-3">
+                        <div key={group.id} className="space-y-4">
                             <button
                                 onClick={() => toggleGroup(group.id)}
-                                className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors w-full text-left py-2"
+                                className="flex items-center gap-3 text-sm font-bold text-neutral-400 uppercase tracking-wider hover:text-white transition-colors w-full text-left py-2 group"
                             >
-                                {expandedGroups[group.id] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                <div className="p-1 rounded-md bg-neutral-800 group-hover:bg-neutral-700 transition-colors">
+                                    {expandedGroups[group.id] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                </div>
                                 {group.title}
-                                <span className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-full text-zinc-500 ml-1">
+                                <span className="text-[10px] bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded-full ml-1 border border-neutral-700">
                                     {group.notes.length}
                                 </span>
                             </button>
 
                             {expandedGroups[group.id] && (
-                                <div className="grid gap-2">
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                                >
                                     {group.notes.map((note: any) => {
                                         const perfColor = note.performances?.color
                                         const isMaster = note.is_master
 
                                         return (
-                                            <div
+                                            <motion.div
+                                                layout
                                                 key={note.id}
-                                                className={`group relative bg-neutral-900/30 border border-transparent hover:border-neutral-800 rounded-xl p-4 transition-all hover:bg-neutral-900/50 flex justify-between items-start w-full max-w-full overflow-hidden`}
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                className={`group relative rounded-xl transition-all duration-300 hover:scale-[1.02] flex flex-col justify-between overflow-hidden cursor-pointer shadow-lg
+                                                    ${isMaster
+                                                        ? 'bg-amber-950/20 border border-amber-900/30 hover:border-amber-500/50'
+                                                        : 'bg-neutral-900/40 border border-neutral-800 hover:border-neutral-600 hover:bg-neutral-900/60'
+                                                    }
+                                                `}
                                                 style={isMaster ? {
-                                                    borderLeft: `3px solid ${perfColor || '#d97706'}`, // Amber-600 default
-                                                    backgroundColor: isMaster ? 'rgba(255, 255, 255, 0.02)' : undefined
+                                                    boxShadow: perfColor ? `inset 4px 0 0 ${perfColor}` : `inset 4px 0 0 #d97706`
                                                 } : undefined}
                                             >
-                                                <Link href={`/notes/${note.id}`} className="flex-1 min-w-0 w-full block">
-                                                    <div className="flex items-center gap-2 mb-1.5 w-full min-w-0">
-                                                        {isMaster && (
-                                                            <FileText
-                                                                size={16}
-                                                                className="text-amber-500/80 flex-shrink-0"
-                                                                style={perfColor ? { color: perfColor } : undefined}
-                                                            />
-                                                        )}
-                                                        <h3 className={`font-medium text-base truncate flex-1 min-w-0 ${isMaster ? 'text-white' : 'text-neutral-200 group-hover:text-white transition-colors'}`}>
+                                                <Link href={`/notes/${note.id}`} className="flex-1 p-5 block h-full">
+                                                    <div className="flex items-start justify-between gap-3 mb-3 pr-8">
+                                                        <h3 className={`font-bold text-lg leading-tight line-clamp-2 ${isMaster ? 'text-amber-100' : 'text-neutral-200 group-hover:text-white'}`}>
                                                             {note.title}
                                                         </h3>
                                                         {isMaster && (
-                                                            <span
-                                                                className="text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 ml-2 flex-shrink-0"
-                                                                style={perfColor ? {
-                                                                    backgroundColor: `${perfColor}15`,
-                                                                    color: perfColor,
-                                                                } : undefined}
-                                                            >
-                                                                {t('master')}
-                                                            </span>
+                                                            <div className="flex-shrink-0">
+                                                                <FileText
+                                                                    size={18}
+                                                                    className="text-amber-500"
+                                                                    style={perfColor ? { color: perfColor } : undefined}
+                                                                />
+                                                            </div>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-neutral-400 line-clamp-2 leading-relaxed break-words w-full">
+
+                                                    <p className="text-sm text-neutral-400 line-clamp-4 leading-relaxed font-light">
                                                         {extractTextFromContent(note.content) || <span className="italic opacity-30">{t('noContent')}</span>}
                                                     </p>
-                                                    <p className="text-xs text-neutral-600 mt-3 font-medium">
-                                                        {format(new Date(note.created_at), 'MMM d, yyyy • HH:mm')}
-                                                    </p>
+
+                                                    <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-neutral-500 font-medium">
+                                                        <span>{format(new Date(note.created_at), 'MMM d, yyyy')}</span>
+                                                    </div>
                                                 </Link>
-                                                <button onClick={() => deleteNote(note.id)} className="text-neutral-600 hover:text-red-400 p-2 rounded-lg hover:bg-red-900/10 transition-colors opacity-0 group-hover:opacity-100 absolute top-3 right-3 z-10">
+
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.preventDefault()
+                                                        e.stopPropagation()
+                                                        deleteNote(note.id)
+                                                    }}
+                                                    className="absolute top-3 right-3 p-2 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-950/30 opacity-0 group-hover:opacity-100 transition-all z-20"
+                                                    title={t('deleteNote')}
+                                                >
                                                     <Trash2 size={16} />
                                                 </button>
-                                            </div>
+                                            </motion.div>
                                         )
                                     })}
-                                </div>
+                                </motion.div>
                             )}
                         </div>
                     ))}

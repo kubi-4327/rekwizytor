@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { SettingsForm } from '@/components/settings/SettingsForm'
 import { getTranslations } from 'next-intl/server';
 import { UserApprovalList } from '@/components/settings/UserApprovalList'
+import { ThumbnailRegenerator } from '@/components/admin/ThumbnailRegenerator'
 
 export default async function SettingsPage() {
     const supabase = await createClient()
@@ -34,6 +35,13 @@ export default async function SettingsPage() {
             <UserApprovalList />
 
             <SettingsForm user={{ ...profile, email: user.email || undefined }} />
+
+            {profile && ((profile.role as string) === 'admin' || (profile.role as string) === 'superadmin') && (
+                <div className="pt-8 border-t border-neutral-800">
+                    <h2 className="text-lg font-bold text-white mb-4">{t('adminZone')}</h2>
+                    <ThumbnailRegenerator />
+                </div>
+            )}
         </div>
     )
 }

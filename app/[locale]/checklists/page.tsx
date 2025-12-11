@@ -1,6 +1,8 @@
 import { createClient } from '@/utils/supabase/server'
 import { getTranslations } from 'next-intl/server'
 import { ActiveChecklistsList } from '@/components/checklists/ActiveChecklistsList'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { Activity } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,14 +38,12 @@ export default async function ChecklistsPage() {
 
     return (
         <div className="p-6 md:p-10 space-y-6 max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-xl font-bold text-white">{t('title')}</h1>
-                    <p className="text-neutral-400 text-sm mt-1">
-                        {t('subtitle')}
-                    </p>
-                </div>
-            </div>
+            <PageHeader
+                title={t('title')}
+                subtitle={t('subtitle')}
+                icon={<Activity className="w-6 h-6 text-white" />}
+                iconColor="text-emerald-400"
+            />
 
             <ActiveChecklistsList initialChecklists={sanitizedChecklists} />
         </div>

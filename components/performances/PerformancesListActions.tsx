@@ -116,7 +116,7 @@ END:VCALENDAR`
             <Button
                 variant="secondary"
                 size="icon"
-                className="hidden sm:inline-flex border-neutral-700 h-[38px] w-[38px]"
+                className="hidden sm:inline-flex border-neutral-700 h-10 w-10"
             >
                 <MoreHorizontal className="h-5 w-5" />
                 <span className="sr-only">{t('actions')}</span>

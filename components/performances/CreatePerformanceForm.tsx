@@ -114,8 +114,8 @@ export function CreatePerformanceForm() {
                 const compressedBlob = await compressImage(imageFile)
                 const compressedFile = new File([compressedBlob], fileName, { type: 'image/jpeg' })
 
-                // Create thumbnail
-                const thumbnailBlob = await createThumbnail(imageFile, 300)
+                // Create thumbnail (No crop for posters, just resize)
+                const thumbnailBlob = await createThumbnail(imageFile, 300, false)
                 const thumbnailFile = new File([thumbnailBlob], thumbnailName, { type: 'image/jpeg' })
 
                 // Upload main image
@@ -161,8 +161,8 @@ export function CreatePerformanceForm() {
                     const compressedBlob = await compressImage(file)
                     const compressedFile = new File([compressedBlob], fileName, { type: 'image/jpeg' })
 
-                    // Create thumbnail
-                    const thumbnailBlob = await createThumbnail(file, 300)
+                    // Create thumbnail (No crop for posters)
+                    const thumbnailBlob = await createThumbnail(file, 300, false)
                     const thumbnailFile = new File([thumbnailBlob], thumbnailName, { type: 'image/jpeg' })
 
                     // Upload main image

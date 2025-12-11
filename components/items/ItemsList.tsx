@@ -12,6 +12,8 @@ import { ItemDetailsDialog } from './ItemDetailsDialog'
 import { ContextSearchTrigger } from '@/components/search/ContextSearchTrigger'
 import { FilterSelect } from '@/components/ui/FilterSelect'
 import { Button } from '@/components/ui/Button'
+import { FilterBar } from '@/components/ui/FilterBar'
+import { Box } from 'lucide-react'
 
 type Item = Database['public']['Tables']['items']['Row']
 type ItemStatus = Database['public']['Enums']['item_performance_status_enum']
@@ -142,24 +144,24 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
     const displayItems = items
 
     return (
-        <div className="space-y-6">
-            <div className="bg-neutral-900/50 p-4 rounded-lg border border-neutral-800 space-y-4">
+        <div className="space-y-8">
+            <FilterBar>
                 {/* Search Bar & Toggle */}
-                <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex-1">
-                        <ContextSearchTrigger context="item" className="w-full" />
-                    </div>
+                <div className="flex-1 w-full xl:w-auto min-w-[300px]">
+                    <ContextSearchTrigger context="item" className="w-full" />
                 </div>
 
                 {/* Filters */}
-                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 items-center">
-                    <Filter className="hidden sm:block w-4 h-4 text-neutral-500 mr-2" />
+                <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+                    <div className="hidden xl:flex items-center text-neutral-500 mr-2">
+                        <Filter className="w-4 h-4" />
+                    </div>
 
                     {/* Status Filter */}
                     <FilterSelect
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="w-full sm:w-auto"
+                        className="flex-1 sm:flex-none"
                     >
                         <option value="all">{t('allStatuses')}</option>
                         <option value="active">{t('statuses.active')}</option>
@@ -173,7 +175,7 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                     <FilterSelect
                         value={categoryFilter}
                         onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="w-full sm:w-auto"
+                        className="flex-1 sm:flex-none"
                     >
                         <option value="all">{t('allCategories')}</option>
                         {groups.map(g => (
@@ -185,7 +187,7 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                     <FilterSelect
                         value={locationFilter}
                         onChange={(e) => setLocationFilter(e.target.value)}
-                        className="w-full sm:w-auto"
+                        className="flex-1 sm:flex-none"
                     >
                         <option value="all">{t('allLocations')}</option>
                         {locations.map(l => (
@@ -197,157 +199,139 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
                     <FilterSelect
                         value={dateSort}
                         onChange={(e) => setDateSort(e.target.value as 'newest' | 'oldest')}
-                        className="w-full sm:w-auto sm:ml-auto"
+                        className="flex-1 sm:flex-none"
                     >
                         <option value="newest">{t('newestFirst')}</option>
                         <option value="oldest">{t('oldestFirst')}</option>
                     </FilterSelect>
 
                     {/* View Toggle */}
-                    <div className="col-span-2 sm:col-span-1 flex justify-end sm:justify-start rounded-md border border-neutral-800 bg-neutral-950 p-1 sm:ml-2">
+                    <div className="flex bg-neutral-900 border border-neutral-800 rounded-lg p-1 ml-auto">
                         <button
                             onClick={() => setView('grid')}
-                            className={`p-1 rounded ${view === 'grid' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white'}`}
+                            className={`p-2 rounded-md transition-all ${view === 'grid' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
                         >
-                            <LayoutGrid className="h-3.5 w-3.5" />
+                            <LayoutGrid className="h-4 w-4" />
                         </button>
                         <button
                             onClick={() => setView('list')}
-                            className={`p-1 rounded ${view === 'list' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white'}`}
+                            className={`p-2 rounded-md transition-all ${view === 'list' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
                         >
-                            <List className="h-3.5 w-3.5" />
+                            <List className="h-4 w-4" />
                         </button>
                     </div>
                 </div>
-            </div>
-
-
+            </FilterBar>
 
             {isFiltering ? (
                 view === 'grid' ? (
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {[...Array(8)].map((_, i) => (
-                            <div key={i} className="rounded-lg border border-neutral-800 bg-neutral-900 overflow-hidden">
-                                <div className="aspect-square bg-neutral-800 animate-pulse" />
-                                <div className="p-4 space-y-2">
-                                    <div className="h-6 bg-neutral-800 rounded w-3/4 animate-pulse" />
-                                    <div className="h-4 bg-neutral-800 rounded w-1/2 animate-pulse" />
+                            <div key={i} className="rounded-xl border border-neutral-800 bg-neutral-900/40 h-[300px] overflow-hidden">
+                                <div className="h-2/3 bg-neutral-800/50 animate-pulse" />
+                                <div className="p-4 space-y-3">
+                                    <div className="h-6 bg-neutral-800/50 rounded w-3/4 animate-pulse" />
+                                    <div className="h-4 bg-neutral-800/50 rounded w-1/2 animate-pulse" />
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         {[...Array(8)].map((_, i) => (
-                            <div key={i} className="flex items-center gap-4 rounded-lg border border-neutral-800 bg-neutral-900 p-3">
-                                <div className="h-12 w-12 rounded-md bg-neutral-800 animate-pulse flex-shrink-0" />
-                                <div className="flex-1 space-y-2">
-                                    <div className="h-5 bg-neutral-800 rounded w-1/3 animate-pulse" />
-                                    <div className="h-4 bg-neutral-800 rounded w-1/4 animate-pulse" />
+                            <div key={i} className="flex items-center gap-4 rounded-xl border border-neutral-800 bg-neutral-900/40 p-4 h-24">
+                                <div className="h-16 w-16 rounded-lg bg-neutral-800/50 animate-pulse flex-shrink-0" />
+                                <div className="flex-1 space-y-3">
+                                    <div className="h-5 bg-neutral-800/50 rounded w-1/3 animate-pulse" />
+                                    <div className="h-4 bg-neutral-800/50 rounded w-1/4 animate-pulse" />
                                 </div>
                             </div>
                         ))}
                     </div>
                 )
             ) : view === 'grid' ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {displayItems.map((item) => (
                         <div
                             key={item.id}
                             onClick={() => handleItemClick(item)}
-                            className="group relative overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900 transition-colors hover:border-neutral-700 cursor-pointer"
+                            className="group relative h-[320px] overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/40 backdrop-blur-sm transition-all duration-300 hover:border-blue-500/30 hover:scale-[1.02] shadow-xl cursor-pointer"
                         >
-                            <div className="aspect-square w-full bg-neutral-800 relative flex items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900">
+                            <div className="absolute inset-x-0 top-0 bottom-24 bg-neutral-800 z-0 overflow-hidden">
                                 {item.image_url ? (
-                                    <NextImage
-                                        src={item.thumbnail_url || item.image_url}
-                                        alt={item.name}
-                                        fill
-                                        className="object-cover transition-transform group-hover:scale-105"
-                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                    />
+                                    <div className="relative w-full h-full">
+                                        <NextImage
+                                            src={item.image_url}
+                                            alt={item.name}
+                                            fill
+                                            className="object-cover object-center transition-transform duration-700 group-hover:scale-110 opacity-100"
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                        />
+                                    </div>
                                 ) : (
-                                    <ItemIcon name={item.name} className="h-16 w-16 text-neutral-600 group-hover:text-neutral-500 transition-colors" />
+                                    <div className="w-full h-full flex items-center justify-center bg-neutral-800 text-neutral-500">
+                                        <div className="p-4 rounded-full bg-neutral-900/50">
+                                            <ItemIcon name={item.name} className="h-12 w-12 opacity-70" />
+                                        </div>
+                                    </div>
                                 )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-transparent opacity-80" />
 
+                                <div className="absolute bottom-2 left-2 flex gap-1 flex-wrap">
+                                    <StatusBadge status={item.status} />
+                                </div>
                             </div>
-                            <div className="p-4">
-                                <h3 className="text-lg font-bold text-white truncate">
+
+                            <div className="absolute inset-x-0 bottom-0 p-5 bg-neutral-900/90 backdrop-blur-md border-t border-white/5 h-24 flex flex-col justify-center transition-colors group-hover:bg-neutral-900">
+                                <h3 className="text-lg font-bold text-white truncate group-hover:text-blue-200 transition-colors">
                                     {item.name}
                                 </h3>
-                                <p className="mt-1 text-sm text-neutral-400 line-clamp-2">
+                                <p className="mt-1 text-sm text-neutral-400 line-clamp-1">
                                     {'explanation' in item ? (item as SearchResult).explanation : (item.notes || t('noNotes'))}
                                 </p>
                                 {item.ai_description && (
-                                    <p className="mt-1 text-xs text-ai-secondary/70 line-clamp-1 font-mono">
+                                    <p className="mt-1 text-xs text-blue-400/70 line-clamp-1 font-mono">
                                         AI: {item.ai_description}
                                     </p>
-                                )}
-                                {'matchType' in item && (
-                                    <div className="mt-2">
-                                        <span className={`text-xs px-2 py-0.5 rounded-full border ${(item as SearchResult).matchType === 'exact' ? 'bg-green-900/30 text-green-400 border-green-900/50' :
-                                            (item as SearchResult).matchType === 'close' ? 'bg-yellow-900/30 text-yellow-400 border-yellow-900/50' :
-                                                'bg-burgundy-main/30 text-burgundy-light border-burgundy-main/50'
-                                            }`}>
-                                            {(item as SearchResult).matchType === 'exact' ? t('bestMatch') : (item as SearchResult).matchType === 'close' ? t('closeMatch') : t('alternative')}
-                                        </span>
-                                    </div>
                                 )}
                             </div>
                         </div>
                     ))}
                 </div>
             ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                     {displayItems.map((item) => (
                         <div
                             key={item.id}
                             onClick={() => handleItemClick(item)}
-                            className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border border-neutral-800 bg-neutral-900 p-3 transition-colors hover:border-neutral-700 cursor-pointer"
+                            className="group flex items-center gap-6 rounded-xl border border-neutral-800 bg-neutral-900/40 backdrop-blur-sm p-3 transition-all duration-300 hover:bg-neutral-900/60 hover:border-blue-500/30 hover:scale-[1.005] cursor-pointer shadow-sm hover:shadow-md"
                         >
-                            <div className="flex items-center gap-4 w-full sm:w-auto">
-                                <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-md bg-neutral-800 flex items-center justify-center">
-                                    {item.image_url ? (
-                                        <NextImage
-                                            src={item.thumbnail_url || item.image_url}
-                                            alt={item.name}
-                                            fill
-                                            className="object-cover"
-                                            sizes="48px"
-                                        />
-                                    ) : (
-                                        <ItemIcon name={item.name} className="h-6 w-6 text-neutral-600" />
-                                    )}
-                                </div>
-                                <div className="flex-1 min-w-0 sm:hidden">
-                                    <h3 className="font-bold text-white truncate">{item.name}</h3>
-                                </div>
+                            <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-neutral-800 shadow-inner">
+                                {item.image_url ? (
+                                    <NextImage
+                                        src={item.image_url}
+                                        alt={item.name}
+                                        fill
+                                        className="object-cover object-center transition-transform duration-500 group-hover:scale-110"
+                                        sizes="64px"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-neutral-500">
+                                        <ItemIcon name={item.name} className="h-8 w-8" />
+                                    </div>
+                                )}
                             </div>
 
-                            <div className="flex-1 min-w-0 hidden sm:block">
-                                <h3 className="font-bold text-white truncate">{item.name}</h3>
-                                <p className="text-sm text-neutral-400 truncate">
-                                    {'explanation' in item ? (item as SearchResult).explanation : item.notes}
-                                </p>
-                                {item.ai_description && (
-                                    <p className="text-xs text-ai-secondary/70 truncate font-mono">
-                                        AI: {item.ai_description}
+                            <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                                <div>
+                                    <h3 className="text-base font-bold text-white truncate group-hover:text-blue-200 transition-colors">{item.name}</h3>
+                                    <p className="text-xs text-neutral-400 truncate mt-0.5">
+                                        {'explanation' in item ? (item as SearchResult).explanation : item.notes}
                                     </p>
-                                )}
-                            </div>
-
-                            {/* Mobile Description */}
-                            <p className="text-sm text-neutral-400 line-clamp-2 sm:hidden">
-                                {'explanation' in item ? (item as SearchResult).explanation : item.notes}
-                            </p>
-
-                            <div className="flex-shrink-0 flex items-center gap-2 mt-2 sm:mt-0 justify-between sm:justify-end w-full sm:w-auto">
-                                {'matchType' in item && (item as SearchResult).matchType === 'exact' && (
-                                    <span className="px-2 py-0.5 rounded-full bg-green-900/30 text-green-400 text-xs border border-green-900/50">
-                                        {t('bestMatch')}
-                                    </span>
-                                )}
-
+                                </div>
+                                <div className="hidden md:flex items-center gap-2 justify-end">
+                                    <StatusBadge status={item.status} />
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -355,21 +339,24 @@ export function ItemsList({ initialItems, totalCount, locations, groups, initial
             )}
 
             {!isFiltering && displayItems.length === 0 && (
-                <div className="text-center py-12 text-neutral-500 bg-neutral-900/30 rounded-lg border border-neutral-800 border-dashed px-4">
-                    <p className="mb-2">{t('noItemsFound')}</p>
-
+                <div className="text-center py-20 bg-neutral-900/20 rounded-2xl border border-neutral-800/50 border-dashed">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-800/50 mb-4 text-neutral-600">
+                        <Box className="w-8 h-8" />
+                    </div>
+                    <p className="text-lg font-medium text-neutral-500">{t('noItemsFound')}</p>
+                    <p className="text-sm text-neutral-600 mt-1">Adjust filters or create a new item.</p>
                 </div>
             )}
 
             {/* Load More Button */}
             {hasMore && !isFiltering && (
-                <div className="flex justify-center pt-8 pb-4">
+                <div className="flex justify-center pt-8 pb-12">
                     <Button
                         onClick={loadMore}
                         disabled={isLoadingMore}
                         variant="secondary"
                         isLoading={isLoadingMore}
-                        className="rounded-full px-6"
+                        className="rounded-full px-8 py-6 text-base"
                     >
                         {t('loadMore')}
                     </Button>

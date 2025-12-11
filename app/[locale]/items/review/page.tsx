@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { ReviewList } from '@/components/items/ReviewList'
+import { PageHeader } from '@/components/ui/PageHeader'
 import Link from 'next/link'
 import { ArrowLeft, CheckCircle2 } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
@@ -28,16 +29,14 @@ export default async function ReviewPage() {
                     {t('backToInventory')}
                 </Link>
                 <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-xl font-bold text-white flex items-center">
-                            <CheckCircle2 className="mr-3 h-6 w-6 text-yellow-400" />
-                            {t('title')}
-                        </h1>
-                        <p className="text-neutral-400 text-sm mt-1">
-                            {t('subtitle')}
-                        </p>
-                    </div>
-                    <div className="text-sm text-neutral-500 hidden sm:block">
+                    <PageHeader
+                        title={t('title')}
+                        subtitle={t('subtitle')}
+                        icon={<CheckCircle2 className="w-6 h-6 text-white" />}
+                        iconColor="text-yellow-400"
+                        className="mb-0" // Override margin since it's inside a flex container with existing layout if needed, or simply let it be
+                    />
+                    <div className="text-sm text-neutral-500 hidden sm:block self-start mt-2">
                         {t('pending', { count: draftItems?.length || 0 })}
                     </div>
                 </div>

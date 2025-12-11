@@ -9,6 +9,7 @@
         "statsTitle": "Statystyki AI",
         "statsDescription": "Monitoruj zużycie tokenów i koszty",
         "viewStats": "Zobacz statystyki",
+        "adminZone": "Strefa Administratora",
         "UserApproval": {
             "confirmApproveTitle": "Zatwierdź Użytkownika",
             "confirmRejectTitle": "Odrzuć Użytkownika",
@@ -713,7 +714,8 @@
         "generalNotes": "Notatki Ogólne",
         "master": "Główna",
         "noContent": "Brak treści",
-        "deleteConfirm": "Czy na pewno chcesz usunąć tę notatkę?"
+        "deleteConfirm": "Czy na pewno chcesz usunąć tę notatkę?",
+        "deleteNote": "Usuń Notatkę"
     },
     "NoteDetail": {
         "invalidId": "Nieprawidłowe ID",

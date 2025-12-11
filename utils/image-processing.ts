@@ -45,7 +45,7 @@ export async function compressImage(file: File): Promise<Blob> {
     })
 }
 
-export async function createThumbnail(file: File, size: number = 300): Promise<Blob> {
+export async function createThumbnail(file: File, size: number = 300, crop: boolean = true): Promise<Blob> {
     return new Promise((resolve, reject) => {
         const reader = new FileReader()
         reader.onload = (e) => {
@@ -59,17 +59,31 @@ export async function createThumbnail(file: File, size: number = 300): Promise<B
                     return
                 }
 
-                // Square crop logic with safety zoom (5%) to avoid edge artifacts
-                const minDimension = Math.min(img.width, img.height)
-                const cropSize = minDimension * 0.95 // Crop 95% of the center
-                const sx = (img.width - cropSize) / 2
-                const sy = (img.height - cropSize) / 2
+                if (crop) {
+                    // Square crop logic with safety zoom (5%) to avoid edge artifacts
+                    const minDimension = Math.min(img.width, img.height)
+                    const cropSize = minDimension * 0.95 // Crop 95% of the center
+                    const sx = (img.width - cropSize) / 2
+                    const sy = (img.height - cropSize) / 2
 
-                canvas.width = size
-                canvas.height = size
+                    canvas.width = size
+                    canvas.height = size
 
-                // Draw cropped and resized image
-                ctx.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, size, size)
+                    // Draw cropped and resized image
+                    ctx.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, size, size)
+                } else {
+                    // Resize logic (preserve aspect ratio)
+                    // We want the resulting image to fit WITHIN the size box (e.g. 300x300)
+                    // but maintain its original aspect ratio.
+                    const scale = Math.min(size / img.width, size / img.height)
+                    const width = img.width * scale
+                    const height = img.height * scale
+
+                    canvas.width = width
+                    canvas.height = height
+
+                    ctx.drawImage(img, 0, 0, width, height)
+                }
 
                 canvas.toBlob((blob) => {
                     if (blob) {
