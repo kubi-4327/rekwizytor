@@ -14,6 +14,7 @@ import { PerformanceLabelButton } from '@/components/performances/PerformanceLab
 import { Button } from '@/components/ui/Button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { PerformanceNotesPreview } from '@/components/performances/PerformanceNotesPreview'
+import { PerformanceDetailActions } from '@/components/performances/PerformanceDetailActions'
 
 type Props = {
     params: Promise<{ id: string }>
@@ -185,48 +186,16 @@ export default async function ProductionDetailsPage({ params }: Props) {
                                     </Link>
 
                                     {/* Actions Menu */}
-                                    <div className="relative group">
-                                        <Button
-                                            variant="outline"
-                                            leftIcon={<Settings className="w-4 h-4" />}
-                                            className="bg-neutral-900 border-neutral-700 hover:bg-neutral-800 hover:text-white"
-                                        >
-                                            <span className="hidden sm:inline">{t('actions')}</span>
-                                        </Button>
-
-                                        <div className="absolute right-0 top-full pt-2 w-56 z-50 hidden group-hover:block">
-                                            <div className="bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl overflow-hidden ring-1 ring-white/5">
-                                                <Link
-                                                    href={`/performances/${id}/edit`}
-                                                    className="block px-4 py-2.5 text-sm text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors"
-                                                >
-                                                    {t('editDetails')}
-                                                </Link>
-                                                <Link
-                                                    href={`/performances/${id}/scenes`}
-                                                    className="block px-4 py-2.5 text-sm text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors border-t border-neutral-800"
-                                                >
-                                                    {t('manageScenes')}
-                                                </Link>
-                                                <div className="border-t border-neutral-800">
-                                                    <PerformanceLabelButton
-                                                        performanceId={id}
-                                                        performanceTitle={production.title}
-                                                        premiereDate={production.premiere_date}
-                                                        variant="menu"
-                                                    />
-                                                    <ExportPerformanceButton
-                                                        production={production}
-                                                        items={assignedProps || []}
-                                                        scenes={scenes || []}
-                                                        notes={notes || []}
-                                                        user={user}
-                                                        variant="menu"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <PerformanceDetailActions
+                                        performanceId={id}
+                                        title={production.title}
+                                        premiereDate={production.premiere_date}
+                                        production={production}
+                                        assignedProps={assignedProps || []}
+                                        scenes={scenes || []}
+                                        notes={notes || []}
+                                        user={user}
+                                    />
                                 </div>
                             </div>
                         </div>
