@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { QrCode } from 'lucide-react'
+import { QrCode, Ticket } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { rasterizeIcon } from '@/utils/icon-rasterizer'
 
 interface PerformanceLabelButtonProps {
     performanceId: string
@@ -12,6 +13,8 @@ interface PerformanceLabelButtonProps {
 
 export function PerformanceLabelButton({ performanceId, performanceTitle, premiereDate, variant = 'icon' }: PerformanceLabelButtonProps & { variant?: 'icon' | 'menu' }) {
     const [isGenerating, setIsGenerating] = useState(false)
+
+
 
     const handleGenerateLabel = async (e: React.MouseEvent) => {
         e.preventDefault() // Prevent navigation if inside a link
@@ -28,7 +31,8 @@ export function PerformanceLabelButton({ performanceId, performanceTitle, premie
                     performances: [{
                         id: performanceId,
                         title: performanceTitle,
-                        premiereDate: premiereDate ? new Date(premiereDate).toLocaleDateString('pl-PL') : undefined
+                        premiereDate: premiereDate ? new Date(premiereDate).toLocaleDateString('pl-PL') : undefined,
+                        iconImage: await rasterizeIcon('Ticket')
                     }]
                 }),
             })

@@ -8,6 +8,7 @@ import { ChevronDown, ChevronRight, MapPin, FileText } from 'lucide-react'
 import { FilterBar } from '@/components/ui/FilterBar'
 import { MorphingSearchBar } from '@/components/search/MorphingSearchBar'
 import { Button } from '@/components/ui/Button'
+import { rasterizeIcon } from '@/utils/icon-rasterizer'
 
 type Group = Database['public']['Tables']['groups']['Row'] & {
     locations: { name: string } | null
@@ -95,11 +96,12 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
         try {
             setIsGenerating(true)
 
-            const allGroups = groups.map(g => ({
+            const allGroups = await Promise.all(groups.map(async (g) => ({
                 id: g.id,
                 name: g.name,
-                locationName: g.locations?.name
-            }))
+                locationName: g.locations?.name,
+                iconImage: await rasterizeIcon(g.icon || 'Folder')
+            })))
 
             // Call backend API (use absolute URL to bypass locale routing)
             const apiUrl = `${window.location.origin}/api/generate-labels`

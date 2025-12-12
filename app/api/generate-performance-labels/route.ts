@@ -8,6 +8,7 @@ interface PerformanceData {
     id: string
     title: string
     premiereDate?: string
+    iconImage?: string
 }
 
 interface RequestBody {
@@ -110,8 +111,8 @@ const styles = StyleSheet.create({
         color: '#000000',
         marginTop: '6mm',
         maxWidth: '70mm',
-        lineHeight: 0.9,
-        wordWrap: 'break-word',
+        lineHeight: 1.15,
+        // wordWrap: 'break-word',
     },
     qrCode: {
         position: 'absolute',
@@ -137,6 +138,15 @@ const styles = StyleSheet.create({
         color: '#cccccc',
         fontFamily: 'Courier Prime',
     },
+    icon: {
+        position: 'absolute',
+        top: '4mm',
+        right: '4mm',
+        width: '8mm',
+        height: '8mm',
+        objectFit: 'contain',
+        opacity: 0.8
+    }
 })
 
 // Create PDF document using React.createElement
@@ -154,13 +164,13 @@ function createPDFDocument(performances: PerformanceData[], qrCodes: string[]) {
 
             // Calculate dynamic font size based on name length
             let nameFontSize = 20
-            if (perf.title.length > 15) {
+            if (perf.title.length > 10) {
                 nameFontSize = 16
             }
-            if (perf.title.length > 25) {
+            if (perf.title.length > 20) {
                 nameFontSize = 14
             }
-            if (perf.title.length > 35) {
+            if (perf.title.length > 30) {
                 nameFontSize = 12
             }
 
@@ -189,6 +199,13 @@ function createPDFDocument(performances: PerformanceData[], qrCodes: string[]) {
             children.push(
                 React.createElement(Text, { key: 'title', style: dynamicNameStyle }, perf.title)
             )
+
+            // Icon at top right
+            if (perf.iconImage) {
+                children.push(
+                    React.createElement(Image, { key: 'icon', src: perf.iconImage, style: styles.icon })
+                )
+            }
 
             // QR code at bottom right
             children.push(

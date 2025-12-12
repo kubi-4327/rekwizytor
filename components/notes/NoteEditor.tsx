@@ -403,32 +403,30 @@ const NoteEditor = forwardRef<NoteEditorRef, {
     }, [editor, readOnly])
 
     return (
-        <div className={`relative w-full h-full min-h-[calc(100vh-200px)] ${readOnly ? '' : ''}`}>
-            {!readOnly && (
-                <div className="absolute top-0 right-0 z-10 flex flex-col items-end gap-2 pointer-events-none">
-                    {hasLocalDraft && (
-                        <button
-                            onClick={() => {
-                                if (confirm('Are you sure you want to restore the local backup? This will overwrite the current view.')) {
-                                    editor?.commands.setContent(localDraftContent)
-                                    setContent(localDraftContent)
-                                    setSaveStatus('unsaved') // Trigger save
-                                    setHasLocalDraft(false)
-                                }
-                            }}
-                            className="pointer-events-auto text-[10px] uppercase tracking-wider font-bold bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 px-2 py-1 rounded shadow-sm hover:bg-amber-200 dark:hover:bg-amber-900 transition-colors border border-amber-200 dark:border-amber-800"
-                        >
-                            Restore Backup
-                        </button>
-                    )}
-                    <div className="text-[10px] uppercase tracking-wider font-medium text-zinc-400 px-2 py-1 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm rounded-md border border-zinc-100 dark:border-zinc-800 shadow-sm">
-                        {saveStatus === 'saved' && <span className="opacity-50">Saved</span>}
-                        {saveStatus === 'saving' && <span className="animate-pulse">Saving...</span>}
-                        {saveStatus === 'unsaved' && <span className="text-amber-500">Saving...</span>}
-                    </div>
+        <div className={`relative w-full h-full min-h-[calc(100vh-200px)] group ${readOnly ? '' : ''}`}>
+            {!readOnly && hasLocalDraft && (
+                <div className="absolute top-0 right-0 z-10 pointer-events-none">
+                    <button
+                        onClick={() => {
+                            if (confirm('Are you sure you want to restore the local backup? This will overwrite the current view.')) {
+                                editor?.commands.setContent(localDraftContent)
+                                setContent(localDraftContent)
+                                setSaveStatus('unsaved') // Trigger save
+                                setHasLocalDraft(false)
+                            }
+                        }}
+                        className="pointer-events-auto text-[10px] uppercase tracking-wider font-bold bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 px-2 py-1 rounded shadow-sm hover:bg-amber-200 dark:hover:bg-amber-900 transition-colors border border-amber-200 dark:border-amber-800"
+                    >
+                        Restore Backup
+                    </button>
                 </div>
             )}
-            <EditorContent editor={editor} className="h-full" />
+
+            <div className="relative h-full">
+                <EditorContent editor={editor} className="h-full" />
+                {/* Gradient fade at bottom for nice effect */}
+                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-neutral-950 to-transparent pointer-events-none" />
+            </div>
         </div>
     )
 })

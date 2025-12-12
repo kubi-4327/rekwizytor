@@ -3,14 +3,19 @@
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Loader2, Wand2, ChevronDown, CheckCheck, ArrowLeft } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { SceneImportWizard } from './SceneImportWizard'
+import { SceneKanbanBoard } from './SceneKanbanBoard'
+import { generateSceneNoteContent, syncSceneNoteContent } from '@/components/notes/utils'
+import { SmartSyncDialog } from './smart-sync-dialog'
 
 type Scene = {
     id: string
     scene_number: number
     name: string | null
     act_number: number
+    performance_id?: string
 }
 
 type Props = {
@@ -23,84 +28,130 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
     const t = useTranslations('ManageScenesForm')
     const [scenes, setScenes] = useState<Scene[]>(initialScenes)
     const [loading, setLoading] = useState(false)
-
-    // New scene state
-    const [newSceneNumber, setNewSceneNumber] = useState(
-        initialScenes.length > 0
-            ? Math.max(...initialScenes.map(s => s.scene_number)) + 1
-            : 1
-    )
-    const [newSceneName, setNewSceneName] = useState('')
-    const [newSceneAct, setNewSceneAct] = useState(
-        initialScenes.length > 0
-            ? initialScenes[initialScenes.length - 1].act_number
-            : 1
-    )
+    const [showWizard, setShowWizard] = useState(false)
+    const [showSyncDialog, setShowSyncDialog] = useState(false)
+    const [isSyncing, setIsSyncing] = useState(false)
 
     const router = useRouter()
     const supabase = createClient()
 
-    const handleAdd = async () => {
-        setLoading(true)
+    const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+    // Check if scenes changed significantly
+    const hasChanges = JSON.stringify(initialScenes) !== JSON.stringify(scenes)
+
+    const handleBackWithCheck = () => {
+        if (hasChanges) {
+            setShowSyncDialog(true)
+        } else {
+            router.back()
+        }
+    }
+
+    const performSync = async (scenesToSave: Scene[]) => {
+        setIsSyncing(true)
+        try {
+            // 1. Get Performance Title
+            const { data: performance } = await supabase.from('performances').select('title').eq('id', performanceId).single()
+            if (!performance) throw new Error('Performance not found')
+
+            const noteTitle = `Notatka sceniczna - ${performance.title}`
+
+            // 2. Find existing note
+            const { data: existingNote } = await supabase
+                .from('notes')
+                .select('*')
+                .eq('performance_id', performanceId)
+                .eq('title', noteTitle)
+                .single()
+
+            if (existingNote) {
+                // Sync existing
+                const newContent = syncSceneNoteContent(existingNote.content, initialScenes, scenesToSave)
+                await supabase
+                    .from('notes')
+                    .update({ content: newContent })
+                    .eq('id', existingNote.id)
+            } else {
+                // Create new
+                const newContent = generateSceneNoteContent(scenesToSave)
+                const { data: userData } = await supabase.auth.getUser()
+
+                await supabase.from('notes').insert({
+                    performance_id: performanceId,
+                    title: noteTitle,
+                    content: newContent,
+                    user_id: userData.user?.id
+                })
+            }
+        } catch (error) {
+            console.error('Sync error:', error)
+            // Continue exit anyway? Maybe alert?
+        } finally {
+            setIsSyncing(false)
+        }
+    }
+
+    const handleConfirmSync = async () => {
+        await performSync(scenes)
+        router.back()
+    }
+
+    const handleIgnoreSync = () => {
+        router.back()
+    }
+
+    // Handlers for Kanban
+    const handleReorder = async (newScenes: Scene[]) => {
+        setScenes(newScenes)
+        try {
+            const updates = newScenes.map(s => ({
+                id: s.id,
+                performance_id: performanceId,
+                act_number: s.act_number,
+                scene_number: s.scene_number,
+                name: s.name
+            }))
+            const { error } = await supabase.from('scenes').upsert(updates)
+            if (error) throw error
+        } catch (error) {
+            console.error('Error reordering scenes:', error)
+            alert(t('updateError'))
+            router.refresh()
+        }
+    }
+
+    const handleQuickAdd = async (act: number, name: string) => {
+        const actScenes = scenes.filter(s => s.act_number === act)
+        const maxNum = Math.max(0, ...actScenes.map(s => s.scene_number))
+        const nextNum = maxNum + 1
+        const tempId = crypto.randomUUID()
+        const newScene: Scene = { id: tempId, act_number: act, scene_number: nextNum, name: name, performance_id: performanceId }
+
+        setScenes([...scenes, newScene])
+
         try {
             const { data, error } = await supabase
                 .from('scenes')
-                .insert({
-                    performance_id: performanceId,
-                    scene_number: newSceneNumber,
-                    name: newSceneName || null,
-                    act_number: newSceneAct
-                })
+                .insert({ performance_id: performanceId, act_number: act, scene_number: nextNum, name: name })
                 .select()
                 .single()
 
             if (error) throw error
-
-            setScenes([...scenes, { ...data, act_number: data.act_number ?? 1 }].sort((a, b) => a.scene_number - b.scene_number))
-
-            // Prepare for next entry
-            setNewSceneNumber(data.scene_number + 1)
-            setNewSceneName('')
-            setNewSceneAct(data.act_number ?? 1)
-
+            setScenes(prev => prev.map(s => s.id === tempId ? { ...s, id: data.id } : s))
             router.refresh()
         } catch (error) {
             console.error('Error adding scene:', error)
             alert(t('addError'))
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleDelete = async (id: string) => {
-        if (!confirm(t('deleteConfirm'))) return
-
-        try {
-            const { error } = await supabase
-                .from('scenes')
-                .delete()
-                .eq('id', id)
-
-            if (error) throw error
-
-            setScenes(scenes.filter(s => s.id !== id))
-            router.refresh()
-        } catch (error) {
-            console.error('Error deleting scene:', error)
-            alert(t('deleteError'))
+            setScenes(scenes)
         }
     }
 
     const handleUpdate = async (id: string, updates: Partial<Scene>) => {
+        setScenes(scenes.map(s => s.id === id ? { ...s, ...updates } : s))
         try {
-            const { error } = await supabase
-                .from('scenes')
-                .update(updates)
-                .eq('id', id)
-
+            const { error } = await supabase.from('scenes').update(updates).eq('id', id)
             if (error) throw error
-
-            setScenes(scenes.map(s => s.id === id ? { ...s, ...updates } : s))
             router.refresh()
         } catch (error) {
             console.error('Error updating scene:', error)
@@ -108,126 +159,95 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
         }
     }
 
-    // Group scenes by act for display
-    const scenesByAct: Record<number, Scene[]> = {}
-    scenes.forEach(scene => {
-        if (!scenesByAct[scene.act_number]) scenesByAct[scene.act_number] = []
-        scenesByAct[scene.act_number].push(scene)
-    })
+    const handleDelete = async (id: string) => {
+        if (!confirm(t('deleteConfirm'))) return
+        setScenes(scenes.filter(s => s.id !== id))
+        try {
+            const { error } = await supabase.from('scenes').delete().eq('id', id)
+            if (error) throw error
+            router.refresh()
+        } catch (error) {
+            console.error('Error deleting scene:', error)
+            alert(t('deleteError'))
+            router.refresh()
+        }
+    }
 
     return (
-        <div className="space-y-8">
-            {/* Add New Scene Form */}
-            <div className="bg-neutral-900/50 p-6 rounded-xl border border-neutral-800 space-y-4">
-                <h3 className="text-lg font-medium text-white flex items-center">
-                    <Plus
-                        className="mr-2 h-5 w-5"
-                        style={{ color: performanceColor || '#C92F3E' }} // Default to burgundy-light
-                    />
-                    {t('addNewScene')}
-                </h3>
+        <div className="space-y-6">
+            <SmartSyncDialog
+                isOpen={showSyncDialog}
+                onConfirm={handleConfirmSync}
+                onCancel={() => setShowSyncDialog(false)}
+                onIgnore={handleIgnoreSync}
+                isSyncing={isSyncing}
+            />
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                    <div className="md:col-span-2">
-                        <label className="block text-xs font-medium text-neutral-400 mb-1">{t('actNumber')}</label>
-                        <input
-                            type="number"
-                            min="1"
-                            value={newSceneAct}
-                            onChange={(e) => setNewSceneAct(parseInt(e.target.value) || 1)}
-                            className="w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white text-sm focus:border-neutral-500 focus:outline-none"
-                        />
-                    </div>
-                    <div className="md:col-span-2">
-                        <label className="block text-xs font-medium text-neutral-400 mb-1">{t('sceneNumber')}</label>
-                        <input
-                            type="number"
-                            min="1"
-                            value={newSceneNumber}
-                            onChange={(e) => setNewSceneNumber(parseInt(e.target.value) || 1)}
-                            className="w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white text-sm focus:border-neutral-500 focus:outline-none"
-                        />
-                    </div>
-                    <div className="md:col-span-5">
-                        <label className="block text-xs font-medium text-neutral-400 mb-1">{t('sceneNameOptional')}</label>
-                        <input
-                            type="text"
-                            value={newSceneName}
-                            onChange={(e) => setNewSceneName(e.target.value)}
-                            placeholder={t('sceneNamePlaceholder')}
-                            className="w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white text-sm focus:border-neutral-500 focus:outline-none"
-                        />
-                    </div>
-                    <div className="md:col-span-3">
-                        <button
-                            onClick={handleAdd}
-                            disabled={loading}
-                            className="w-full flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed h-[38px]"
-                        >
-                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('addScene')}
-                        </button>
-                    </div>
+            {showWizard && (
+                <SceneImportWizard
+                    performanceId={performanceId}
+                    existingScenes={scenes.map(s => ({ act: s.act_number, number: s.scene_number }))}
+                    onClose={() => setShowWizard(false)}
+                />
+            )}
+
+            <div className="flex justify-between items-center bg-neutral-900/50 p-4 rounded-xl border border-neutral-800">
+                <div className="flex items-center gap-4">
+                    <button onClick={handleBackWithCheck} className="p-2 hover:bg-neutral-800 rounded-full text-neutral-400 hover:text-white transition-colors">
+                        <ArrowLeft className="w-5 h-5" />
+                    </button>
+                    <h3 className="text-lg font-medium text-white flex items-center">
+                        <span className="w-2 h-8 rounded-full mr-3" style={{ backgroundColor: performanceColor || '#C92F3E' }} />
+                        {t('manageScenes')}
+                    </h3>
+                </div>
+
+                <div className="relative flex gap-2">
+                    <button
+                        onClick={handleBackWithCheck}
+                        className="hidden sm:flex items-center gap-2 px-4 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-md transition-colors"
+                    >
+                        <CheckCheck className="w-4 h-4" />
+                        Done
+                    </button>
+
+                    <button
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#C92F3E] text-white text-sm font-medium rounded-md hover:bg-[#A62733] transition-colors"
+                    >
+                        <Plus className="w-4 h-4" />
+                        {t('addScene')}
+                        <ChevronDown className={`w-4 h-4 ml-1 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isMenuOpen && (
+                        <div className="absolute right-0 mt-12 w-48 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl z-50 overflow-hidden">
+                            <button
+                                onClick={() => { setIsMenuOpen(false) }}
+                                className="w-full text-left px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-800 flex items-center gap-2"
+                            >
+                                <Plus className="w-4 h-4" />
+                                {t('manualEntry')}
+                            </button>
+                            <button
+                                onClick={() => { setIsMenuOpen(false); setShowWizard(true) }}
+                                className="w-full text-left px-4 py-3 text-sm text-purple-400 hover:bg-neutral-800 flex items-center gap-2 border-t border-neutral-800"
+                            >
+                                <Wand2 className="w-4 h-4" />
+                                {t('aiImport')}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* List of Scenes */}
-            <div className="space-y-6">
-                {Object.entries(scenesByAct).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([actNum, actScenes]) => (
-                    <div key={actNum} className="space-y-3">
-                        <div className="flex items-center gap-4">
-                            <h3 className="text-lg font-bold text-white">{t('act')} {actNum}</h3>
-                            <div className="h-px flex-1 bg-neutral-800"></div>
-                        </div>
-
-                        <div className="grid gap-2">
-                            {actScenes.sort((a, b) => a.scene_number - b.scene_number).map((scene) => (
-                                <div key={scene.id} className="flex items-center gap-4 p-3 rounded-lg bg-neutral-900 border border-neutral-800 group hover:border-neutral-700 transition-colors">
-                                    <div className="w-16 flex-shrink-0">
-                                        <span className="text-xs text-neutral-500 uppercase block">{t('scene')}</span>
-                                        <span className="text-lg font-bold text-white">#{scene.scene_number}</span>
-                                    </div>
-
-                                    <div className="flex-1">
-                                        <input
-                                            type="text"
-                                            value={scene.name || ''}
-                                            onChange={(e) => handleUpdate(scene.id, { name: e.target.value })}
-                                            placeholder={t('sceneName')}
-                                            className="w-full bg-transparent border-none p-0 text-white placeholder-neutral-600 focus:ring-0 text-sm font-medium"
-                                        />
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex flex-col items-end mr-4">
-                                            <label className="text-[10px] text-neutral-500 uppercase">{t('act')}</label>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                value={scene.act_number}
-                                                onChange={(e) => handleUpdate(scene.id, { act_number: parseInt(e.target.value) || 1 })}
-                                                className="w-12 bg-neutral-950 border border-neutral-800 rounded px-1 py-0.5 text-right text-xs text-white focus:border-neutral-500 focus:outline-none"
-                                            />
-                                        </div>
-
-                                        <button
-                                            onClick={() => handleDelete(scene.id)}
-                                            className="p-2 text-neutral-600 hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                ))}
-
-                {scenes.length === 0 && (
-                    <div className="text-center py-12 text-neutral-500 border border-dashed border-neutral-800 rounded-xl">
-                        {t('noScenes')}
-                    </div>
-                )}
-            </div>
+            <SceneKanbanBoard
+                scenes={scenes}
+                onReorder={handleReorder}
+                onUpdate={handleUpdate}
+                onRemove={handleDelete}
+                onAdd={handleQuickAdd}
+            />
         </div>
     )
 }

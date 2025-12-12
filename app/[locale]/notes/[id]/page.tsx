@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import NoteEditor, { NoteEditorRef } from '@/components/notes/NoteEditor'
 import { ArrowLeft, Share, Copy, Download, ChevronDown, Pencil, Check, Folder } from 'lucide-react'
@@ -13,6 +13,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 export default function NoteDetailPage() {
     const t = useTranslations('NoteDetail')
     const params = useParams()
+    const searchParams = useSearchParams()
     const id = Array.isArray(params.id) ? params.id[0] : params.id
     const [note, setNote] = useState<any>(null)
     const [title, setTitle] = useState('')
@@ -23,6 +24,12 @@ export default function NoteDetailPage() {
     const supabase = createClient()
     const router = useRouter()
     const editorRef = useRef<NoteEditorRef>(null)
+
+    useEffect(() => {
+        if (searchParams.get('edit') === 'true') {
+            setIsEditing(true)
+        }
+    }, [searchParams])
 
     if (!id) return <div>{t('invalidId')}</div>
 
@@ -188,12 +195,9 @@ export default function NoteDetailPage() {
 
     const toggleEditMode = async () => {
         if (isEditing) {
-            // Saving... handled by debounce, but let's ensure we are clean
             if (editorRef.current) {
-                // Should we force a save here?
-                // The editor saves on blur, maybe we relying on that or standard debounce
-                // Let's force a save of the title if it changed?
-                // Title saves on blur of input.
+                const content = editorRef.current.getJSON()
+                await saveNote(content)
             }
         }
         setIsEditing(!isEditing)
@@ -205,19 +209,6 @@ export default function NoteDetailPage() {
 
     return (
         <div className="w-full relative min-h-screen">
-            {/* Visual Indicator for Edit Mode - a subtle border or background wash could be nice */}
-            <AnimatePresence>
-                {isEditing && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        // Changed inset-0 to inset-4 or similar to give spacing, or attached to container
-                        className="absolute -inset-2 border-[3px] border-amber-500/30 rounded-xl pointer-events-none z-0"
-                    />
-                )}
-            </AnimatePresence>
-
             <div className="p-6 w-full relative z-10">
                 <div className="max-w-3xl mx-auto mb-8">
                     <div className="flex items-center gap-4 mb-4">

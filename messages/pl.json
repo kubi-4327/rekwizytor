@@ -250,7 +250,14 @@
         "act": "Akt {actNum}",
         "noProps": "Nie przypisano jeszcze żadnych rekwizytów do tego Spektaklu.",
         "sceneView": "Widok Scen",
-        "allItemsView": "Wszystkie Przedmioty"
+        "allItemsView": "Wszystkie Przedmioty",
+        "notesTitle": "Notatki",
+        "viewAllNotes": "Wszystkie ({count})",
+        "noNotes": "Brak notatek dla tego spektaklu.",
+        "addNote": "Dodaj notatkę",
+        "addNewNote": "Dodaj nową notatkę",
+        "noPropsInScene": "Brak rekwizytów w tej scenie",
+        "noScenes": "Brak zdefiniowanych scen dla tego spektaklu."
     },
     "ManageScenes": {
         "backToProduction": "Powrót do Spektakli",
@@ -497,7 +504,17 @@
         "deleteConfirm": "Jesteś pewien? To usunie definicję sceny.",
         "addError": "Nie udało się dodać sceny",
         "deleteError": "Nie udało się usunąć sceny",
-        "updateError": "Nie udało się zaktualizować sceny"
+        "updateError": "Nie udało się zaktualizować sceny",
+        "manageScenes": "Zarządzaj Scenami",
+        "actHeader": "Akt {act}",
+        "manualEntry": "Wprowadzanie Ręczne",
+        "aiImport": "Import AI",
+        "aiImportError": "Błąd podczas importu AI",
+        "syncSceneNoteTitle": "Zaktualizować notatkę sceniczną?",
+        "syncSceneNoteDescription": "Czy chcesz zsynchronizować zmiany (zmiany nazw, kolejności) z notatką sceniczną? Twój tekst zostanie przeniesiony zgodnie z nową strukturą scen.",
+        "syncAndSave": "Tak, synchronizuj i zapisz",
+        "saveOnly": "Nie, zapisz tylko sceny",
+        "cancel": "Anuluj"
     },
     "ManagePropsForm": {
         "unassignedItems": "Nieprzypisane Przedmioty",
@@ -509,6 +526,7 @@
         "customScene": "Niestandardowa / Niewymieniona Scena",
         "noScenesDefined": "Nie zdefiniowano scen.",
         "manageScenes": "Zarządzaj Scenami",
+        "actHeader": "Akt {act}",
         "orUseCustom": "lub użyj niestandardowej poniżej.",
         "sceneNumPlaceholder": "Scena #",
         "nameOptPlaceholder": "Nazwa (opc)",
@@ -567,7 +585,7 @@
         "importDescription": "Wklej link do strony spektaklu aby automatycznie uzupełnić dane."
     },
     "ScheduledShowsList": {
-        "title": "Zaplanowane Spektakle",
+        "title": "Zaplanowane",
         "exportAll": "Eksportuj Wszystkie",
         "schedule": "Zaplanuj",
         "show": "Spektakl",

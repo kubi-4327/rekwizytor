@@ -1,10 +1,12 @@
 import { createClient } from '@/utils/supabase/server'
-import { ManagePropsForm } from '@/components/performances/ManagePropsForm'
+import dynamic from 'next/dynamic'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 import { Database } from '@/types/supabase'
 import { getTranslations } from 'next-intl/server'
+
+import { ManagePropsClient } from '@/components/performances/ManagePropsClient'
 
 type Props = {
     params: Promise<{ id: string }>
@@ -45,6 +47,7 @@ export default async function ManagePropsPage({ params }: Props) {
         .from('scenes')
         .select('*')
         .eq('performance_id', id)
+        .order('act_number', { ascending: true })
         .order('scene_number', { ascending: true })
         .returns<Scene[]>()
 
@@ -83,7 +86,7 @@ export default async function ManagePropsPage({ params }: Props) {
                 </p>
             </div>
 
-            <ManagePropsForm
+            <ManagePropsClient
                 performanceId={id}
                 initialAssignments={assignments || []}
                 availableItems={items || []}

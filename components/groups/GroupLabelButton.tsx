@@ -1,18 +1,23 @@
 'use client'
 
 import { useState } from 'react'
-import { QrCode } from 'lucide-react'
+import { QrCode, Folder } from 'lucide-react'
 import { notify } from '@/utils/notify'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
+
+import { rasterizeIcon } from '@/utils/icon-rasterizer'
 
 interface GroupLabelButtonProps {
     groupId: string
     groupName: string
     locationName?: string
+    icon?: string | null
 }
 
-export function GroupLabelButton({ groupId, groupName, locationName }: GroupLabelButtonProps) {
+
+
+export function GroupLabelButton({ groupId, groupName, locationName, icon }: GroupLabelButtonProps) {
     const [isGenerating, setIsGenerating] = useState(false)
     const t = useTranslations('toast')
 
@@ -32,7 +37,8 @@ export function GroupLabelButton({ groupId, groupName, locationName }: GroupLabe
                     groups: [{
                         id: groupId,
                         name: groupName,
-                        locationName
+                        locationName,
+                        iconImage: await rasterizeIcon(icon || 'Folder')
                     }]
                 }),
             })

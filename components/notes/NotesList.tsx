@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/client'
 import { Plus, FileText, Trash2, ChevronDown, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { MorphingSearchBar } from '@/components/search/MorphingSearchBar'
 import { Button } from '@/components/ui/Button'
 import { extractTextFromContent } from './utils'
@@ -22,10 +22,22 @@ export default function NotesList({ performanceId }: { performanceId?: string })
 
     const supabase = createClient()
     const router = useRouter()
+    const searchParams = useSearchParams()
 
     useEffect(() => {
         fetchNotes()
     }, [performanceId])
+
+    useEffect(() => {
+        if (searchParams.get('create') === 'true') {
+            const perfIdFromUrl = searchParams.get('performanceId')
+            // Avoid double creation? strict mode?
+            // Clean up params?
+            // Check if we are already creating?
+            // Simple approach: Create and redirect immediately.
+            createNote(perfIdFromUrl || performanceId)
+        }
+    }, [searchParams])
 
     const fetchNotes = async () => {
         setLoading(true)
@@ -53,12 +65,14 @@ export default function NotesList({ performanceId }: { performanceId?: string })
         setLoading(false)
     }
 
-    const createNote = async () => {
+    const createNote = async (overridePerformanceId?: string | null) => {
+        const targetPerfId = overridePerformanceId || performanceId
+
         // Fetch performance title if needed for default title
         let title = `Note #${notes.length + 1}`
 
-        if (performanceId) {
-            const { data: perf } = await supabase.from('performances').select('title').eq('id', performanceId).single()
+        if (targetPerfId) {
+            const { data: perf } = await supabase.from('performances').select('title').eq('id', targetPerfId).single()
             if (perf) {
                 title = `${perf.title} #${notes.length + 1}`
             }
@@ -66,12 +80,12 @@ export default function NotesList({ performanceId }: { performanceId?: string })
 
         const { data, error } = await supabase.from('notes').insert({
             title,
-            performance_id: performanceId || null,
+            performance_id: targetPerfId || null,
             content: {},
         }).select().single()
 
         if (data) {
-            router.push(`/notes/${data.id}`)
+            router.push(`/notes/${data.id}?edit=true`)
         }
     }
 
@@ -129,7 +143,7 @@ export default function NotesList({ performanceId }: { performanceId?: string })
             >
                 <div className="flex justify-end w-full sm:w-auto">
                     <Button
-                        onClick={createNote}
+                        onClick={() => createNote()}
                         variant="primary"
                         className="w-full sm:w-auto sm:min-w-[140px]"
                         leftIcon={<Plus size={16} />}

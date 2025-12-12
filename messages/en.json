@@ -247,7 +247,14 @@
         "act": "Act {actNum}",
         "noProps": "No props assigned to this production yet.",
         "sceneView": "Scene View",
-        "allItemsView": "All Items View"
+        "allItemsView": "All Items View",
+        "notesTitle": "Notes",
+        "viewAllNotes": "All ({count})",
+        "noNotes": "No notes for this production.",
+        "addNote": "Add Note",
+        "addNewNote": "Add New Note",
+        "noPropsInScene": "No props in this scene",
+        "noScenes": "No scenes defined for this production."
     },
     "ManageScenes": {
         "backToProduction": "Back to Production",
@@ -494,7 +501,11 @@
         "deleteConfirm": "Are you sure? This will delete the scene definition.",
         "addError": "Failed to add scene",
         "deleteError": "Failed to delete scene",
-        "updateError": "Failed to update scene"
+        "updateError": "Failed to update scene",
+        "manageScenes": "Manage Scenes",
+        "actHeader": "Act {act}",
+        "manualEntry": "Manual Entry",
+        "aiImport": "AI Import"
     },
     "ManagePropsForm": {
         "unassignedItems": "Unassigned Items",
@@ -506,6 +517,7 @@
         "customScene": "Custom / Unlisted Scene",
         "noScenesDefined": "No scenes defined.",
         "manageScenes": "Manage Scenes",
+        "actHeader": "Act {act}",
         "orUseCustom": "or use custom below.",
         "sceneNumPlaceholder": "Scene #",
         "nameOptPlaceholder": "Name (opt)",
@@ -564,7 +576,7 @@
         "importDescription": "Paste the performance page link to automatically fill the data."
     },
     "ScheduledShowsList": {
-        "title": "Scheduled Shows",
+        "title": "Scheduled",
         "exportAll": "Export All",
         "schedule": "Schedule",
         "show": "Show",

@@ -15,13 +15,16 @@ type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] 
     } | null
 }
 
+type Scene = Database['public']['Tables']['scenes']['Row']
+
 type Props = {
     performanceId: string
     propsByAct: Record<number, PerformanceItem[]>
     assignedProps: PerformanceItem[] | null
+    scenes: Scene[]
 }
 
-export function PerformanceContent({ performanceId, propsByAct, assignedProps }: Props) {
+export function PerformanceContent({ performanceId, propsByAct, assignedProps, scenes }: Props) {
     const [viewMode, setViewMode] = useState<'scenes' | 'all'>('scenes')
     const t = useTranslations('ProductionDetails')
 
@@ -31,9 +34,9 @@ export function PerformanceContent({ performanceId, propsByAct, assignedProps }:
                 <h2 className="text-xl font-bold text-white">{t('propsList')}</h2>
                 <Link
                     href={`/performances/${performanceId}/props`}
-                    className="w-full sm:w-auto px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-white border border-neutral-800 rounded-md hover:bg-neutral-900 transition-colors flex items-center justify-center gap-2"
+                    className="inline-flex items-center justify-center rounded-md border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 hover:text-white transition-colors gap-2 w-full sm:w-auto"
                 >
-                    <Settings className="w-3 h-3" />
+                    <Settings className="w-4 h-4" />
                     {t('manageProps')}
                 </Link>
             </div>
@@ -67,6 +70,7 @@ export function PerformanceContent({ performanceId, propsByAct, assignedProps }:
                     performanceId={performanceId}
                     propsByAct={propsByAct}
                     assignedProps={assignedProps}
+                    scenes={scenes}
                 />
             ) : (
                 <PerformanceAllItemsView

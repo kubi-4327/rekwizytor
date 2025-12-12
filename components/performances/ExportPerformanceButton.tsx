@@ -14,6 +14,8 @@ type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] 
         image_url: string | null
     } | null
 }
+type Note = Database['public']['Tables']['notes']['Row']
+type Scene = Database['public']['Tables']['scenes']['Row']
 type User = {
     full_name: string | null
     email: string | undefined
@@ -22,11 +24,13 @@ type User = {
 interface ExportPerformanceButtonProps {
     production: Performance
     items: PerformanceItem[]
+    scenes?: Scene[]
+    notes?: Note[]
     user: User | null
     variant?: 'default' | 'menu'
 }
 
-export function ExportPerformanceButton({ production, items, user, variant = 'default' }: ExportPerformanceButtonProps) {
+export function ExportPerformanceButton({ production, items, scenes = [], notes = [], user, variant = 'default' }: ExportPerformanceButtonProps) {
     const t = useTranslations('ExportButton') // Reusing existing translations or we might need new ones
     const [isExporting, setIsExporting] = useState(false)
 
@@ -38,7 +42,7 @@ export function ExportPerformanceButton({ production, items, user, variant = 'de
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ production, items, user }),
+                body: JSON.stringify({ production, items, scenes, notes, user }),
             })
 
             if (!response.ok) throw new Error('Failed to generate PDF')

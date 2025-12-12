@@ -39,6 +39,7 @@ type ItemRow = Database['public']['Tables']['items']['Row']
 type Assignment = {
     id: string
     item_id: string
+    scene_id: string | null // NEW
     scene_number: string | null
     scene_name: string | null
     setup_instructions: string | null
@@ -62,7 +63,7 @@ type Profile = {
 
 import { ItemDetailsDialog } from '@/components/items/ItemDetailsDialog'
 
-type Props = {
+export type ManagePropsFormProps = {
     performanceId: string
     initialAssignments: Assignment[]
     availableItems: ItemRow[]
@@ -181,7 +182,7 @@ function DroppableContainer({ id, children, className }: { id: string, children:
     )
 }
 
-export function ManagePropsForm({ performanceId, initialAssignments, availableItems, definedScenes, accentColor, profiles, locations, groups }: Props) {
+export function ManagePropsForm({ performanceId, initialAssignments, availableItems, definedScenes, accentColor, profiles, locations, groups }: ManagePropsFormProps) {
     const t = useTranslations('ManagePropsForm')
     const [assignments, setAssignments] = useState<Assignment[]>(initialAssignments)
     const [loading, setLoading] = useState(false)
@@ -190,7 +191,8 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
     const [activeId, setActiveId] = useState<string | null>(null)
 
     // Track which scene we are adding to. null means unassigned.
-    const [targetScene, setTargetScene] = useState<{ number: string | null, name: string | null } | null>(null)
+    // Track which scene we are adding to. null means unassigned.
+    const [targetScene, setTargetScene] = useState<{ number: string | null, name: string | null, id: string | null } | null>(null)
 
     const router = useRouter()
     const supabase = createClient()
@@ -209,17 +211,20 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
     const [selectedDetailItem, setSelectedDetailItem] = useState<ItemRow | null>(null)
     const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
+
+
     const handleItemClick = (item: ItemRow) => {
         setSelectedDetailItem(item)
         setIsDetailsOpen(true)
     }
 
-    // Group assignments by scene
+
+    // Group assignments by scene ID
     const groupedAssignments = useMemo(() => {
         const groups: Record<string, Assignment[]> = {}
         // Initialize groups for all defined scenes
         definedScenes.forEach(scene => {
-            const key = scene.scene_number.toString()
+            const key = scene.id
             groups[key] = []
         })
         // Add "unassigned" group
@@ -227,7 +232,20 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
 
         // Distribute assignments
         assignments.forEach(a => {
-            const key = a.scene_number ? a.scene_number.toString() : 'unassigned'
+            // Priority: scene_id -> match by scene_number -> unassigned
+            let key = 'unassigned'
+
+            if (a.scene_id) {
+                key = a.scene_id
+            } else if (a.scene_number) {
+                // Fallback for legacy data without scene_id
+                // Try to find scene by number (and Act 1 preference if ambiguous, but really we should rely on ID)
+                const matchingScene = definedScenes.find(s => s.scene_number.toString() === a.scene_number?.toString() && (!a.scene_name || s.name === a.scene_name))
+                if (matchingScene) {
+                    key = matchingScene.id
+                }
+            }
+
             if (!groups[key]) groups[key] = []
             groups[key].push(a)
         })
@@ -240,8 +258,26 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
         return groups
     }, [assignments, definedScenes])
 
-    const handleOpenAddDialog = (sceneNumber: string | null, sceneName: string | null) => {
-        setTargetScene({ number: sceneNumber, name: sceneName })
+    // Group scenes by Act for display
+    const scenesByAct = useMemo(() => {
+        const groups: Record<number, typeof definedScenes> = {}
+        definedScenes.forEach(s => {
+            const act = s.act_number || 1
+            if (!groups[act]) groups[act] = []
+            groups[act].push(s)
+        })
+        return groups
+    }, [definedScenes])
+
+    const sortedActs = Object.keys(scenesByAct).map(Number).sort((a, b) => a - b)
+
+    const handleOpenAddDialog = (sceneId: string | null) => {
+        const scene = definedScenes.find(s => s.id === sceneId)
+        setTargetScene({
+            number: scene?.scene_number.toString() || null,
+            name: scene?.name || null,
+            id: sceneId
+        })
         setIsDialogOpen(true)
     }
 
@@ -251,13 +287,14 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
         setLoading(true)
         try {
             // Get max sort order for the target scene
-            const targetKey = targetScene?.number || 'unassigned'
+            const targetKey = targetScene?.id || 'unassigned'
             const currentItems = groupedAssignments[targetKey] || []
             const maxSortOrder = currentItems.length > 0 ? Math.max(...currentItems.map(i => i.sort_order || 0)) : 0
 
             const newAssignmentsData = selectedIds.map((itemId, index) => ({
                 performance_id: performanceId,
                 item_id: itemId,
+                scene_id: targetScene?.id || null, // New field
                 scene_number: targetScene?.number || null,
                 scene_name: targetScene?.name || null,
                 setup_instructions: null,
@@ -285,20 +322,19 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
 
             // Optimistic update
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const newAssignments: Assignment[] = (data as unknown as any[]).map(d => ({
+            const newAssignedItems = (data as any[]).map(d => ({
                 ...d,
-                items: d.items as ItemRow
+                items: availableItems.find(i => i.id === d.item_id) // Simplification for optimistic
             }))
 
-            setAssignments([...assignments, ...newAssignments])
-            router.refresh()
+            setAssignments(prev => [...prev, ...newAssignedItems])
+            setIsDialogOpen(false)
+            setSelectedItems(new Set())
         } catch (error) {
-            console.error('Error adding props:', error)
-            alert(t('addError'))
+            console.error('Error adding items:', error)
+            alert(t('updateError'))
         } finally {
             setLoading(false)
-            setIsDialogOpen(false)
-            setTargetScene(null)
         }
     }
 
@@ -360,207 +396,118 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
         }
     }
 
+    // --- Drag and Drop Logic ---
+
     const handleDragStart = (event: DragStartEvent) => {
-        setActiveId(event.active.id as string)
+        const { active } = event
+        setActiveId(active.id as string)
     }
 
     const handleDragOver = (event: DragOverEvent) => {
         const { active, over } = event
-        if (!over) return
+        const overId = over?.id
 
-        // Find the containers
+        if (!overId || active.id === overId) return
+
+        // Note: findContainer now returns scene ID (UUID) or 'unassigned'
         const activeContainer = findContainer(active.id as string)
-        const overContainer = findContainer(over.id as string) || (over.data.current?.sortable?.containerId) || over.id
+        const overContainer = findContainer(overId as string)
 
         if (!activeContainer || !overContainer || activeContainer === overContainer) {
             return
         }
 
-        // If moving to a different container, we update the state immediately for visual feedback
-        // This is handled by onDragEnd for final persistence, but we could do optimistic updates here if needed
+        // Just visual placeholder logic if needed, but we mostly rely on dragEnd for real moves
     }
 
     const findContainer = (id: string) => {
-        if (id in groupedAssignments) return id
-        return Object.keys(groupedAssignments).find(key =>
-            groupedAssignments[key].find(item => item.id === id)
+        if (Object.keys(groupedAssignments).includes(id)) {
+            return id
+        }
+
+        return Object.keys(groupedAssignments).find((key) =>
+            groupedAssignments[key].some((item) => item.id === id)
         )
     }
 
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event
+        const activeId = active.id as string
+        const overId = over?.id
+
         setActiveId(null)
 
-        if (!over) return
+        if (!overId) return
 
-        const activeContainer = findContainer(active.id as string)
-        const overContainer = findContainer(over.id as string) || (over.data.current?.sortable?.containerId) || over.id
+        const activeContainer = findContainer(activeId)
+        const overContainer = findContainer(overId as string)
 
-        if (!activeContainer || !overContainer) return
+        if (!activeContainer || !overContainer || activeContainer === overContainer && active.id === overId) {
+            return
+        }
 
-        const activeIndex = groupedAssignments[activeContainer].findIndex(item => item.id === active.id)
-        const overIndex = groupedAssignments[overContainer].findIndex(item => item.id === over.id)
+        // We are moving item
+        // Calculate new index
+        const activeIndex = groupedAssignments[activeContainer].findIndex(i => i.id === activeId)
+        const overIndex = groupedAssignments[overContainer].findIndex(i => i.id === overId) // -1 if dropped on container
 
         let newAssignments = [...assignments]
-        let movedItems: Assignment[] = []
 
-        // Determine which items are being moved
-        // If the dragged item is selected, move all selected items
-        // Otherwise, just move the dragged item
-        const isDraggingSelected = selectedItems.has(active.id as string)
-        const itemsToMoveIds = isDraggingSelected ? Array.from(selectedItems) : [active.id as string]
+        // Are we moving multiple items?
+        // If the dragged item is selected, we move all selected items.
+        // If not, we just move the dragged item (and deselect others potentially, or just move one).
+        const movingSelected = selectedItems.has(activeId)
+        const itemsToMoveIds = movingSelected ? Array.from(selectedItems) : [activeId]
 
-        // Filter out items that are not in the active container (sanity check)
-        const validItemsToMoveIds = itemsToMoveIds.filter(id =>
-            groupedAssignments[activeContainer].some(item => item.id === id)
-        )
-
-        if (activeContainer === overContainer) {
-            // Reordering within the same container
-            if (activeIndex !== overIndex) {
-                // We only support reordering single items or contiguous blocks for now in a simple way
-                // For simplicity in this iteration, if multiple items are selected, we just move them to the target position
-                // But standard sortable behavior is usually single item.
-                // Let's stick to single item reordering if not moving between containers, OR handle multi-move carefully.
-                // For now: standard reorder for the dragged item.
-                // If multiple selected, we might want to just reorder the dragged one, or move all to that position.
-                // Let's implement: Move all selected items to the new position.
-
-                const oldIndex = activeIndex
-                const newIndex = overIndex
-
-                // Remove items from old positions
-                const itemsToMove = validItemsToMoveIds.map(id => newAssignments.find(a => a.id === id)!).filter(Boolean)
-                newAssignments = newAssignments.filter(a => !validItemsToMoveIds.includes(a.id))
-
-                // Insert at new position
-                // We need to find where to insert in the global array based on the target container's items
-                const targetContainerItems = groupedAssignments[overContainer]
-                const targetItem = targetContainerItems[newIndex] // This is the item we dropped ON
-
-                // If we dropped on an item, we want to insert before or after it.
-                // But since we removed items, indices might have shifted.
-                // Easier approach: Reconstruct the container's list, then update global list.
-
-                let newContainerList = [...groupedAssignments[overContainer]]
-                // Remove moved items from this list (if they were there)
-                newContainerList = newContainerList.filter(a => !validItemsToMoveIds.includes(a.id))
-
-                // Calculate insert index in the cleaned list
-                let insertIndex = newIndex
-                if (oldIndex < newIndex) {
-                    // If moving down, we need to adjust because we removed items
-                    // However, overIndex is based on the list WITH the items.
-                    // It's complicated. Let's use arrayMove for single item, and custom logic for multiple.
-                }
-
-                // SIMPLIFICATION: If multiple items selected, just move them to the end of the target container if different,
-                // or just reorder the single dragged item if same container.
-                if (validItemsToMoveIds.length > 1 && activeContainer === overContainer) {
-                    // Multi-item reorder in same container is complex UX. Let's just reorder the dragged item for now.
-                    newAssignments = arrayMove(assignments,
-                        assignments.findIndex(a => a.id === active.id),
-                        assignments.findIndex(a => a.id === over.id)
-                    )
-                } else {
-                    // Single item reorder
-                    const oldGlobalIndex = assignments.findIndex(a => a.id === active.id)
-                    const newGlobalIndex = assignments.findIndex(a => a.id === over.id)
-                    newAssignments = arrayMove(assignments, oldGlobalIndex, newGlobalIndex)
-                }
-            }
-        } else {
-            // Moving to a different container
-            const targetSceneNumber = overContainer === 'unassigned' ? null : overContainer
-            const targetSceneName = definedScenes.find(s => s.scene_number.toString() === targetSceneNumber)?.name || null
-
-            newAssignments = newAssignments.map(item => {
-                if (validItemsToMoveIds.includes(item.id)) {
-                    return {
-                        ...item,
-                        scene_number: targetSceneNumber,
-                        scene_name: targetSceneName,
-                        // We will update sort_order later
-                    }
-                }
-                return item
-            })
-        }
-
-        // Update sort orders for the affected containers
-        // We need to re-calculate sort orders for everything to be safe
-        // But mainly active and over containers.
-
-        // Let's optimistic update state first
-        setAssignments(newAssignments)
-
-        // Now prepare DB updates
-        // We need to update scene_number, scene_name, and sort_order for moved items
-        // And update sort_order for other items in the affected containers
-
-        // Re-group to calculate new sort orders
-        const newGroups: Record<string, Assignment[]> = {}
-        definedScenes.forEach(s => newGroups[s.scene_number.toString()] = [])
-        newGroups['unassigned'] = []
-
-        newAssignments.forEach(a => {
-            const key = a.scene_number ? a.scene_number.toString() : 'unassigned'
-            if (!newGroups[key]) newGroups[key] = []
-            newGroups[key].push(a)
+        // Filter out items that are NOT in the activeContainer (just in case selection spans containers, which we shouldn't allow or should handle gracefully)
+        // For simple kanban, let's assume selection is valid if we handle it.
+        // But safer to only move items from the CURRENT activeContainer to avoid weird jumps.
+        const validItemsToMoveIds = itemsToMoveIds.filter(id => {
+            const container = findContainer(id)
+            return container === activeContainer
         })
 
-        // Sort each group by existing sort_order to maintain relative order of untouched items
-        // But for the moved items, we want them in the new position.
-        // This is tricky with the simple state update above.
-        // For MVP: Just update the scene_number for moved items, and append them to the end of the list (or keep relative order).
-        // If we want precise drop position, we need to handle the array insertion correctly.
+        if (validItemsToMoveIds.length === 0) return
 
-        // Let's refine the "Move to different container" logic to insert at specific index
-        if (activeContainer !== overContainer) {
-            // We already updated scene_number in newAssignments.
-            // But we didn't handle the specific index insertion.
-            // For now, let's just let them fall into the list and rely on a re-sort if needed.
-            // Or better: Update sort_order based on the new list order.
+        // Update local state optimistic
+        // We first update the scene fields for the moved items.
+
+        // Find target scene details
+        let targetSceneId: string | null = null
+        let targetSceneNum: string | null = null
+        let targetSceneName: string | null = null
+
+        if (overContainer !== 'unassigned') {
+            const scene = definedScenes.find(s => s.id === overContainer)
+            if (scene) {
+                targetSceneId = scene.id
+                targetSceneNum = scene.scene_number.toString()
+                targetSceneName = scene.name
+            }
         }
 
-        // Prepare bulk update
-        const updates = []
-
-        // We only really need to update items in activeContainer and overContainer
-        const containersToUpdate = new Set([activeContainer, overContainer])
-
-        // For each container, recalculate sort_order
-        // Note: The `newAssignments` array might not be sorted correctly by visual order yet if we just mapped it.
-        // We need to ensure the visual order is reflected.
-        // Since we didn't do complex array insertion for cross-container move in `newAssignments` construction above (just map),
-        // the items will stay in their relative global positions but change groups.
-        // This means they will likely appear at the end or in some default order.
-        // To fix this, we should have manipulated the arrays.
-
-        // CORRECT APPROACH for Cross-Container:
-        // 1. Remove from source array
-        // 2. Insert into target array at overIndex
-        // 3. Flatten back to global array
+        // --- Logic Update for ID based containers ---
 
         if (activeContainer !== overContainer) {
             const sourceList = groupedAssignments[activeContainer].filter(a => !validItemsToMoveIds.includes(a.id))
             const targetList = [...groupedAssignments[overContainer]]
+
             const itemsToMove = validItemsToMoveIds.map(id => assignments.find(a => a.id === id)!).map(item => ({
                 ...item,
-                scene_number: overContainer === 'unassigned' ? null : overContainer,
-                scene_name: definedScenes.find(s => s.scene_number.toString() === overContainer)?.name || null
+                scene_id: targetSceneId,
+                scene_number: targetSceneNum,
+                scene_name: targetSceneName
             }))
 
             // Insert at overIndex
-            // If overIndex is -1 (dropped on container but not specific item), append
             const insertAt = overIndex >= 0 ? overIndex : targetList.length
             targetList.splice(insertAt, 0, ...itemsToMove)
 
-            // Now rebuild assignments
-            const otherAssignments = assignments.filter(a =>
-                (a.scene_number?.toString() || 'unassigned') !== activeContainer &&
-                (a.scene_number?.toString() || 'unassigned') !== overContainer
-            )
+            // Rebuild assignments
+            const otherAssignments = assignments.filter(a => {
+                const c = findContainer(a.id)
+                return c !== activeContainer && c !== overContainer
+            })
 
             // Update sort orders
             const updatedSource = sourceList.map((a, i) => ({ ...a, sort_order: i }))
@@ -570,49 +517,131 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
             setAssignments(newAssignments)
 
             // DB Updates
-            const itemsToUpdate = [...updatedSource, ...updatedTarget]
-            for (const item of itemsToUpdate) {
-                updates.push({
-                    id: item.id,
-                    item_id: item.item_id,
-                    performance_id: performanceId,
-                    scene_number: item.scene_number,
-                    scene_name: item.scene_name,
-                    sort_order: item.sort_order
-                })
+            const updates = [...updatedSource, ...updatedTarget].map(item => ({
+                id: item.id,
+                item_id: item.item_id,
+                performance_id: performanceId,
+                scene_id: item.scene_id, // Add scene_id
+                scene_number: item.scene_number,
+                scene_name: item.scene_name,
+                sort_order: item.sort_order
+            }))
+
+            // Execute DB update
+            if (updates.length > 0) {
+                try {
+                    const { error } = await supabase
+                        .from('performance_items')
+                        .upsert(updates)
+
+                    if (error) throw error
+                } catch (error) {
+                    console.error('Error updating sort order:', error)
+                }
             }
+
         } else {
             // Same container reorder
-            // We used arrayMove on the global list, but we should verify sort orders within the container
-            const containerList = newAssignments.filter(a => (a.scene_number?.toString() || 'unassigned') === activeContainer)
-            const updatedContainer = containerList.map((a, i) => ({ ...a, sort_order: i }))
+            const containerList = groupedAssignments[activeContainer]
+            // We need to move items within this list
+
+            // We use dnd-kit's arrayMove equivalent logic
+            // But since we support multi-drag, it's custom.
+
+            // Simpler approach for same container:
+            // Remove items, insert at new index.
+            const itemsToMove = validItemsToMoveIds.map(id => containerList.find(a => a.id === id)!)
+            const listWithoutMoved = containerList.filter(a => !validItemsToMoveIds.includes(a.id))
+
+            // Adjust overIndex because removal might shift indices
+            // If we drag down, the insertion index is fine (relative to original list if we consider indices carefully).
+            // Actually simpler:
+            // If single item:
+            if (itemsToMove.length === 1) {
+                const oldIndex = activeIndex
+                const newIndex = overIndex
+                // If overIndex matches an item in the list, we place before or after?
+                // arrayMove logic usually swaps.
+                // let's try to construct the new list manually.
+
+                // If dropped on self, do nothing
+                if (oldIndex === newIndex) return
+            }
+
+            // For robust multi-sort, recreating the list is key.
+            // Target index is overIndex.
+
+            // Let's take the logic:
+            // 1. Filter out moved items.
+            // 2. Insert them at the desired position.
+
+            // Careful: overIndex is the index in the *original* list (including the item being moved).
+            // We need to translate that to the index in the *filtered* list.
+
+            let finalIndex = overIndex
+
+            // If we are moving down, we need to adjust
+            // Logic is complex for multi-drag. 
+            // Simplified: just put them at the dropped position.
+
+            const newList = [...listWithoutMoved]
+            // If overIndex was -1 (container drop), append
+            // Else, we must find where the 'over' item is now in the filtered list
+            // If 'over' item was one of the moving items, this logic breaks.
+            // But dragEnd only fires if we drop on something.
+            // If we drop on one of the selected items (which moves with us), overId is that item.
+
+            // If we drop on an item that is NOT moving:
+            const overItemIndexInFiltered = listWithoutMoved.findIndex(a => a.id === overId)
+
+            if (overItemIndexInFiltered !== -1) {
+                // Determine if we drop before or after.
+                // dnd-kit suggests using arrayMove which handles single item.
+                // For multi, let's just insert before the over item.
+                newList.splice(overItemIndexInFiltered, 0, ...itemsToMove)
+            } else {
+                // We dropped on ourselves or container?
+                // If container (overId === containerId), append.
+                if (overId === activeContainer) {
+                    newList.push(...itemsToMove)
+                } else {
+                    // Fallback to end
+                    newList.push(...itemsToMove)
+                }
+            }
+
+            const updatedContainer = newList.map((a, i) => ({ ...a, sort_order: i }))
 
             // Merge back
-            const otherAssignments = newAssignments.filter(a => (a.scene_number?.toString() || 'unassigned') !== activeContainer)
+            const otherAssignments = assignments.filter(a => {
+                const c = findContainer(a.id)
+                return c !== activeContainer
+            })
+
             newAssignments = [...otherAssignments, ...updatedContainer]
             setAssignments(newAssignments)
 
-            for (const item of updatedContainer) {
-                updates.push({
-                    id: item.id,
-                    item_id: item.item_id,
-                    performance_id: performanceId,
-                    sort_order: item.sort_order
-                })
-            }
-        }
+            // DB Updates
+            const updates = updatedContainer.map(item => ({
+                id: item.id,
+                item_id: item.item_id,
+                performance_id: performanceId,
+                scene_id: item.scene_id, // Ensure scene_id is passed for upsert
+                scene_number: item.scene_number,
+                scene_name: item.scene_name,
+                sort_order: item.sort_order
+            }))
 
-        // Execute DB updates
-        if (updates.length > 0) {
-            try {
-                const { error } = await supabase
-                    .from('performance_items')
-                    .upsert(updates) // upsert is good for batch updates by ID
+            if (updates.length > 0) {
+                try {
+                    const { error } = await supabase
+                        .from('performance_items')
+                        .upsert(updates)
 
-                if (error) throw error
-            } catch (error) {
-                console.error('Error updating sort order:', error)
-                // Revert state if needed (omitted for brevity)
+                    if (error) throw error
+                } catch (error) {
+                    console.error('Error updating sort order:', error)
+                }
             }
         }
     }
@@ -647,15 +676,16 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
         )
     }
 
+
     return (
-        <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-        >
-            <div className="space-y-8 pb-20">
+        <div className="space-y-8 pb-32">
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+            >
                 <ItemSelectionDialog
                     isOpen={isDialogOpen}
                     onClose={() => setIsDialogOpen(false)}
@@ -768,7 +798,7 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                                         <Menu.Item>
                                             {({ active }) => (
                                                 <button
-                                                    onClick={() => handleOpenAddDialog(null, null)}
+                                                    onClick={() => handleOpenAddDialog(null)}
                                                     className={`${active ? 'bg-neutral-700 text-white' : 'text-neutral-300'
                                                         } group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm`}
                                                 >
@@ -799,70 +829,84 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                     </div>
                 </div>
 
-                {/* Scenes List */}
-                <div className="space-y-8">
-                    {definedScenes.map((scene) => (
-                        <div key={scene.id} className="space-y-4">
-                            <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
-                                <div>
-                                    <h3 className="text-lg font-medium text-white">
-                                        {t('actScene', { act: scene.act_number, scene: scene.scene_number })}
-                                    </h3>
-                                    {scene.name && (
-                                        <p className="text-sm text-neutral-400">{scene.name}</p>
-                                    )}
-                                </div>
-                                <Menu as="div" className="relative">
-                                    <Menu.Button
-                                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-burgundy-main hover:bg-burgundy-light rounded-md transition-colors"
-                                        style={accentColor ? { backgroundColor: accentColor } : {}}
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                        <span className="hidden sm:inline">{t('addProp')}</span>
-                                        <ChevronDown className="h-3 w-3 sm:ml-1" />
-                                    </Menu.Button>
-                                    <Transition
-                                        as={Fragment}
-                                        enter="transition ease-out duration-100"
-                                        enterFrom="transform opacity-0 scale-95"
-                                        enterTo="transform opacity-100 scale-100"
-                                        leave="transition ease-in duration-75"
-                                        leaveFrom="transform opacity-100 scale-100"
-                                        leaveTo="transform opacity-0 scale-95"
-                                    >
-                                        <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-neutral-800 border border-neutral-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                            <div className="p-1">
-                                                <Menu.Item>
-                                                    {({ active }) => (
-                                                        <button
-                                                            onClick={() => handleOpenAddDialog(scene.scene_number.toString(), scene.name)}
-                                                            className={`${active ? 'bg-neutral-700 text-white' : 'text-neutral-300'
-                                                                } group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm`}
-                                                        >
-                                                            <List className="h-4 w-4" />
-                                                            {t('selectExisting')}
-                                                        </button>
-                                                    )}
-                                                </Menu.Item>
-                                                <Menu.Item>
-                                                    {({ active }) => (
-                                                        <a
-                                                            href={`/items/fast-add?performanceId=${performanceId}`}
-                                                            className={`${active ? 'bg-neutral-700 text-white' : 'text-neutral-300'
-                                                                } group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm`}
-                                                        >
-                                                            <Camera className="h-4 w-4" />
-                                                            {t('fastAdd')}
-                                                        </a>
-                                                    )}
-                                                </Menu.Item>
-                                            </div>
-                                        </Menu.Items>
-                                    </Transition>
-                                </Menu>
+                {/* Scenes List Grouped by Act */}
+                <div className="space-y-12">
+                    {sortedActs.map((actNum) => (
+                        <div key={actNum} className="space-y-6">
+                            {/* Act Header */}
+                            <div className="flex items-center gap-4 border-b border-neutral-800 pb-2">
+                                <h3 className="text-xl font-bold text-white uppercase tracking-wider">
+                                    {t('actHeader', { act: actNum })}
+                                </h3>
+                                <div className="h-px bg-neutral-800 flex-1" />
                             </div>
-                            <div>
-                                {renderAssignmentList(scene.scene_number.toString(), groupedAssignments[scene.scene_number.toString()] || [])}
+
+                            <div className="space-y-8 pl-4 border-l-2 border-neutral-800/30">
+                                {scenesByAct[actNum].map((scene) => (
+                                    <div key={scene.id} className="space-y-4">
+                                        <div className="flex items-center justify-between border-b border-neutral-800/50 pb-2">
+                                            <div>
+                                                <h3 className="text-lg font-medium text-white">
+                                                    {t('actScene', { act: scene.act_number, scene: scene.scene_number })}
+                                                </h3>
+                                                {scene.name && (
+                                                    <p className="text-sm text-neutral-400">{scene.name}</p>
+                                                )}
+                                            </div>
+                                            <Menu as="div" className="relative">
+                                                <Menu.Button
+                                                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-burgundy-main hover:bg-burgundy-light rounded-md transition-colors"
+                                                    style={accentColor ? { backgroundColor: accentColor } : {}}
+                                                >
+                                                    <Plus className="h-4 w-4" />
+                                                    <span className="hidden sm:inline">{t('addProp')}</span>
+                                                    <ChevronDown className="h-3 w-3 sm:ml-1" />
+                                                </Menu.Button>
+                                                <Transition
+                                                    as={Fragment}
+                                                    enter="transition ease-out duration-100"
+                                                    enterFrom="transform opacity-0 scale-95"
+                                                    enterTo="transform opacity-100 scale-100"
+                                                    leave="transition ease-in duration-75"
+                                                    leaveFrom="transform opacity-100 scale-100"
+                                                    leaveTo="transform opacity-0 scale-95"
+                                                >
+                                                    <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-neutral-800 border border-neutral-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                        <div className="p-1">
+                                                            <Menu.Item>
+                                                                {({ active }) => (
+                                                                    <button
+                                                                        onClick={() => handleOpenAddDialog(scene.id)}
+                                                                        className={`${active ? 'bg-neutral-700 text-white' : 'text-neutral-300'
+                                                                            } group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm`}
+                                                                    >
+                                                                        <List className="h-4 w-4" />
+                                                                        {t('selectExisting')}
+                                                                    </button>
+                                                                )}
+                                                            </Menu.Item>
+                                                            <Menu.Item>
+                                                                {({ active }) => (
+                                                                    <a
+                                                                        href={`/items/fast-add?performanceId=${performanceId}`}
+                                                                        className={`${active ? 'bg-neutral-700 text-white' : 'text-neutral-300'
+                                                                            } group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm`}
+                                                                    >
+                                                                        <Camera className="h-4 w-4" />
+                                                                        {t('fastAdd')}
+                                                                    </a>
+                                                                )}
+                                                            </Menu.Item>
+                                                        </div>
+                                                    </Menu.Items>
+                                                </Transition>
+                                            </Menu>
+                                        </div>
+                                        <div>
+                                            {renderAssignmentList(scene.id, groupedAssignments[scene.id] || [])}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     ))}
@@ -893,7 +937,7 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                         </div>
                     ) : null}
                 </DragOverlay>
-            </div>
-        </DndContext>
+            </DndContext>
+        </div>
     )
 }

@@ -8,7 +8,9 @@ interface GroupData {
     id: string
     name: string
     locationName?: string
+
     short_id?: string
+    iconImage?: string
 }
 
 interface RequestBody {
@@ -111,8 +113,8 @@ const styles = StyleSheet.create({
         color: '#000000',
         marginTop: '6mm',
         maxWidth: '70mm',
-        lineHeight: 0.9,
-        wordWrap: 'break-word',
+        lineHeight: 1.15,
+        // wordWrap: 'break-word', // Removed to prevent splitting words
     },
     qrCode: {
         position: 'absolute',
@@ -138,6 +140,15 @@ const styles = StyleSheet.create({
         color: '#cccccc',
         fontFamily: 'Courier Prime',
     },
+    icon: {
+        position: 'absolute',
+        top: '4mm',
+        right: '4mm',
+        width: '8mm',
+        height: '8mm',
+        objectFit: 'contain',
+        opacity: 0.8
+    }
 })
 
 // Create PDF document using React.createElement
@@ -156,15 +167,15 @@ function createPDFDocument(groups: GroupData[], qrCodes: string[]) {
             // Calculate dynamic font size based on name length
             // Shifted down by one step as requested
             // Boldonse is taller than Courier Prime (~1.7x at same font size)
-            let nameFontSize = 20 // Changed from 24
-            if (group.name.length > 15) {
-                nameFontSize = 16 // Changed from 20
+            let nameFontSize = 20 // Reduced base size from 24
+            if (group.name.length > 10) {
+                nameFontSize = 16
             }
-            if (group.name.length > 25) {
-                nameFontSize = 14 // Changed from 16
+            if (group.name.length > 20) {
+                nameFontSize = 14
             }
-            if (group.name.length > 35) {
-                nameFontSize = 12 // Changed from 14
+            if (group.name.length > 30) {
+                nameFontSize = 12
             }
 
             const dynamicNameStyle = {
@@ -188,6 +199,13 @@ function createPDFDocument(groups: GroupData[], qrCodes: string[]) {
             children.push(
                 React.createElement(Text, { key: 'name', style: dynamicNameStyle }, group.name)
             )
+
+            // Icon at top right (if exists)
+            if (group.iconImage) {
+                children.push(
+                    React.createElement(Image, { key: 'icon', src: group.iconImage, style: styles.icon })
+                )
+            }
 
             // QR code at bottom right
             children.push(

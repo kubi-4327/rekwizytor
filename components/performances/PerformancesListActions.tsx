@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { MoreHorizontal, Download, QrCode } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { rasterizeIcon } from '@/utils/icon-rasterizer'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Database } from '@/types/supabase'
@@ -83,11 +84,12 @@ END:VCALENDAR`
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    performances: performances.map(p => ({
+                    performances: await Promise.all(performances.map(async (p) => ({
                         id: p.id,
                         title: p.title,
-                        premiereDate: p.premiere_date ? new Date(p.premiere_date).toLocaleDateString('pl-PL') : undefined
-                    }))
+                        premiereDate: p.premiere_date ? new Date(p.premiere_date).toLocaleDateString('pl-PL') : undefined,
+                        iconImage: await rasterizeIcon('Ticket')
+                    })))
                 }),
             })
 

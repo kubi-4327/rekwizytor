@@ -305,6 +305,7 @@ export type Database = {
           location_snapshot: string | null
           notes_snapshot: string | null
           performance_id: string
+          scene_id: string | null
           scene_name: string | null
           scene_number: string | null
           setup_instructions: string | null
@@ -322,6 +323,7 @@ export type Database = {
           location_snapshot?: string | null
           notes_snapshot?: string | null
           performance_id: string
+          scene_id?: string | null
           scene_name?: string | null
           scene_number?: string | null
           setup_instructions?: string | null
@@ -339,6 +341,7 @@ export type Database = {
           location_snapshot?: string | null
           notes_snapshot?: string | null
           performance_id?: string
+          scene_id?: string | null
           scene_name?: string | null
           scene_number?: string | null
           setup_instructions?: string | null
@@ -659,8 +662,8 @@ export type Database = {
           name: string | null
           notes: string | null
           performance_status:
-            | Database["public"]["Enums"]["item_performance_status_enum"]
-            | null
+          | Database["public"]["Enums"]["item_performance_status_enum"]
+          | null
           updated_at: string | null
         }
         Insert: {
@@ -674,8 +677,8 @@ export type Database = {
           name?: string | null
           notes?: string | null
           performance_status?:
-            | Database["public"]["Enums"]["item_performance_status_enum"]
-            | null
+          | Database["public"]["Enums"]["item_performance_status_enum"]
+          | null
           updated_at?: string | null
         }
         Update: {
@@ -689,8 +692,8 @@ export type Database = {
           name?: string | null
           notes?: string | null
           performance_status?:
-            | Database["public"]["Enums"]["item_performance_status_enum"]
-            | null
+          | Database["public"]["Enums"]["item_performance_status_enum"]
+          | null
           updated_at?: string | null
         }
         Relationships: [
@@ -731,11 +734,11 @@ export type Database = {
           item_name: string | null
           location_name: string | null
           location_type:
-            | Database["public"]["Enums"]["location_type_enum"]
-            | null
+          | Database["public"]["Enums"]["location_type_enum"]
+          | null
           performance_status:
-            | Database["public"]["Enums"]["item_performance_status_enum"]
-            | null
+          | Database["public"]["Enums"]["item_performance_status_enum"]
+          | null
         }
         Relationships: []
       }
@@ -782,90 +785,90 @@ export type Database = {
       }
       refresh_search_index: { Args: never; Returns: undefined }
       search_global:
-        | {
-            Args: {
-              match_count?: number
-              match_threshold?: number
-              query_text: string
-            }
-            Returns: {
-              description: string
-              entity_type: string
-              id: string
-              image_url: string
-              metadata: Json
-              name: string
-              score: number
-              url: string
-            }[]
-          }
-        | {
-            Args: {
-              fuzzy_threshold?: number
-              match_count?: number
-              match_threshold?: number
-              query_text: string
-            }
-            Returns: {
-              description: string
-              entity_type: string
-              id: string
-              image_url: string
-              match_type: string
-              metadata: Json
-              name: string
-              score: number
-              url: string
-            }[]
-          }
+      | {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_text: string
+        }
+        Returns: {
+          description: string
+          entity_type: string
+          id: string
+          image_url: string
+          metadata: Json
+          name: string
+          score: number
+          url: string
+        }[]
+      }
+      | {
+        Args: {
+          fuzzy_threshold?: number
+          match_count?: number
+          match_threshold?: number
+          query_text: string
+        }
+        Returns: {
+          description: string
+          entity_type: string
+          id: string
+          image_url: string
+          match_type: string
+          metadata: Json
+          name: string
+          score: number
+          url: string
+        }[]
+      }
       search_global_hybrid:
-        | {
-            Args: {
-              fuzzy_threshold?: number
-              match_count?: number
-              match_threshold?: number
-              query_embedding: string
-              query_text: string
-            }
-            Returns: {
-              description: string
-              entity_type: string
-              id: string
-              image_url: string
-              match_type: string
-              metadata: Json
-              name: string
-              score: number
-              url: string
-            }[]
-          }
-        | {
-            Args: {
-              match_count?: number
-              match_threshold?: number
-              query_embedding: string
-              query_text: string
-            }
-            Returns: {
-              description: string
-              entity_type: string
-              id: string
-              name: string
-              score: number
-              url: string
-            }[]
-          }
+      | {
+        Args: {
+          fuzzy_threshold?: number
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+          query_text: string
+        }
+        Returns: {
+          description: string
+          entity_type: string
+          id: string
+          image_url: string
+          match_type: string
+          metadata: Json
+          name: string
+          score: number
+          url: string
+        }[]
+      }
+      | {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+          query_text: string
+        }
+        Returns: {
+          description: string
+          entity_type: string
+          id: string
+          name: string
+          score: number
+          url: string
+        }[]
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       soft_delete_item: { Args: { item_uuid: string }; Returns: undefined }
     }
     Enums: {
       item_performance_status_enum:
-        | "active"
-        | "upcoming"
-        | "archived"
-        | "unassigned"
-        | "in_maintenance"
+      | "active"
+      | "upcoming"
+      | "archived"
+      | "unassigned"
+      | "in_maintenance"
       item_status_enum: "draft" | "active"
       location_type_enum: "main_storage" | "backstage" | "stage" | "other"
       mention_type: "item" | "category" | "location" | "user" | "date"
@@ -885,116 +888,116 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-    ? R
-    : never
+  ? R
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
+    DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] &
+    DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+  ? R
+  : never
+  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema["Tables"]
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
+    Insert: infer I
+  }
+  ? I
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+    Insert: infer I
+  }
+  ? I
+  : never
+  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema["Tables"]
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
+    Update: infer U
+  }
+  ? U
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+    Update: infer U
+  }
+  ? U
+  : never
+  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema["Enums"]
+  | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+  : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema["CompositeTypes"]
+  | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+  : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never
 
 export const Constants = {
   public: {
@@ -1015,3 +1018,6 @@ export const Constants = {
     },
   },
 } as const
+export type Scene = Database['public']['Tables']['scenes']['Row']
+export type Item = Database['public']['Tables']['items']['Row']
+export type Performance = Database['public']['Tables']['performances']['Row']

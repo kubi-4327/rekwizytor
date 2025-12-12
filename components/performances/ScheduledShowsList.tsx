@@ -69,45 +69,22 @@ export function ScheduledShowsList({ scheduledShows, productionTitle, performanc
             <div
                 key={date}
                 onClick={() => setSelectedShowDate(date)}
-                className={`p-4 rounded-lg bg-neutral-900 border transition-all cursor-pointer hover:bg-neutral-800/50 ${isNearest
+                className={`p-5 rounded-lg bg-neutral-900 border transition-all cursor-pointer hover:bg-neutral-800/50 ${isNearest
                     ? 'border-ai-primary/50 shadow-[0_0_15px_rgba(160,35,47,0.15)]'
                     : isPast
                         ? 'border-neutral-800/50 opacity-60 hover:opacity-100'
                         : 'border-neutral-800'
                     }`}
             >
-                <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                        <div className="flex items-center text-white font-medium">
+                <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center text-white font-medium text-base">
                             <Clock className={`mr-2 h-4 w-4 ${isNearest ? 'text-ai-secondary' : 'text-neutral-500'}`} />
                             <span>
-                                {format(new Date(date), 'dd/MM/yyyy')}
+                                {format(new Date(date), 'dd.MM.yyyy')}
                             </span>
                             <span className="mx-2 text-neutral-600">•</span>
                             <span>{formatTime(date)}</span>
-                        </div>
-                        <span
-                            className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${firstShow.type === 'rehearsal'
-                                ? 'bg-neutral-800 text-neutral-400 border-neutral-700'
-                                : ''
-                                }`}
-                            style={firstShow.type !== 'rehearsal' ? {
-                                backgroundColor: `${performanceColor || '#3b82f6'}20`,
-                                color: performanceColor || '#60a5fa',
-                                borderColor: `${performanceColor || '#3b82f6'}30`
-                            } : undefined}
-                        >
-                            {firstShow.type === 'rehearsal' ? t('rehearsal') : t('show')}
-                        </span>
-                        {firstShow.cast && (
-                            <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border bg-ai-primary/20 text-ai-secondary border-ai-primary/30">
-                                {firstShow.cast === 'first' ? t('cast.first') : firstShow.cast === 'second' ? t('cast.second') : t('cast.other')}
-                            </span>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div onClick={(e) => e.stopPropagation()}>
-                            {/* AddToCalendar removed from list view */}
                         </div>
                         {isLive && (
                             <span className="px-2 py-0.5 rounded-full bg-green-900/20 text-green-400 text-xs border border-green-900/30 animate-pulse">
@@ -115,10 +92,27 @@ export function ScheduledShowsList({ scheduledShows, productionTitle, performanc
                             </span>
                         )}
                     </div>
-                </div>
-                <div className="text-xs text-neutral-500 flex justify-between items-center">
-                    <span>{t('scenes', { count: shows.length })}</span>
-                    <span className="text-ai-secondary group-hover:underline">{t('viewDetails')}</span>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span
+                            className={`text-[10px] uppercase tracking-wider px-2 py-1 rounded border font-medium ${firstShow.type === 'rehearsal'
+                                ? 'bg-neutral-800 text-neutral-400 border-neutral-700'
+                                : ''
+                                }`}
+                            style={firstShow.type !== 'rehearsal' ? {
+                                backgroundColor: `${performanceColor || '#3b82f6'}15`,
+                                color: performanceColor || '#60a5fa',
+                                borderColor: `${performanceColor || '#3b82f6'}30`
+                            } : undefined}
+                        >
+                            {firstShow.type === 'rehearsal' ? t('rehearsal') : t('show')}
+                        </span>
+                        {firstShow.cast && (
+                            <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded border bg-ai-primary/10 text-ai-secondary border-ai-primary/20 font-medium">
+                                {firstShow.cast === 'first' ? t('cast.first') : firstShow.cast === 'second' ? t('cast.second') : t('cast.other')}
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
         )
@@ -165,27 +159,26 @@ END:VCALENDAR`
                     {sortedDates.length > 0 && (
                         <button
                             onClick={handleDownloadAll}
-                            className="inline-flex items-center justify-center rounded-md border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50"
+                            className="inline-flex items-center justify-center rounded-md border border-neutral-700 bg-neutral-800 p-2 text-white hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50"
                             title={t('exportAll')}
                         >
-                            <Download className="sm:mr-2 h-4 w-4" />
-                            <span className="hidden sm:inline">{t('exportAll')}</span>
+                            <Download className="h-4 w-4" />
                         </button>
                     )}
                     <Link
                         href={`/performances/${performanceId}/schedule`}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-white text-black rounded-md hover:bg-neutral-200 transition-colors"
+                        className="inline-flex items-center justify-center p-2 bg-white text-black rounded-md hover:bg-neutral-200 transition-colors"
+                        title={t('schedule')}
                     >
                         <Plus className="w-4 h-4" />
-                        {t('schedule')}
                     </Link>
                 </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
                 {/* Past Shows Section */}
                 {pastDates.length > 0 && (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         <button
                             onClick={() => setShowPast(!showPast)}
                             className="text-xs text-neutral-500 hover:text-neutral-300 flex items-center gap-2 w-full"
