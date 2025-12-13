@@ -30,24 +30,50 @@ export default async function Home() {
   // Execute all independent queries in parallel for 5x performance improvement
   const [
     nearestPerformanceResult,
-    upcomingPerformancesResult,
+    upcomingChecklistsResult,
+    upcomingPremieresResult,
     totalItemsResult,
     inMaintenanceResult,
     unassignedResult,
     activeChecklistsResult,
     mentionsResult,
   ] = await Promise.allSettled([
-    // Fetch Nearest Upcoming Performance
+    // Fetch Nearest Upcoming Performance (based on scheduled checklists)
     supabase
-      .from('performances')
-      .select('id, title, premiere_date, image_url, status')
-      .is('deleted_at', null)
-      .in('status', ['active', 'upcoming'])
-      .order('premiere_date', { ascending: true })
+      .from('scene_checklists')
+      .select(`
+        show_date,
+        performance:performances (
+          id,
+          title,
+          premiere_date,
+          image_url,
+          status
+        )
+      `)
+      .gte('show_date', new Date().toISOString())
+      .order('show_date', { ascending: true })
       .limit(1)
       .single(),
 
-    // Fetch Upcoming Performances (3-5 shows)
+    // Fetch Upcoming Scheduled Shows (from checklists)
+    supabase
+      .from('scene_checklists')
+      .select(`
+        id,
+        show_date,
+        performance:performances (
+          id,
+          title,
+          status,
+          color
+        )
+      `)
+      .gte('show_date', new Date().toISOString())
+      .order('show_date', { ascending: true })
+      .limit(10),
+
+    // Fetch Upcoming Premieres (as fallback/addition)
     supabase
       .from('performances')
       .select('id, title, premiere_date, status, color')
@@ -119,13 +145,66 @@ export default async function Home() {
   ])
 
   // Extract data with error handling for each query
-  const nearestPerformance = nearestPerformanceResult.status === 'fulfilled'
+  const nearestChecklist = nearestPerformanceResult.status === 'fulfilled'
     ? nearestPerformanceResult.value.data
     : null
 
-  const upcomingPerformances = upcomingPerformancesResult.status === 'fulfilled'
-    ? upcomingPerformancesResult.value.data
-    : null
+  const nearestPerformance = nearestChecklist?.performance && !Array.isArray(nearestChecklist.performance) ? {
+    ...nearestChecklist.performance,
+    next_show_date: nearestChecklist.show_date
+  } : null
+
+  // Process Upcoming Performances (Merge Checklists and Premieres)
+  const scheduledShows = upcomingChecklistsResult.status === 'fulfilled'
+    ? upcomingChecklistsResult.value.data || []
+    : []
+
+  const futurePremieres = upcomingPremieresResult.status === 'fulfilled'
+    ? upcomingPremieresResult.value.data || []
+    : []
+
+  // Combine and normalize to common interface { id, title, date, status, color }
+  const combinedPerformances = [
+    // Add scheduled shows
+    ...scheduledShows
+      .filter(item => item.performance)
+      .map(item => {
+        const perf = item.performance as any // Type assertion for joined data
+        return {
+          id: perf.id,
+          title: perf.title,
+          date: item.show_date,
+          status: perf.status,
+          color: perf.color
+        }
+      }),
+    // Add premieres
+    ...futurePremieres.map(perf => ({
+      id: perf.id,
+      title: perf.title,
+      date: perf.premiere_date!,
+      status: perf.status,
+      color: perf.color
+    }))
+  ]
+
+  // Deduplicate: If same performance ID exists on same DATE, prefer the one from scheduledShows (if any distinction needed).
+  // Actually, simplified deduplication: Just distinct by `${id}-${date}` key.
+  const uniquePerformancesMap = new Map()
+  combinedPerformances.forEach(p => {
+    // Only add if future or today
+    if (new Date(p.date) >= new Date(new Date().setHours(0, 0, 0, 0))) {
+      const key = `${p.id}-${p.date.split('T')[0]}` // Dedupe by ID and Day
+      if (!uniquePerformancesMap.has(key)) {
+        uniquePerformancesMap.set(key, p)
+      }
+    }
+  })
+
+  // Sort by date ascending and take top 5
+  const upcomingPerformances = Array.from(uniquePerformancesMap.values())
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 5)
 
   const totalItems = totalItemsResult.status === 'fulfilled'
     ? totalItemsResult.value.count
@@ -186,7 +265,7 @@ export default async function Home() {
 
           <div className="grid gap-6 md:grid-cols-2">
             <section>
-              <UpcomingPerformances performances={upcomingPerformances?.filter(p => p.premiere_date) as any || []} />
+              <UpcomingPerformances performances={upcomingPerformances as any} />
             </section>
             <section>
               <ActiveChecklistsStatus checklists={checklistsForDisplay as any} />

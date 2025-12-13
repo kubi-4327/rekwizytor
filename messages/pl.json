@@ -108,6 +108,7 @@
         }
     },
     "Navigation": {
+        "home": "Start",
         "items": "Rekwizyty",
         "productions": "Spektakle",
         "checklists": "Live View",

@@ -11,6 +11,7 @@ interface Performance {
     id: string
     title: string
     premiere_date: string | null
+    next_show_date?: string | null
     image_url: string | null
     status: string
 }
@@ -44,9 +45,11 @@ export function NearestPerformanceCard({ performance }: NearestPerformanceCardPr
         )
     }
 
-    const premiereDate = performance.premiere_date ? new Date(performance.premiere_date) : null
-    const daysLeft = premiereDate ? differenceInDays(premiereDate, new Date()) : null
-    const isPerformanceToday = premiereDate ? isToday(premiereDate) : false
+    // Use next_show_date if available (for precise scheduling), otherwise fallback to premiere_date
+    const displayDateString = performance.next_show_date || performance.premiere_date
+    const displayDate = displayDateString ? new Date(displayDateString) : null
+    const daysLeft = displayDate ? differenceInDays(displayDate, new Date()) : null
+    const isPerformanceToday = displayDate ? isToday(displayDate) : false
 
     return (
         <div className="group relative overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 min-h-[300px] flex flex-col justify-end shadow-2xl">
@@ -115,7 +118,7 @@ export function NearestPerformanceCard({ performance }: NearestPerformanceCardPr
                     <div className="flex flex-wrap items-center gap-4 mt-2 md:mt-4">
                         <div className="flex items-center gap-3 text-neutral-200 text-sm md:text-base font-medium bg-black/30 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/10">
                             <Calendar className="h-5 w-5" />
-                            {premiereDate ? format(premiereDate, 'd MMMM yyyy', { locale: dateLocale }) : 'TBD'}
+                            {displayDate ? format(displayDate, 'd MMMM yyyy', { locale: dateLocale }) : 'TBD'}
                         </div>
 
                         <Link

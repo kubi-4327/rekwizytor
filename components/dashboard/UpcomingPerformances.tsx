@@ -8,7 +8,7 @@ import { useLocale } from 'next-intl'
 interface Performance {
     id: string
     title: string
-    premiere_date: string
+    date: string
     status: string
     color?: string
 }
@@ -64,22 +64,22 @@ export function UpcomingPerformances({ performances }: UpcomingPerformancesProps
                 {t('upcomingPerformances')}
             </h3>
             <div className="space-y-2">
-                {performances.map((performance) => {
-                    const { text: timeUntil, urgent } = getTimeUntil(performance.premiere_date)
+                {performances.map((performance, index) => {
+                    const { text: timeUntil, urgent } = getTimeUntil(performance.date)
 
                     return (
                         <Link
-                            key={performance.id}
+                            key={`${performance.id}-${performance.date}-${index}`}
                             href={`/performances/${performance.id}`}
                             className="block group"
                         >
                             <div className="flex items-center gap-4 p-3 rounded-xl bg-neutral-800/30 border border-transparent hover:border-neutral-700 hover:bg-neutral-800/50 transition-all duration-200">
                                 <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-neutral-900 border border-neutral-800 flex-shrink-0">
                                     <span className="text-xs text-neutral-500 uppercase font-medium">
-                                        {new Date(performance.premiere_date).toLocaleDateString(locale, { month: 'short' }).replace('.', '')}
+                                        {new Date(performance.date).toLocaleDateString(locale, { month: 'short' }).replace('.', '')}
                                     </span>
                                     <span className="text-lg font-bold text-white">
-                                        {new Date(performance.premiere_date).getDate()}
+                                        {new Date(performance.date).getDate()}
                                     </span>
                                 </div>
 

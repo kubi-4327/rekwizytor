@@ -107,6 +107,7 @@
         }
     },
     "Navigation": {
+        "home": "Home",
         "items": "Items",
         "productions": "Productions",
         "checklists": "Live View",

@@ -2,7 +2,7 @@
 
 import { Link } from '@/i18n/routing'
 import { usePathname } from 'next/navigation'
-import { Box, Layers, ClipboardList, Menu, Tag, Notebook, Search } from 'lucide-react'
+import { Box, Layers, ClipboardList, Menu, Tag, Notebook, Search, House } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useState } from 'react'
 import { MobileMenu } from './layout/MobileMenu'
@@ -16,9 +16,8 @@ export function BottomNav() {
     const t = useTranslations('Navigation')
 
     const navigation = [
-        { name: t('productions'), href: '/performances', icon: Layers },
+        { name: t('home'), href: '/', icon: House },
         { name: t('notes'), href: '/notes', icon: Notebook },
-        { name: t('checklists'), href: '/checklists', icon: ClipboardList },
         { name: t('search'), href: '/search', icon: Search }, // href is dummy for 'search'
         { name: t('more'), href: '/more', icon: Menu }, // href is dummy for 'more'
     ]
@@ -35,7 +34,11 @@ export function BottomNav() {
                 <div className="flex h-16 items-center justify-around px-2">
                     {navigation.map((item) => {
                         const isMore = item.href === '/more'
-                        const isActive = !isMore && pathname.startsWith(item.href)
+                        const isActive = !isMore && (
+                            item.href === '/'
+                                ? pathname === '/'
+                                : pathname.startsWith(item.href)
+                        )
 
                         if (isMore) {
                             return (
