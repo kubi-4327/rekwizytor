@@ -13,7 +13,8 @@ import { Database } from '@/types/supabase'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 
-type Group = Database['public']['Tables']['groups']['Row']
+type Group = Pick<Database['public']['Tables']['groups']['Row'],
+    'id' | 'name' | 'icon'>
 
 type Props = {
     group: Group | null

@@ -11,9 +11,10 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 
-type Item = Database['public']['Tables']['items']['Row']
-type Location = Database['public']['Tables']['locations']['Row']
-type Group = Database['public']['Tables']['groups']['Row']
+type Item = Pick<Database['public']['Tables']['items']['Row'],
+    'id' | 'name' | 'image_url' | 'notes' | 'status' | 'group_id' | 'location_id' | 'created_at' | 'performance_status' | 'ai_description'>
+type Location = Pick<Database['public']['Tables']['locations']['Row'], 'id' | 'name'>
+type Group = Pick<Database['public']['Tables']['groups']['Row'], 'id' | 'name'>
 
 type Props = {
     item: Item | null

@@ -12,9 +12,10 @@ import { useRouter } from 'next/navigation'
 import { notify } from '@/utils/notify'
 import { useTranslations } from 'next-intl'
 
-type Item = Database['public']['Tables']['items']['Row']
-type Location = Database['public']['Tables']['locations']['Row']
-type Group = Database['public']['Tables']['groups']['Row']
+type Item = Pick<Database['public']['Tables']['items']['Row'],
+    'id' | 'name' | 'image_url' | 'notes' | 'status' | 'group_id' | 'location_id' | 'ai_description'>
+type Location = Pick<Database['public']['Tables']['locations']['Row'], 'id' | 'name'>
+type Group = Pick<Database['public']['Tables']['groups']['Row'], 'id' | 'name' | 'parent_id'>
 
 type Props = {
     item: Item | null

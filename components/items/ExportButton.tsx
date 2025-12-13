@@ -9,7 +9,8 @@ import { format } from 'date-fns'
 import { notify } from '@/utils/notify'
 import { DropdownAction } from '@/components/ui/DropdownAction'
 
-type Item = Database['public']['Tables']['items']['Row']
+type Item = Pick<Database['public']['Tables']['items']['Row'],
+    'name' | 'notes' | 'performance_status' | 'created_at'>
 
 interface ExportButtonProps {
     items: Item[]

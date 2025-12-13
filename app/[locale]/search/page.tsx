@@ -40,6 +40,9 @@ export default function SearchPage() {
     const [loading, setLoading] = React.useState(false)
     const [searchStrategy, setSearchStrategy] = React.useState<SearchStrategy>('fts')
 
+    // Defer results to prevent blocking renders during typing
+    const deferredResults = React.useDeferredValue(results)
+
     // Enhanced Filter State
     const initialType = searchParams.get('type')
     const [entityTypeFilter, setEntityTypeFilter] = React.useState<string[]>(
@@ -219,13 +222,17 @@ export default function SearchPage() {
         return () => clearTimeout(timer)
     }, [query, entityTypeFilter, searchParams])
 
-    const displayResults = aiMode ? aiResults : (loading && staleResults.length > 0 ? staleResults : results)
-    const grouped = displayResults.reduce((acc, item) => {
-        const type = item.entity_type
-        if (!acc[type]) acc[type] = []
-        acc[type].push(item)
-        return acc
-    }, {} as Record<string, typeof displayResults>)
+    const displayResults = aiMode ? aiResults : (loading && staleResults.length > 0 ? staleResults : deferredResults)
+
+    // Memoize grouped results to prevent recalculation
+    const grouped = React.useMemo(() => {
+        return displayResults.reduce((acc, item) => {
+            const type = item.entity_type
+            if (!acc[type]) acc[type] = []
+            acc[type].push(item)
+            return acc
+        }, {} as Record<string, typeof displayResults>)
+    }, [displayResults])
 
     const hasActiveQuery = query.length > 0
     const showStale = loading && staleResults.length > 0

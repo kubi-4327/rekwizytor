@@ -12,24 +12,29 @@ export default async function PerformancesPage() {
     const supabase = await createClient()
     const t = await getTranslations('Performances')
 
-    const { data: performances } = await supabase
-        .from('performances')
-        .select('*')
-        .is('deleted_at', null)
-        .order('premiere_date', { ascending: false })
+    // Parallel queries for better performance
+    const [performancesResult, scheduledShowsResult] = await Promise.all([
+        supabase
+            .from('performances')
+            .select('id, title, status, premiere_date, thumbnail_url, image_url, color, deleted_at')
+            .is('deleted_at', null)
+            .order('premiere_date', { ascending: false }),
+        supabase
+            .from('scene_checklists')
+            .select(`
+                id,
+                show_date,
+                type,
+                cast,
+                performance:performances (
+                    title
+                )
+            `)
+            .order('show_date', { ascending: true })
+    ])
 
-    const { data: allScheduledShows } = await supabase
-        .from('scene_checklists')
-        .select(`
-            id,
-            show_date,
-            type,
-            cast,
-            performance:performances (
-                title
-            )
-        `)
-        .order('show_date', { ascending: true })
+    const performances = performancesResult.data
+    const allScheduledShows = scheduledShowsResult.data
 
     return (
         <div className="p-4 md:p-10 space-y-6 max-w-7xl mx-auto">

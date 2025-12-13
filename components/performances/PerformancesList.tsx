@@ -12,7 +12,8 @@ import { FilterBar } from '@/components/ui/FilterBar'
 import { clsx } from 'clsx'
 import { motion, AnimatePresence } from 'framer-motion'
 
-type Performance = Database['public']['Tables']['performances']['Row']
+type Performance = Pick<Database['public']['Tables']['performances']['Row'],
+    'id' | 'title' | 'status' | 'premiere_date' | 'thumbnail_url' | 'image_url' | 'color'>
 
 type Props = {
     performances: Performance[]
@@ -43,7 +44,6 @@ const PerformanceListItem = ({ show }: { show: Performance }) => {
                             alt={show.title}
                             fill
                             className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                            unoptimized
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-neutral-700 bg-neutral-800/50">
@@ -109,7 +109,7 @@ const PerformanceGridItem = ({ show }: { show: Performance }) => {
                                     alt={show.title}
                                     fill
                                     className="object-cover blur-2xl opacity-50 scale-125"
-                                    unoptimized
+                                    priority
                                 />
                                 {/* Main Image */}
                                 <Image
@@ -117,7 +117,6 @@ const PerformanceGridItem = ({ show }: { show: Performance }) => {
                                     alt={show.title}
                                     fill
                                     className="object-cover transition-transform duration-700 group-hover:scale-105 opacity-80 group-hover:opacity-100"
-                                    unoptimized
                                 />
                             </>
                         ) : (

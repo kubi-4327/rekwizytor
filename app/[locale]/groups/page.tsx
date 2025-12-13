@@ -16,10 +16,10 @@ export default async function GroupsPage({ searchParams }: Props) {
 
     const groupId = typeof resolvedSearchParams.groupId === 'string' ? resolvedSearchParams.groupId : null
 
-    // Fetch all groups to build hierarchy and list
+    // Fetch all groups to build hierarchy and list - optimized query
     const { data: groups } = await supabase
         .from('groups')
-        .select('*, locations(name)')
+        .select('id, name, parent_id, icon, locations(name)')
         .order('name')
 
     if (!groups) return null

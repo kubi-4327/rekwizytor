@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { Plus, FileText, Trash2, ChevronDown, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
@@ -14,18 +14,21 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { FilterBar } from '@/components/ui/FilterBar'
 import { motion } from 'framer-motion'
 
-export default function NotesList({ performanceId }: { performanceId?: string }) {
+export default function NotesList({ performanceId, initialNotes = [] }: { performanceId?: string, initialNotes?: any[] }) {
     const t = useTranslations('NotesList')
-    const [notes, setNotes] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
+    const [notes, setNotes] = useState<any[]>(initialNotes)
+    const [loading, setLoading] = useState(false)
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
 
     const supabase = createClient()
     const router = useRouter()
     const searchParams = useSearchParams()
 
+    // Only fetch if performanceId changes (for filtered views)
     useEffect(() => {
-        fetchNotes()
+        if (performanceId) {
+            fetchNotes()
+        }
     }, [performanceId])
 
     useEffect(() => {
@@ -102,35 +105,42 @@ export default function NotesList({ performanceId }: { performanceId?: string })
     // Filter notes
     const filteredNotes = notes
 
-    // Group notes
-    const groupedNotes = filteredNotes.reduce((acc: any, note: any) => {
-        const key = note.performance_id || 'general'
-        if (!acc[key]) {
-            acc[key] = {
-                id: key,
-                title: note.performances?.title || t('generalNotes'),
-                notes: []
+    // Group notes - memoized to prevent recalculation
+    const groupedNotes = useMemo(() => {
+        return filteredNotes.reduce((acc: any, note: any) => {
+            const key = note.performance_id || 'general'
+            if (!acc[key]) {
+                acc[key] = {
+                    id: key,
+                    title: note.performances?.title || t('generalNotes'),
+                    color: note.performances?.color,
+                    notes: []
+                }
             }
-        }
-        acc[key].notes.push(note)
-        return acc
-    }, {})
+            acc[key].notes.push(note)
+            return acc
+        }, {})
+    }, [filteredNotes, t])
 
-    // Sort groups: General first, then others
-    const sortedGroups = Object.values(groupedNotes).sort((a: any, b: any) => {
-        if (a.id === 'general') return -1
-        if (b.id === 'general') return 1
-        return a.title.localeCompare(b.title)
-    })
-
-    // Sort notes within groups
-    sortedGroups.forEach((group: any) => {
-        group.notes.sort((a: any, b: any) => {
-            if (a.is_master && !b.is_master) return -1
-            if (!a.is_master && b.is_master) return 1
-            return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    // Sort groups: General first, then others - memoized
+    const sortedGroups = useMemo(() => {
+        const groups = Object.values(groupedNotes).sort((a: any, b: any) => {
+            if (a.id === 'general') return -1
+            if (b.id === 'general') return 1
+            return a.title.localeCompare(b.title)
         })
-    })
+
+        // Sort notes within groups
+        groups.forEach((group: any) => {
+            group.notes.sort((a: any, b: any) => {
+                if (a.is_master && !b.is_master) return -1
+                if (!a.is_master && b.is_master) return 1
+                return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+            })
+        })
+
+        return groups
+    }, [groupedNotes])
 
     return (
         <div className="space-y-8">
@@ -185,6 +195,12 @@ export default function NotesList({ performanceId }: { performanceId?: string })
                                 <div className="p-1 rounded-md bg-neutral-800 group-hover:bg-neutral-700 transition-colors">
                                     {expandedGroups[group.id] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                                 </div>
+                                {group.color && (
+                                    <div
+                                        className="h-4 w-1 rounded-full mr-1"
+                                        style={{ backgroundColor: group.color }}
+                                    />
+                                )}
                                 {group.title}
                                 <span className="text-[10px] bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded-full ml-1 border border-neutral-700">
                                     {group.notes.length}

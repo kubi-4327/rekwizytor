@@ -8,9 +8,10 @@ import { useState } from 'react'
 import { EditGroupDialog } from './EditGroupDialog'
 import { GroupLabelButton } from './GroupLabelButton'
 
-type Group = Database['public']['Tables']['groups']['Row'] & {
-    locations: { name: string } | null
-}
+type Group = Pick<Database['public']['Tables']['groups']['Row'],
+    'id' | 'name' | 'icon'> & {
+        locations: { name: string } | null
+    }
 
 interface GroupCardProps {
     group: Group

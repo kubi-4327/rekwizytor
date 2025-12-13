@@ -14,16 +14,18 @@ import { Button } from '@/components/ui/Button'
 import { FilterBar } from '@/components/ui/FilterBar'
 import { Box } from 'lucide-react'
 
-type Item = Database['public']['Tables']['items']['Row']
+type Item = Pick<Database['public']['Tables']['items']['Row'],
+    'id' | 'name' | 'image_url' | 'notes' | 'status' | 'group_id' | 'location_id' | 'created_at' | 'ai_description' | 'performance_status'>
 type ItemStatus = Database['public']['Enums']['item_performance_status_enum']
 
-
+type Location = Pick<Database['public']['Tables']['locations']['Row'], 'id' | 'name'>
+type Group = Pick<Database['public']['Tables']['groups']['Row'], 'id' | 'name' | 'icon' | 'parent_id'>
 
 type Props = {
     initialItems: Item[]
     totalCount: number
-    locations: Database['public']['Tables']['locations']['Row'][]
-    groups: Database['public']['Tables']['groups']['Row'][]
+    locations: Location[]
+    groups: Group[]
     initialCategoryId?: string
     initialViewItemId?: string
 }

@@ -21,24 +21,32 @@ export default async function ItemsPage({ searchParams }: Props) {
     const viewItemId = typeof resolvedSearchParams.view === 'string' ? resolvedSearchParams.view : undefined
     const locationId = typeof resolvedSearchParams.locationId === 'string' ? resolvedSearchParams.locationId : undefined
 
-    let query = supabase
+    // Build items query with optimized column selection
+    let itemsQuery = supabase
         .from('items')
-        .select('*', { count: 'exact' })
+        .select('id, name, image_url, notes, status, group_id, location_id, created_at, ai_description, performance_status', { count: 'exact' })
         .is('deleted_at', null)
         .neq('status', 'draft')
         .order('created_at', { ascending: false })
 
     if (groupId) {
-        query = query.eq('group_id', groupId)
+        itemsQuery = itemsQuery.eq('group_id', groupId)
     }
     if (locationId) {
-        query = query.eq('location_id', locationId)
+        itemsQuery = itemsQuery.eq('location_id', locationId)
     }
 
-    const { data: items, count } = await query.range(0, 49)
+    // Parallel queries for better performance
+    const [itemsResult, locationsResult, groupsResult] = await Promise.all([
+        itemsQuery.range(0, 49),
+        supabase.from('locations').select('id, name').order('name'),
+        supabase.from('groups').select('id, name, icon, parent_id').order('name')
+    ])
 
-    const { data: locations } = await supabase.from('locations').select('*').order('name')
-    const { data: groups } = await supabase.from('groups').select('*').order('name')
+    const items = itemsResult.data
+    const count = itemsResult.count
+    const locations = locationsResult.data
+    const groups = groupsResult.data
 
     return (
         <div className="p-4 md:p-10 space-y-6 max-w-7xl mx-auto">

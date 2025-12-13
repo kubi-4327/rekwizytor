@@ -3,16 +3,17 @@
 import { Database } from '@/types/supabase'
 import { GroupCard } from './GroupCard'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { ChevronDown, ChevronRight, MapPin, FileText } from 'lucide-react'
 import { FilterBar } from '@/components/ui/FilterBar'
 import { MorphingSearchBar } from '@/components/search/MorphingSearchBar'
 import { Button } from '@/components/ui/Button'
 import { rasterizeIcon } from '@/utils/icon-rasterizer'
 
-type Group = Database['public']['Tables']['groups']['Row'] & {
-    locations: { name: string } | null
-}
+type Group = Pick<Database['public']['Tables']['groups']['Row'],
+    'id' | 'name' | 'parent_id' | 'icon'> & {
+        locations: { name: string } | null
+    }
 
 interface GroupsListProps {
     groups: Group[]
@@ -24,6 +25,27 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
     const searchParams = useSearchParams()
     const highlightId = searchParams.get('highlight')
     const [expandedLocations, setExpandedLocations] = useState<Record<string, boolean>>({})
+
+    // Filter groups to show only children of current parent
+    const currentLevelGroups = groups.filter(g => g.parent_id === currentParentId)
+
+    // Initialize expanded state for all locations on mount
+    useEffect(() => {
+        const groupedByLoc = currentLevelGroups.reduce((acc, group) => {
+            const locationName = group.locations?.name || 'Unassigned'
+            if (!acc[locationName]) {
+                acc[locationName] = []
+            }
+            acc[locationName].push(group)
+            return acc
+        }, {} as Record<string, Group[]>)
+
+        const initialExpanded: Record<string, boolean> = {}
+        Object.keys(groupedByLoc).forEach(loc => {
+            initialExpanded[loc] = true
+        })
+        setExpandedLocations(initialExpanded)
+    }, []) // Empty deps - only run on mount
 
     // Handle highlight logic
     useEffect(() => {
@@ -50,9 +72,6 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
         }
     }, [highlightId, groups])
 
-    // Filter groups to show only children of current parent
-    const currentLevelGroups = groups.filter(g => g.parent_id === currentParentId)
-
     if (currentLevelGroups.length === 0) {
         return (
             <div className="text-center py-12">
@@ -61,24 +80,17 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
         )
     }
 
-    // Group by location
-    const groupedByLocation = currentLevelGroups.reduce((acc, group) => {
-        const locationName = group.locations?.name || 'Unassigned'
-        if (!acc[locationName]) {
-            acc[locationName] = []
-        }
-        acc[locationName].push(group)
-        return acc
-    }, {} as Record<string, Group[]>)
-
-    // Initialize expanded state for all locations on first render if empty
-    if (Object.keys(expandedLocations).length === 0 && Object.keys(groupedByLocation).length > 0) {
-        const initialExpanded: Record<string, boolean> = {}
-        Object.keys(groupedByLocation).forEach(loc => {
-            initialExpanded[loc] = true
-        })
-        setExpandedLocations(initialExpanded)
-    }
+    // Memoize groupedByLocation to prevent recalculation
+    const groupedByLocation = useMemo(() => {
+        return currentLevelGroups.reduce((acc, group) => {
+            const locationName = group.locations?.name || 'Unassigned'
+            if (!acc[locationName]) {
+                acc[locationName] = []
+            }
+            acc[locationName].push(group)
+            return acc
+        }, {} as Record<string, Group[]>)
+    }, [currentLevelGroups])
 
     const toggleLocation = (location: string) => {
         setExpandedLocations(prev => ({ ...prev, [location]: !prev[location] }))

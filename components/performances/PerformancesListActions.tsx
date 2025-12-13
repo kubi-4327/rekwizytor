@@ -7,7 +7,8 @@ import { rasterizeIcon } from '@/utils/icon-rasterizer'
 import { useTranslations } from 'next-intl'
 import { Database } from '@/types/supabase'
 
-type Performance = Database['public']['Tables']['performances']['Row']
+type Performance = Pick<Database['public']['Tables']['performances']['Row'],
+    'id' | 'title' | 'premiere_date'>
 
 type ScheduledShow = {
     id: string
