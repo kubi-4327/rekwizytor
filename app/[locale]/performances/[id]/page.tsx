@@ -106,11 +106,6 @@ export default async function ProductionDetailsPage({ params }: Props) {
     return (
         <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
             <div>
-                <Link href="/performances" className="inline-flex items-center text-sm text-neutral-400 hover:text-white mb-4 transition-colors">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    {t('backToProductions')}
-                </Link>
-
                 {/* Header Container */}
                 <div className="bg-neutral-900/50 backdrop-blur-sm border border-neutral-800 rounded-xl p-6 shadow-xl">
                     <div className="flex flex-col md:flex-row gap-6 items-start">

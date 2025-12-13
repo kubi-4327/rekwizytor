@@ -71,7 +71,7 @@ export function ExportPerformanceButton({ production, items, scenes = [], notes 
                 onClick={handleExportPDF}
                 disabled={isExporting}
                 variant="ghost"
-                className="w-full justify-start px-4 py-2.5 text-neutral-300 hover:text-white hover:bg-neutral-800"
+                className="w-full justify-start px-4 py-2 text-sm text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg mt-1"
                 isLoading={isExporting}
                 leftIcon={!isExporting && <FileText className="w-4 h-4" />}
             >

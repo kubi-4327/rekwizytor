@@ -63,7 +63,7 @@ export function PerformanceLabelButton({ performanceId, performanceTitle, premie
                 onClick={handleGenerateLabel}
                 disabled={isGenerating}
                 variant="ghost"
-                className="w-full justify-start px-4 py-2.5 text-neutral-300 hover:text-white hover:bg-neutral-800 border-t border-neutral-800 rounded-none h-auto"
+                className="w-full justify-start px-4 py-2 text-sm text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg h-auto"
                 isLoading={isGenerating}
                 leftIcon={!isGenerating && <QrCode className="w-4 h-4" />}
             >

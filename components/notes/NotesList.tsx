@@ -145,10 +145,10 @@ export default function NotesList({ performanceId }: { performanceId?: string })
                     <Button
                         onClick={() => createNote()}
                         variant="primary"
-                        className="w-full sm:w-auto sm:min-w-[140px]"
-                        leftIcon={<Plus size={16} />}
+                        className="sm:w-auto sm:min-w-[140px]"
                     >
-                        {t('newNote')}
+                        <Plus className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">{t('newNote')}</span>
                     </Button>
                 </div>
             </PageHeader>

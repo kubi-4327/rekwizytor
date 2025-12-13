@@ -68,25 +68,29 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
             if (existingNote) {
                 // Sync existing
                 const newContent = syncSceneNoteContent(existingNote.content, initialScenes, scenesToSave)
-                await supabase
+                const { error: updateError } = await supabase
                     .from('notes')
                     .update({ content: newContent })
                     .eq('id', existingNote.id)
+
+                if (updateError) throw updateError
             } else {
                 // Create new
                 const newContent = generateSceneNoteContent(scenesToSave)
                 const { data: userData } = await supabase.auth.getUser()
 
-                await supabase.from('notes').insert({
+                const { error: insertError } = await supabase.from('notes').insert({
                     performance_id: performanceId,
                     title: noteTitle,
                     content: newContent,
-                    user_id: userData.user?.id
+                    created_by: userData.user?.id
                 })
+
+                if (insertError) throw insertError
             }
         } catch (error) {
             console.error('Sync error:', error)
-            // Continue exit anyway? Maybe alert?
+            alert(t('updateError') + ': ' + (error as any).message)
         } finally {
             setIsSyncing(false)
         }

@@ -1,11 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreHorizontal, Download, QrCode } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { MoreVertical, Download, QrCode } from 'lucide-react'
+import { DropdownAction } from '@/components/ui/DropdownAction'
 import { rasterizeIcon } from '@/utils/icon-rasterizer'
 import { useTranslations } from 'next-intl'
-import Link from 'next/link'
 import { Database } from '@/types/supabase'
 
 type Performance = Database['public']['Tables']['performances']['Row']
@@ -114,45 +113,27 @@ END:VCALENDAR`
     }
 
     return (
-        <div className="relative group">
-            <Button
-                variant="secondary"
-                size="icon"
-                className="hidden sm:inline-flex border-neutral-700 h-10 w-10"
-            >
-                <MoreHorizontal className="h-5 w-5" />
-                <span className="sr-only">{t('actions')}</span>
-            </Button>
-
-            {/* Visible only on mobile as a simpler button, or handling responsive design differently if needed. 
-                 For now, assuming the same dropdown pattern as requested. */}
-
-            <div className="absolute right-0 top-full pt-2 w-56 z-50 hidden group-hover:block">
-                <div className="bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl overflow-hidden">
-                    <div className="py-1">
-                        <Button
-                            variant="ghost"
-                            onClick={handleDownloadAllSchedule}
-                            disabled={scheduledShows.length === 0}
-                            className="w-full justify-start px-4 py-2.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-none h-auto"
-                            leftIcon={<Download className="w-4 h-4" />}
-                        >
-                            {t('exportAllSchedule')}
-                        </Button>
-
-                        <Button
-                            variant="ghost"
-                            onClick={handleGenerateAllLabels}
-                            disabled={isGeneratingLabels || performances.length === 0}
-                            isLoading={isGeneratingLabels}
-                            className="w-full justify-start px-4 py-2.5 text-neutral-300 hover:text-white hover:bg-neutral-800 border-t border-neutral-800 rounded-none h-auto"
-                            leftIcon={!isGeneratingLabels && <QrCode className="w-4 h-4" />}
-                        >
-                            {t('generateAllLabels')}
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <DropdownAction
+            variant="secondary"
+            icon={<MoreVertical className="h-5 w-5" />}
+            label={t('actions')}
+            className="hidden sm:inline-flex border-neutral-700 h-10 min-w-0 px-3"
+            showChevron={false}
+            items={[
+                {
+                    label: t('exportAllSchedule'),
+                    icon: <Download className="w-4 h-4" />,
+                    onClick: handleDownloadAllSchedule,
+                    disabled: scheduledShows.length === 0
+                },
+                {
+                    label: t('generateAllLabels'),
+                    icon: <QrCode className="w-4 h-4" />,
+                    onClick: handleGenerateAllLabels,
+                    isLoading: isGeneratingLabels,
+                    disabled: performances.length === 0
+                }
+            ]}
+        />
     )
 }

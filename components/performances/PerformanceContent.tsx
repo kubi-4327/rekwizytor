@@ -7,6 +7,7 @@ import { PerformanceAllItemsView } from './PerformanceAllItemsView'
 import { useTranslations } from 'next-intl'
 import { Layers, Grid, Settings } from 'lucide-react'
 import Link from 'next/link'
+import { buttonVariants } from '@/components/ui/Button'
 
 type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] & {
     items: {
@@ -34,7 +35,7 @@ export function PerformanceContent({ performanceId, propsByAct, assignedProps, s
                 <h2 className="text-xl font-bold text-white">{t('propsList')}</h2>
                 <Link
                     href={`/performances/${performanceId}/props`}
-                    className="inline-flex items-center justify-center rounded-md border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 hover:text-white transition-colors gap-2 w-full sm:w-auto"
+                    className={buttonVariants({ variant: "secondary", className: "gap-2 w-full sm:w-auto" })}
                 >
                     <Settings className="w-4 h-4" />
                     {t('manageProps')}

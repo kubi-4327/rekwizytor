@@ -7,6 +7,7 @@ import { Plus, Trash2, Loader2, Package, GripVertical, CheckSquare, Square, User
 import { ItemSelectionDialog } from './ItemSelectionDialog'
 import NextImage from 'next/image'
 import { ItemIcon } from '@/components/ui/ItemIcon'
+import { DropdownAction } from '@/components/ui/DropdownAction'
 import { useTranslations } from 'next-intl'
 import { Database } from '@/types/supabase'
 import {
@@ -776,53 +777,23 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                             <Package className="h-5 w-5 text-neutral-400" />
                             {t('unassignedItems')}
                         </h3>
-                        <Menu as="div" className="relative">
-                            <Menu.Button
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-neutral-300 bg-neutral-800 hover:bg-neutral-700 rounded-md transition-colors"
-                            >
-                                <Plus className="h-4 w-4" />
-                                <span className="hidden sm:inline">{t('addProp')}</span>
-                                <ChevronDown className="h-3 w-3 sm:ml-1" />
-                            </Menu.Button>
-                            <Transition
-                                as={Fragment}
-                                enter="transition ease-out duration-100"
-                                enterFrom="transform opacity-0 scale-95"
-                                enterTo="transform opacity-100 scale-100"
-                                leave="transition ease-in duration-75"
-                                leaveFrom="transform opacity-100 scale-100"
-                                leaveTo="transform opacity-0 scale-95"
-                            >
-                                <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-neutral-800 border border-neutral-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                    <div className="p-1">
-                                        <Menu.Item>
-                                            {({ active }) => (
-                                                <button
-                                                    onClick={() => handleOpenAddDialog(null)}
-                                                    className={`${active ? 'bg-neutral-700 text-white' : 'text-neutral-300'
-                                                        } group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm`}
-                                                >
-                                                    <List className="h-4 w-4" />
-                                                    {t('selectExisting')}
-                                                </button>
-                                            )}
-                                        </Menu.Item>
-                                        <Menu.Item>
-                                            {({ active }) => (
-                                                <a
-                                                    href={`/items/fast-add?performanceId=${performanceId}`}
-                                                    className={`${active ? 'bg-neutral-700 text-white' : 'text-neutral-300'
-                                                        } group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm`}
-                                                >
-                                                    <Camera className="h-4 w-4" />
-                                                    {t('fastAdd')}
-                                                </a>
-                                            )}
-                                        </Menu.Item>
-                                    </div>
-                                </Menu.Items>
-                            </Transition>
-                        </Menu>
+                        <DropdownAction
+                            label={t('addProp')}
+                            icon={<Plus className="h-4 w-4" />}
+                            variant="primary"
+                            items={[
+                                {
+                                    label: t('selectExisting'),
+                                    icon: <List className="h-4 w-4" />,
+                                    onClick: () => handleOpenAddDialog(null)
+                                },
+                                {
+                                    label: t('fastAdd'),
+                                    icon: <Camera className="h-4 w-4" />,
+                                    href: `/items/fast-add?performanceId=${performanceId}`
+                                }
+                            ]}
+                        />
                     </div>
                     <div className="bg-neutral-900/30 p-4 rounded-xl border border-neutral-800/50 border-dashed">
                         {renderAssignmentList('unassigned', groupedAssignments['unassigned'])}
@@ -853,54 +824,23 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                                                     <p className="text-sm text-neutral-400">{scene.name}</p>
                                                 )}
                                             </div>
-                                            <Menu as="div" className="relative">
-                                                <Menu.Button
-                                                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-burgundy-main hover:bg-burgundy-light rounded-md transition-colors"
-                                                    style={accentColor ? { backgroundColor: accentColor } : {}}
-                                                >
-                                                    <Plus className="h-4 w-4" />
-                                                    <span className="hidden sm:inline">{t('addProp')}</span>
-                                                    <ChevronDown className="h-3 w-3 sm:ml-1" />
-                                                </Menu.Button>
-                                                <Transition
-                                                    as={Fragment}
-                                                    enter="transition ease-out duration-100"
-                                                    enterFrom="transform opacity-0 scale-95"
-                                                    enterTo="transform opacity-100 scale-100"
-                                                    leave="transition ease-in duration-75"
-                                                    leaveFrom="transform opacity-100 scale-100"
-                                                    leaveTo="transform opacity-0 scale-95"
-                                                >
-                                                    <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-neutral-800 border border-neutral-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                                        <div className="p-1">
-                                                            <Menu.Item>
-                                                                {({ active }) => (
-                                                                    <button
-                                                                        onClick={() => handleOpenAddDialog(scene.id)}
-                                                                        className={`${active ? 'bg-neutral-700 text-white' : 'text-neutral-300'
-                                                                            } group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm`}
-                                                                    >
-                                                                        <List className="h-4 w-4" />
-                                                                        {t('selectExisting')}
-                                                                    </button>
-                                                                )}
-                                                            </Menu.Item>
-                                                            <Menu.Item>
-                                                                {({ active }) => (
-                                                                    <a
-                                                                        href={`/items/fast-add?performanceId=${performanceId}`}
-                                                                        className={`${active ? 'bg-neutral-700 text-white' : 'text-neutral-300'
-                                                                            } group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm`}
-                                                                    >
-                                                                        <Camera className="h-4 w-4" />
-                                                                        {t('fastAdd')}
-                                                                    </a>
-                                                                )}
-                                                            </Menu.Item>
-                                                        </div>
-                                                    </Menu.Items>
-                                                </Transition>
-                                            </Menu>
+                                            <DropdownAction
+                                                label={t('addProp')}
+                                                icon={<Plus className="h-4 w-4" />}
+                                                variant="primary"
+                                                items={[
+                                                    {
+                                                        label: t('selectExisting'),
+                                                        icon: <List className="h-4 w-4" />,
+                                                        onClick: () => handleOpenAddDialog(scene.id)
+                                                    },
+                                                    {
+                                                        label: t('fastAdd'),
+                                                        icon: <Camera className="h-4 w-4" />,
+                                                        href: `/items/fast-add?performanceId=${performanceId}`
+                                                    }
+                                                ]}
+                                            />
                                         </div>
                                         <div>
                                             {renderAssignmentList(scene.id, groupedAssignments[scene.id] || [])}
