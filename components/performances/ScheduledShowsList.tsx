@@ -7,6 +7,8 @@ import Link from 'next/link'
 import { useTimeFormat } from '@/hooks/useTimeFormat'
 import { ScheduledShowDetailsModal } from './ScheduledShowDetailsModal'
 import { isAfter, subHours, format } from 'date-fns'
+import { ScheduleShowDialog } from './ScheduleShowDialog'
+
 
 import { useTranslations } from 'next-intl'
 
@@ -151,6 +153,10 @@ END:VCALENDAR`
         document.body.removeChild(link)
     }
 
+    const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
+
+    // ... (rest of the component logic)
+
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-4">
@@ -165,13 +171,13 @@ END:VCALENDAR`
                             <Download className="h-4 w-4" />
                         </button>
                     )}
-                    <Link
-                        href={`/performances/${performanceId}/schedule`}
+                    <button
+                        onClick={() => setIsScheduleModalOpen(true)}
                         className="inline-flex items-center justify-center p-2 bg-white text-black rounded-md hover:bg-neutral-200 transition-colors"
                         title={t('schedule')}
                     >
                         <Plus className="w-4 h-4" />
-                    </Link>
+                    </button>
                 </div>
             </div>
 
@@ -209,8 +215,17 @@ END:VCALENDAR`
                     showDate={selectedShowDate}
                     shows={showsByDate[selectedShowDate]}
                     productionTitle={productionTitle}
+                    performanceColor={performanceColor}
                 />
             )}
+
+            <ScheduleShowDialog
+                isOpen={isScheduleModalOpen}
+                onClose={() => setIsScheduleModalOpen(false)}
+                performanceId={performanceId}
+                performanceColor={performanceColor || null}
+            />
         </div>
     )
 }
+

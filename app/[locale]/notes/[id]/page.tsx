@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import NoteEditor, { NoteEditorRef } from '@/components/notes/NoteEditor'
+import SceneNoteEditor from '@/components/notes/SceneNoteEditor'
 import { ArrowLeft, Share, Copy, Download, ChevronDown, Pencil, Check, Folder } from 'lucide-react'
 import Link from 'next/link'
 import { extractMentions } from '@/components/notes/utils'
@@ -332,14 +333,24 @@ export default function NoteDetailPage() {
 
                 </div>
 
-                <NoteEditor
-                    ref={editorRef}
-                    initialContent={note.content}
-                    noteId={note.id}
-                    serverUpdatedAt={note.updated_at}
-                    onSave={saveNote}
-                    readOnly={!isEditing}
-                />
+                {(title.startsWith('Notatka sceniczna') && note.performance_id) ? (
+                    <SceneNoteEditor
+                        noteId={note.id}
+                        initialContent={note.content}
+                        performanceId={note.performance_id}
+                        onSave={saveNote}
+                        readOnly={!isEditing}
+                    />
+                ) : (
+                    <NoteEditor
+                        ref={editorRef}
+                        initialContent={note.content}
+                        noteId={note.id}
+                        serverUpdatedAt={note.updated_at}
+                        onSave={saveNote}
+                        readOnly={!isEditing}
+                    />
+                )}
             </div>
         </div>
     )

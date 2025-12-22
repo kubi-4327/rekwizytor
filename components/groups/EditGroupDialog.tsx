@@ -1,11 +1,12 @@
 'use client'
 
 import { Fragment, useState, useEffect } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
 import {
     X,
     Folder
 } from 'lucide-react'
+import { Modal } from '@/components/ui/Modal'
+
 import { ICONS, KEYWORD_MAPPINGS, getIconComponent } from '@/utils/icon-map'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/utils/supabase/client'
@@ -109,157 +110,114 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
     const labelSave = t('save', { defaultMessage: 'Save Changes' })
 
     return (
-        <Transition.Root show={isOpen} as={Fragment}>
-            <Dialog as="div" className="relative z-50" onClose={onClose}>
-                <Transition.Child
-                    as={Fragment}
-                    enter="ease-out duration-300"
-                    enterFrom="opacity-0"
-                    enterTo="opacity-100"
-                    leave="ease-in duration-200"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                >
-                    <div className="fixed inset-0 bg-black/80 transition-opacity" />
-                </Transition.Child>
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={labelTitle}
+        >
+            <div className="space-y-6 mt-4">
+                <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-neutral-400 mb-2">
+                        {labelName}
+                    </label>
+                    <input
+                        type="text"
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="block w-full rounded-md border-0 bg-neutral-900 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-neutral-800 placeholder:text-neutral-500 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
+                    />
+                </div>
 
-                <div className="fixed inset-0 z-10 overflow-y-auto">
-                    <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-                        <Transition.Child
-                            as={Fragment}
-                            enter="ease-out duration-300"
-                            enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                            enterTo="opacity-100 translate-y-0 sm:scale-100"
-                            leave="ease-in duration-200"
-                            leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-                            leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                        >
-                            <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 border border-neutral-800">
-                                <div className="absolute right-4 top-4">
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="text-neutral-400 hover:text-white"
-                                        onClick={onClose}
+                <div>
+                    <label className="block text-sm font-medium text-neutral-400 mb-2">
+                        {labelIcon}
+                    </label>
+
+                    <div className="mb-4">
+                        <input
+                            type="text"
+                            placeholder={placeholderSearch}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="block w-full rounded-md border-0 bg-neutral-900 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-neutral-800 placeholder:text-neutral-500 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
+                        />
+                    </div>
+
+                    {/* Suggested Icons */}
+                    {!searchTerm && getSuggestedIcons(name).length > 0 && (
+                        <div className="mb-3">
+                            <p className="text-xs text-neutral-500 mb-2">{labelSuggested}</p>
+                            <div className="flex gap-2">
+                                {getSuggestedIcons(name).map((item) => (
+                                    <button
+                                        key={`suggested-${item.name}`}
+                                        onClick={() => setSelectedIcon(item.name)}
+                                        className={`p-2 rounded-md flex items-center justify-center transition-colors border border-neutral-700 ${selectedIcon === item.name
+                                            ? 'bg-white text-black'
+                                            : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                                            }`}
+                                        title={item.name}
                                     >
-                                        <X className="h-6 w-6" aria-hidden="true" />
-                                    </Button>
-                                </div>
+                                        <item.icon className="w-5 h-5" />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
-                                <div className="mt-3 sm:mt-5">
-                                    <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-white mb-6">
-                                        {labelTitle}
-                                    </Dialog.Title>
+                    <div className="grid grid-cols-6 gap-2 max-h-60 overflow-y-auto p-2 bg-neutral-900 rounded-md border border-neutral-800">
+                        {ICONS
+                            .filter(item => {
+                                const lowerSearch = searchTerm.toLowerCase()
+                                // Direct name match
+                                if (item.name.toLowerCase().includes(lowerSearch)) return true
 
-                                    <div className="space-y-6">
-                                        <div>
-                                            <label htmlFor="name" className="block text-sm font-medium text-neutral-400 mb-2">
-                                                {labelName}
-                                            </label>
-                                            <input
-                                                type="text"
-                                                id="name"
-                                                value={name}
-                                                onChange={(e) => setName(e.target.value)}
-                                                className="block w-full rounded-md border-0 bg-neutral-900 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-neutral-800 placeholder:text-neutral-500 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
-                                            />
-                                        </div>
+                                // Reverse lookup in mappings to allow searching by Polish term in the input
+                                // E.g. user types "krzesło", we find 'Armchair' in mapping['krzesło']
+                                const polishMatches = Object.entries(KEYWORD_MAPPINGS)
+                                    .filter(([key]) => key.includes(lowerSearch))
+                                    .flatMap(([, icons]) => icons)
 
-                                        <div>
-                                            <label className="block text-sm font-medium text-neutral-400 mb-2">
-                                                {labelIcon}
-                                            </label>
-
-                                            <div className="mb-4">
-                                                <input
-                                                    type="text"
-                                                    placeholder={placeholderSearch}
-                                                    value={searchTerm}
-                                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                                    className="block w-full rounded-md border-0 bg-neutral-900 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-neutral-800 placeholder:text-neutral-500 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
-                                                />
-                                            </div>
-
-                                            {/* Suggested Icons */}
-                                            {!searchTerm && getSuggestedIcons(name).length > 0 && (
-                                                <div className="mb-3">
-                                                    <p className="text-xs text-neutral-500 mb-2">{labelSuggested}</p>
-                                                    <div className="flex gap-2">
-                                                        {getSuggestedIcons(name).map((item) => (
-                                                            <button
-                                                                key={`suggested-${item.name}`}
-                                                                onClick={() => setSelectedIcon(item.name)}
-                                                                className={`p-2 rounded-md flex items-center justify-center transition-colors border border-neutral-700 ${selectedIcon === item.name
-                                                                    ? 'bg-white text-black'
-                                                                    : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
-                                                                    }`}
-                                                                title={item.name}
-                                                            >
-                                                                <item.icon className="w-5 h-5" />
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <div className="grid grid-cols-6 gap-2 max-h-60 overflow-y-auto p-2 bg-neutral-900 rounded-md border border-neutral-800">
-                                                {ICONS
-                                                    .filter(item => {
-                                                        const lowerSearch = searchTerm.toLowerCase()
-                                                        // Direct name match
-                                                        if (item.name.toLowerCase().includes(lowerSearch)) return true
-
-                                                        // Reverse lookup in mappings to allow searching by Polish term in the input
-                                                        // E.g. user types "krzesło", we find 'Armchair' in mapping['krzesło']
-                                                        const polishMatches = Object.entries(KEYWORD_MAPPINGS)
-                                                            .filter(([key]) => key.includes(lowerSearch))
-                                                            .flatMap(([, icons]) => icons)
-
-                                                        return polishMatches.includes(item.name)
-                                                    })
-                                                    .map((item) => (
-                                                        <button
-                                                            key={item.name}
-                                                            onClick={() => setSelectedIcon(item.name)}
-                                                            className={`p-2 rounded-md flex items-center justify-center transition-colors ${selectedIcon === item.name
-                                                                ? 'bg-white text-black'
-                                                                : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
-                                                                }`}
-                                                            title={item.name}
-                                                        >
-                                                            <item.icon className="w-5 h-5" />
-                                                        </button>
-                                                    ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="mt-5 sm:mt-6 flex gap-3">
-                                    <Button
-                                        type="button"
-                                        variant="secondary"
-                                        onClick={onClose}
-                                        className="w-full"
-                                    >
-                                        {labelCancel}
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="primary"
-                                        onClick={handleSave}
-                                        isLoading={isSaving}
-                                        className="w-full"
-                                    >
-                                        {labelSave}
-                                    </Button>
-                                </div>
-                            </Dialog.Panel>
-                        </Transition.Child>
+                                return polishMatches.includes(item.name)
+                            })
+                            .map((item) => (
+                                <button
+                                    key={item.name}
+                                    onClick={() => setSelectedIcon(item.name)}
+                                    className={`p-2 rounded-md flex items-center justify-center transition-colors ${selectedIcon === item.name
+                                        ? 'bg-white text-black'
+                                        : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                                        }`}
+                                    title={item.name}
+                                >
+                                    <item.icon className="w-5 h-5" />
+                                </button>
+                            ))}
                     </div>
                 </div>
-            </Dialog>
-        </Transition.Root>
+            </div>
+
+            <div className="mt-5 sm:mt-6 flex gap-3">
+                <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={onClose}
+                    className="w-full"
+                >
+                    {labelCancel}
+                </Button>
+                <Button
+                    type="button"
+                    variant="primary"
+                    onClick={handleSave}
+                    isLoading={isSaving}
+                    className="w-full"
+                >
+                    {labelSave}
+                </Button>
+            </div>
+        </Modal>
     )
 }
+

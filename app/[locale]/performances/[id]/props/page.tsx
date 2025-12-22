@@ -1,21 +1,12 @@
 import { createClient } from '@/utils/supabase/server'
-import dynamic from 'next/dynamic'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Loader2 } from 'lucide-react'
-import { Database } from '@/types/supabase'
+import { ArrowLeft } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
-
-import { ManagePropsClient } from '@/components/performances/ManagePropsClient'
+import { ManagePropsContent } from '@/components/props/ManagePropsContent'
 
 type Props = {
     params: Promise<{ id: string }>
-}
-
-type Scene = Database['public']['Tables']['scenes']['Row']
-type Item = Database['public']['Tables']['items']['Row']
-type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] & {
-    items: Database['public']['Tables']['items']['Row'] | null
 }
 
 export default async function ManagePropsPage({ params }: Props) {
@@ -34,44 +25,13 @@ export default async function ManagePropsPage({ params }: Props) {
         notFound()
     }
 
-    // Fetch all available items
-    const { data: items } = await supabase
-        .from('items')
-        .select('*')
-        .is('deleted_at', null)
-        .order('name')
-        .returns<Item[]>()
-
-    // Fetch available scenes
-    const { data: scenes } = await supabase
-        .from('scenes')
+    // Fetch props
+    const { data: props } = await supabase
+        .from('performance_props')
         .select('*')
         .eq('performance_id', id)
-        .order('act_number', { ascending: true })
-        .order('scene_number', { ascending: true })
-        .returns<Scene[]>()
-
-    // Fetch current assignments
-    const { data: assignments } = await supabase
-        .from('performance_items')
-        .select(`
-      *,
-      items (*)
-    `)
-        .eq('performance_id', id)
-        .order('scene_number', { ascending: true })
-        .order('sort_order', { ascending: true })
-        .returns<PerformanceItem[]>()
-
-    // Fetch all profiles for assignment
-    const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url')
-        .order('full_name')
-
-    // Fetch locations and groups for item details
-    const { data: locations } = await supabase.from('locations').select('*').order('name')
-    const { data: groups } = await supabase.from('groups').select('*').order('name')
+        .order('order', { ascending: true })
+        .order('created_at', { ascending: true })
 
     return (
         <div className="p-4 md:p-10 max-w-5xl mx-auto">
@@ -86,15 +46,10 @@ export default async function ManagePropsPage({ params }: Props) {
                 </p>
             </div>
 
-            <ManagePropsClient
+            <ManagePropsContent
                 performanceId={id}
-                initialAssignments={assignments || []}
-                availableItems={items || []}
-                definedScenes={scenes?.map((s: Scene) => ({ ...s, act_number: s.act_number ?? 1 })) || []}
                 accentColor={production.color}
-                profiles={profiles || []}
-                locations={locations || []}
-                groups={groups || []}
+                initialItems={props || []}
             />
         </div>
     )

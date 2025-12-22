@@ -2,7 +2,7 @@
 
 import { Link } from '@/i18n/routing'
 import { usePathname } from 'next/navigation'
-import { Box, Layers, ClipboardList, Menu, Tag, Notebook, Search, House } from 'lucide-react'
+import { Layers, ClipboardList, Menu, Tag, Notebook, Search, House } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useState } from 'react'
 import { MobileMenu } from './layout/MobileMenu'

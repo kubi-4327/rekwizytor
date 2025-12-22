@@ -1,11 +1,14 @@
-'use client'
 
+import { useState, useEffect, useMemo } from 'react'
 import { Database } from '@/types/supabase'
-import { Calendar, Clock, Users, X, Edit2 } from 'lucide-react'
+import { Calendar, Clock, Users, Edit2 } from 'lucide-react'
 import { useTimeFormat } from '@/hooks/useTimeFormat'
 import { AddToCalendar } from '@/components/ui/AddToCalendar'
 import { useTranslations } from 'next-intl'
 import { format } from 'date-fns'
+import { ScheduleShowDialog } from './ScheduleShowDialog'
+import { Modal } from '@/components/ui/Modal'
+import { Button } from '@/components/ui/Button'
 
 type ScheduledShow = Database['public']['Tables']['scene_checklists']['Row']
 
@@ -15,57 +18,45 @@ type Props = {
     showDate: string
     shows: ScheduledShow[]
     productionTitle: string
+    performanceColor?: string | null
 }
 
-export function ScheduledShowDetailsModal({ isOpen, onClose, showDate, shows, productionTitle }: Props) {
+export function ScheduledShowDetailsModal({ isOpen, onClose, showDate, shows, productionTitle, performanceColor }: Props) {
     const t = useTranslations('ScheduledShowDetailsModal')
     const { formatTime } = useTimeFormat()
 
-    if (!isOpen || !shows || shows.length === 0) return null
+    const [isEditing, setIsEditing] = useState(false)
+
+    // Close editing when modal closes
+    useEffect(() => {
+        if (!isOpen) setIsEditing(false)
+    }, [isOpen])
+
+    if (!shows || shows.length === 0) return null
 
     const firstShow = shows[0]
     const dateObj = new Date(showDate)
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-                <div className="p-6 space-y-6">
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <h2 className="text-xl font-bold text-white">{productionTitle}</h2>
-                            <p className="text-neutral-400 text-sm mt-1 uppercase tracking-wider font-medium">
-                                {firstShow.type || t('show')}
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => {
-                                    // Navigate to edit page with show ID (using first show's date/time as identifier)
-                                    // Since we don't have a direct edit page for a single show instance yet, 
-                                    // we might need to implement it or reuse schedule page.
-                                    // For now, let's just log or show a placeholder, or better, 
-                                    // redirect to schedule page with query param to pre-fill?
-                                    // Actually user asked for "add possibility to edit scheduled show".
-                                    // I'll add the button but it needs a target.
-                                    // Let's assume we will create an edit route or modal.
-                                    // For now I will just put the button there.
-                                    // Wait, I can use the existing schedule page but I need to pass data.
-                                    // Or I can make a new modal for editing.
-                                    // Let's just add the button for now as requested and maybe link to a new page.
-                                    window.location.href = `/performances/${shows[0].performance_id}/schedule?edit=${showDate}`
-                                }}
-                                className="text-neutral-500 hover:text-white transition-colors p-1"
-                                title={t('edit')}
-                            >
-                                <Users className="h-5 w-5 hidden" /> {/* Hack to import icon if needed, but I'll use Edit2 */}
-                                <Edit2 className="h-5 w-5" />
-                            </button>
-                            <button onClick={onClose} className="text-neutral-500 hover:text-white transition-colors">
-                                <X className="h-5 w-5" />
-                            </button>
-                        </div>
-                    </div>
+    const editData = useMemo(() => ({
+        date: dateObj,
+        cast: (firstShow.cast as any) || 'first',
+        originalDate: showDate
+    }), [dateObj.getTime(), firstShow.cast, showDate])
 
+    return (
+        <>
+            <Modal
+                isOpen={isOpen}
+                onClose={onClose}
+                title={productionTitle}
+                description={
+                    <span className="uppercase tracking-wider font-medium">
+                        {firstShow.type || t('show')}
+                    </span>
+                }
+                maxWidth="md"
+            >
+                <div className="space-y-6">
                     <div className="space-y-4">
                         <div className="flex items-center gap-3 text-neutral-300">
                             <Calendar className="h-5 w-5 text-neutral-500" />
@@ -95,16 +86,35 @@ export function ScheduledShowDetailsModal({ isOpen, onClose, showDate, shows, pr
                         </div>
                     </div>
 
-                    <div className="pt-2 flex justify-end">
+                    <div className="pt-2 flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center">
+                        <Button
+                            onClick={() => setIsEditing(true)}
+                            variant="outline"
+                            className="text-neutral-400 hover:text-white border-neutral-700 hover:bg-neutral-800"
+                        >
+                            <Edit2 className="h-4 w-4 mr-2" />
+                            {t('edit')}
+                        </Button>
+
                         <AddToCalendar
-                            title={`${productionTitle} - ${firstShow.type || t('show')}`}
+                            title={`${productionTitle} - ${firstShow.type || t('show')} `}
                             date={showDate}
-                            details={`Cast: ${firstShow.cast || 'N/A'}\nScenes: ${shows.map(s => s.scene_number).join(', ')}`}
+                            details={`Cast: ${firstShow.cast || 'N/A'} \nScenes: ${shows.map(s => s.scene_number).join(', ')} `}
                             className="text-neutral-400 hover:text-white"
                         />
                     </div>
                 </div>
-            </div>
-        </div>
+            </Modal>
+
+            <ScheduleShowDialog
+                isOpen={isEditing}
+                onClose={() => {
+                    setIsEditing(false)
+                }}
+                performanceId={firstShow.performance_id || ''}
+                performanceColor={performanceColor || null}
+                editData={editData}
+            />
+        </>
     )
 }

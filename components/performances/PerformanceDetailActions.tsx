@@ -68,6 +68,13 @@ export function PerformanceDetailActions({
                     >
                         {t('manageScenes')}
                     </Link>
+                    <Link
+                        href={`/performances/${performanceId}/props`}
+                        className="block px-4 py-2 text-sm text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors rounded-lg mt-1"
+                        onClick={close}
+                    >
+                        {t('manageProps')}
+                    </Link>
                     <div className="bg-neutral-800 h-px my-1 mx-2" />
                     <div>
                         <PerformanceLabelButton

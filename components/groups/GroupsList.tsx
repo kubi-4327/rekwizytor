@@ -4,7 +4,8 @@ import { Database } from '@/types/supabase'
 import { GroupCard } from './GroupCard'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useState, useEffect, useMemo } from 'react'
-import { ChevronDown, ChevronRight, MapPin, FileText } from 'lucide-react'
+import { GroupScannerDialog } from './GroupScannerDialog'
+import { ChevronDown, ChevronRight, MapPin, FileText, ScanLine } from 'lucide-react'
 import { FilterBar } from '@/components/ui/FilterBar'
 import { MorphingSearchBar } from '@/components/search/MorphingSearchBar'
 import { Button } from '@/components/ui/Button'
@@ -103,6 +104,7 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
     })
 
     const [isGenerating, setIsGenerating] = useState(false)
+    const [isScannerOpen, setIsScannerOpen] = useState(false)
 
     const handleGenerateAllLabels = async () => {
         try {
@@ -155,6 +157,13 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
                 </div>
                 <div className="flex items-center gap-3">
                     <Button
+                        onClick={() => setIsScannerOpen(true)}
+                        variant="primary"
+                        leftIcon={<ScanLine className="w-4 h-4" />}
+                    >
+                        Scan New
+                    </Button>
+                    <Button
                         onClick={handleGenerateAllLabels}
                         disabled={isGenerating}
                         variant="secondary"
@@ -165,6 +174,11 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
                     </Button>
                 </div>
             </FilterBar>
+            <GroupScannerDialog
+                isOpen={isScannerOpen}
+                onClose={() => setIsScannerOpen(false)}
+                parentId={currentParentId}
+            />
             {sortedLocations.map(location => (
                 <div key={location} className="space-y-4">
                     <button

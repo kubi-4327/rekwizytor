@@ -228,6 +228,8 @@
     "ProductionDetails": {
         "backToProductions": "Back to Productions",
         "scenes": "Scenes",
+        "scene": "Scene",
+        "props": "Props",
         "acts": "Acts",
         "manageScenes": "Manage Scenes",
         "editDetails": "Edit Details",
@@ -799,6 +801,24 @@
         "credits": "Credits",
         "creditsText": "Designed and built with ❤️ by Jakub Pełka.",
         "testVersionWarning": "This is a test version of the application. Some features may not work correctly."
+    },
+    "PropsChecklist": {
+        "progress": "{checked} of {total} checked",
+        "showBulkAdd": "Bulk Add",
+        "hideBulkAdd": "Hide Bulk Add",
+        "bulkAddLabel": "Add multiple props (one per line)",
+        "bulkAddPlaceholder": "Red cup\nOld pistol\nVintage suitcase\n...",
+        "addBulkProps": "Add All Props",
+        "addPropPlaceholder": "Add a prop...",
+        "noProps": "No props yet. Add some using the form above.",
+        "propAdded": "Prop added",
+        "propsAdded": "{count} props added",
+        "propDeleted": "Prop deleted",
+        "propUpdated": "Prop updated",
+        "errorAdding": "Failed to add prop",
+        "errorBulkAdding": "Failed to add props",
+        "errorDeleting": "Failed to delete prop",
+        "errorUpdating": "Failed to update prop"
     },
     "toast": {
         "success": {

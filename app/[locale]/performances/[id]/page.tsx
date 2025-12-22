@@ -58,7 +58,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
         .eq('performance_id', id)
         .order('show_date', { ascending: true })
 
-    // Fetch assigned props (performance_items)
+    // Fetch assigned props (performance_items) - Legacy system for Scene View
     const { data: assignedProps } = await supabase
         .from('performance_items')
         .select(`
@@ -95,6 +95,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
         propsByAct[actNum].push(prop)
     })
 
+
     // Fetch notes for this performance
     const { data: notes } = await supabase
         .from('notes')
@@ -102,6 +103,18 @@ export default async function ProductionDetailsPage({ params }: Props) {
         .eq('performance_id', id)
         .order('is_master', { ascending: false })
         .order('updated_at', { ascending: false })
+
+    const sceneNote = notes?.find(n => n.title.startsWith('Notatka sceniczna')) || null
+
+
+
+    // Fetch all props for checklist
+    const { data: allProps } = await supabase
+        .from('performance_props')
+        .select('*')
+        .eq('performance_id', id)
+        .order('order', { ascending: true })
+        .order('created_at', { ascending: true })
 
     return (
         <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
@@ -219,10 +232,14 @@ export default async function ProductionDetailsPage({ params }: Props) {
                 <div className="lg:col-span-2">
                     <PerformanceContent
                         performanceId={id}
+                        allProps={allProps || []}
                         propsByAct={propsByAct}
                         assignedProps={assignedProps}
                         scenes={scenes || []}
+                        sceneNote={sceneNote}
+
                     />
+
                 </div>
             </div>
         </div>

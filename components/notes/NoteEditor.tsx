@@ -173,12 +173,35 @@ const NoteEditor = forwardRef<NoteEditorRef, {
                                 .insertContent('?')
                                 .run()
                         } else if ((props as any).value === 'user') {
-                            // Replace slash command with at sign for user search
+                            // Replace slash command with @ for user search
                             editor
                                 .chain()
                                 .focus()
                                 .deleteRange(range)
                                 .insertContent('@')
+                                .run()
+                        } else if ((props as any).value === 'preshow') {
+                            // Insert Pre-show template
+                            editor
+                                .chain()
+                                .focus()
+                                .deleteRange(range)
+                                .insertContent([
+                                    {
+                                        type: 'heading',
+                                        attrs: { level: 2 },
+                                        content: [{ type: 'text', text: 'Etap 0: Przed spektaklem' }]
+                                    },
+                                    {
+                                        type: 'bulletList',
+                                        content: [
+                                            {
+                                                type: 'listItem',
+                                                content: [{ type: 'paragraph' }]
+                                            }
+                                        ]
+                                    }
+                                ])
                                 .run()
                         } else if ((props as any).type === 'command') {
                             // Insert the command text to trigger further suggestions

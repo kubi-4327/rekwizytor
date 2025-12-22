@@ -62,7 +62,6 @@ type Profile = {
     avatar_url: string | null
 }
 
-import { ItemDetailsDialog } from '@/components/items/ItemDetailsDialog'
 
 export type ManagePropsFormProps = {
     performanceId: string
@@ -82,8 +81,7 @@ function SortableItem({
     onToggleSelect,
     onDelete,
     accentColor,
-    profile,
-    onItemClick
+    profile
 }: {
     assignment: Assignment
     isSelected: boolean
@@ -91,7 +89,6 @@ function SortableItem({
     onDelete: (id: string) => void
     accentColor?: string | null
     profile?: Profile | null
-    onItemClick: (item: ItemRow) => void
 }) {
     const {
         attributes,
@@ -134,8 +131,7 @@ function SortableItem({
                     )}
                 </button>
                 <div
-                    className="h-10 w-10 flex-shrink-0 relative bg-neutral-800 rounded overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => assignment.items && onItemClick(assignment.items)}
+                    className="h-10 w-10 flex-shrink-0 relative bg-neutral-800 rounded overflow-hidden flex items-center justify-center"
                 >
                     {assignment.items?.image_url ? (
                         <NextImage src={assignment.items.image_url} alt="" fill className="object-cover" unoptimized />
@@ -143,8 +139,8 @@ function SortableItem({
                         <ItemIcon name={assignment.items?.name || ''} className="h-5 w-5 text-neutral-600" />
                     )}
                 </div>
-                <div className="min-w-0 flex-1 cursor-pointer" onClick={() => assignment.items && onItemClick(assignment.items)}>
-                    <div className="text-sm font-medium text-white truncate hover:text-action-primary transition-colors">{assignment.items?.name || 'Unknown Item'}</div>
+                <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium text-white truncate">{assignment.items?.name || 'Unknown Item'}</div>
                     <div className="flex items-center gap-2 text-xs text-neutral-500">
 
                         {profile && (
@@ -190,9 +186,6 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
     const [activeId, setActiveId] = useState<string | null>(null)
-
-    // Track which scene we are adding to. null means unassigned.
-    // Track which scene we are adding to. null means unassigned.
     const [targetScene, setTargetScene] = useState<{ number: string | null, name: string | null, id: string | null } | null>(null)
 
     const router = useRouter()
@@ -208,16 +201,6 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
             coordinateGetter: sortableKeyboardCoordinates,
         })
     )
-
-    const [selectedDetailItem, setSelectedDetailItem] = useState<ItemRow | null>(null)
-    const [isDetailsOpen, setIsDetailsOpen] = useState(false)
-
-
-
-    const handleItemClick = (item: ItemRow) => {
-        setSelectedDetailItem(item)
-        setIsDetailsOpen(true)
-    }
 
 
     // Group assignments by scene ID
@@ -664,7 +647,6 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                             onDelete={handleDelete}
                             accentColor={accentColor}
                             profile={profiles.find(p => p.id === assignment.assigned_to)}
-                            onItemClick={handleItemClick}
                         />
                     ))}
                     {items.length === 0 && (
@@ -693,15 +675,6 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                     onConfirm={handleMultiAdd}
                     items={availableItems}
                     accentColor={accentColor}
-                />
-
-                <ItemDetailsDialog
-                    item={selectedDetailItem as Database['public']['Tables']['items']['Row'] | null}
-                    isOpen={isDetailsOpen}
-                    onClose={() => setIsDetailsOpen(false)}
-                    onEdit={() => { }} // Read-only or implement edit if needed
-                    locations={locations}
-                    groups={groups}
                 />
 
                 {/* Bulk Actions Toolbar */}
@@ -786,11 +759,6 @@ export function ManagePropsForm({ performanceId, initialAssignments, availableIt
                                     label: t('selectExisting'),
                                     icon: <List className="h-4 w-4" />,
                                     onClick: () => handleOpenAddDialog(null)
-                                },
-                                {
-                                    label: t('fastAdd'),
-                                    icon: <Camera className="h-4 w-4" />,
-                                    href: `/items/fast-add?performanceId=${performanceId}`
                                 }
                             ]}
                         />

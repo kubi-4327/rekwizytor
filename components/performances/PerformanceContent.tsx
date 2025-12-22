@@ -2,12 +2,10 @@
 
 import { useState } from 'react'
 import { Database } from '@/types/supabase'
-import { PerformanceSceneView } from './PerformanceSceneView'
-import { PerformanceAllItemsView } from './PerformanceAllItemsView'
 import { useTranslations } from 'next-intl'
-import { Layers, Grid, Settings } from 'lucide-react'
-import Link from 'next/link'
-import { buttonVariants } from '@/components/ui/Button'
+import { Layers, Grid } from 'lucide-react'
+import { PropsChecklist } from '@/components/props/PropsChecklist'
+import { PerformanceSceneView } from './PerformanceSceneView'
 
 type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] & {
     items: {
@@ -18,29 +16,33 @@ type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] 
 
 type Scene = Database['public']['Tables']['scenes']['Row']
 
+type Prop = {
+    id: string
+    item_name: string
+    is_checked: boolean | null
+    created_at: string | null
+    performance_id: string
+    order: number | null
+}
+
 type Props = {
     performanceId: string
+    allProps: Prop[]
     propsByAct: Record<number, PerformanceItem[]>
     assignedProps: PerformanceItem[] | null
     scenes: Scene[]
+    sceneNote: any | null
 }
 
-export function PerformanceContent({ performanceId, propsByAct, assignedProps, scenes }: Props) {
-    const [viewMode, setViewMode] = useState<'scenes' | 'all'>('scenes')
+
+export function PerformanceContent({ performanceId, allProps, propsByAct, assignedProps, scenes, sceneNote }: Props) {
+    const [viewMode, setViewMode] = useState<'scenes' | 'checklist'>('scenes')
     const t = useTranslations('ProductionDetails')
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h2 className="text-xl font-bold text-white">{t('propsList')}</h2>
-                <Link
-                    href={`/performances/${performanceId}/props`}
-                    className={buttonVariants({ variant: "secondary", className: "gap-2 w-full sm:w-auto" })}
-                >
-                    <Settings className="w-4 h-4" />
-                    {t('manageProps')}
-                </Link>
-            </div>
+            <h2 className="text-xl font-bold text-white">{t('propsList')}</h2>
+
 
             {/* View Toggle */}
             <div className="flex justify-start border-b border-neutral-800 overflow-x-auto">
@@ -55,8 +57,8 @@ export function PerformanceContent({ performanceId, propsByAct, assignedProps, s
                     {t('sceneView')}
                 </button>
                 <button
-                    onClick={() => setViewMode('all')}
-                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${viewMode === 'all'
+                    onClick={() => setViewMode('checklist')}
+                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${viewMode === 'checklist'
                         ? 'border-white text-white'
                         : 'border-transparent text-neutral-400 hover:text-white hover:border-neutral-700'
                         }`}
@@ -66,19 +68,24 @@ export function PerformanceContent({ performanceId, propsByAct, assignedProps, s
                 </button>
             </div>
 
-            {viewMode === 'scenes' ? (
-                <PerformanceSceneView
-                    performanceId={performanceId}
-                    propsByAct={propsByAct}
-                    assignedProps={assignedProps}
-                    scenes={scenes}
-                />
-            ) : (
-                <PerformanceAllItemsView
-                    performanceId={performanceId}
-                    items={assignedProps || []}
-                />
-            )}
-        </div>
+            {
+                viewMode === 'checklist' ? (
+                    <PropsChecklist
+                        performanceId={performanceId}
+                        initialProps={allProps}
+                        variant="checklist"
+                    />
+                ) : (
+                    <PerformanceSceneView
+                        performanceId={performanceId}
+                        propsByAct={propsByAct}
+                        assignedProps={assignedProps}
+                        scenes={scenes}
+                        sceneNote={sceneNote}
+
+                    />
+                )
+            }
+        </div >
     )
 }

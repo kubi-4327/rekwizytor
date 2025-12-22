@@ -127,6 +127,7 @@ export const getSlashSuggestions = async (query: string) => {
         { id: 'cmd-place', label: 'Place', type: 'command', value: 'place', icon: <MapPin size={14} /> },
         { id: 'cmd-date', label: 'Date', type: 'command', value: 'data', icon: <Calendar size={14} /> },
         { id: 'cmd-user', label: 'Person', type: 'command', value: 'user', icon: <User size={14} /> },
+        { id: 'cmd-preshow', label: 'Pre-show Stage', type: 'command', value: 'preshow', icon: <Box size={14} /> },
     ]
     return commands.filter(c => c.label.toLowerCase().startsWith(lower) || c.value.startsWith(lower))
 }

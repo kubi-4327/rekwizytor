@@ -394,6 +394,41 @@ export type Database = {
           },
         ]
       }
+      performance_props: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_checked: boolean | null
+          item_name: string
+          order: number | null
+          performance_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_checked?: boolean | null
+          item_name: string
+          order?: number | null
+          performance_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_checked?: boolean | null
+          item_name?: string
+          order?: number | null
+          performance_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_props_performance_id_fkey"
+            columns: ["performance_id"]
+            isOneToOne: false
+            referencedRelation: "performances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performances: {
         Row: {
           color: string | null
@@ -555,6 +590,7 @@ export type Database = {
       scene_checklists: {
         Row: {
           cast: string | null
+          checklist_state: Json | null
           created_at: string | null
           id: string
           is_active: boolean | null
@@ -567,6 +603,7 @@ export type Database = {
         }
         Insert: {
           cast?: string | null
+          checklist_state?: Json | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -579,6 +616,7 @@ export type Database = {
         }
         Update: {
           cast?: string | null
+          checklist_state?: Json | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null

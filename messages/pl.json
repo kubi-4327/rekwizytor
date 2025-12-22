@@ -231,6 +231,8 @@
     "ProductionDetails": {
         "backToProductions": "Powrót do Spektakli",
         "scenes": "Sceny",
+        "scene": "Scena",
+        "props": "Rekwizyty",
         "acts": "Akty",
         "liveView": "Podgląd Na Żywo",
         "manageScenes": "Zarządzaj Scenami",
@@ -808,6 +810,24 @@
         "credits": "Twórcy",
         "creditsText": "Zaprojektowane i zbudowane z ❤️ przez Jakub Pełka.",
         "testVersionWarning": "To jest wersja testowa aplikacji. Niektóre funkcje mogą nie działać poprawnie."
+    },
+    "PropsChecklist": {
+        "progress": "{checked} z {total} odhaczonych",
+        "showBulkAdd": "Dodawanie Masowe",
+        "hideBulkAdd": "Ukryj Dodawanie Masowe",
+        "bulkAddLabel": "Dodaj wiele rekwizytów (jeden na linię)",
+        "bulkAddPlaceholder": "Czerwony kubek\nStary pistolet\nStara walizka\n...",
+        "addBulkProps": "Dodaj Wszystkie Rekwizyty",
+        "addPropPlaceholder": "Dodaj rekwizyt...",
+        "noProps": "Brak rekwizytów. Dodaj je używając formularza powyżej.",
+        "propAdded": "Rekwizyt dodany",
+        "propsAdded": "Dodano {count} rekwizytów",
+        "propDeleted": "Rekwizyt usunięty",
+        "propUpdated": "Rekwizyt zaktualizowany",
+        "errorAdding": "Nie udało się dodać rekwizytu",
+        "errorBulkAdding": "Nie udało się dodać rekwizytów",
+        "errorDeleting": "Nie udało się usunąć rekwizytu",
+        "errorUpdating": "Nie udało się zaktualizować rekwizytu"
     },
     "toast": {
         "success": {

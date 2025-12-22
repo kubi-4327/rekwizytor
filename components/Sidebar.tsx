@@ -24,8 +24,6 @@ export function Sidebar() {
         { name: t('groups'), href: '/groups', icon: Tag },
         { name: t('notes'), href: '/notes', icon: Notebook },
         { name: t('checklists'), href: '/checklists', icon: ClipboardList },
-        { name: t('items'), href: '/items', icon: Box },
-        { name: t('reviewDrafts'), href: '/items/review', icon: CheckCircle2 },
     ]
 
     const handleSignOut = async () => {

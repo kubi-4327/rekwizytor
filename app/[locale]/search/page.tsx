@@ -3,19 +3,12 @@
 import * as React from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
-    Search,
-    FileText,
     Box,
     Layers,
     MapPin,
-    Loader2,
     StickyNote,
     Sparkles,
-    Command as CommandIcon,
     Zap,
-    Brain,
-    X,
-    ArrowRight,
     ChevronDown,
     LayoutGrid
 } from 'lucide-react'
@@ -23,7 +16,6 @@ import { clsx } from 'clsx'
 import { useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 import { unifiedSearch, type SearchResult, type SearchStrategy } from '@/app/actions/unified-search'
-import { smartSearch } from '@/app/actions/smart-search'
 import { SearchResultCard, getEntityConfig } from '@/components/search/SearchResultCard'
 import { SearchFilters } from '@/components/search/SearchFilters'
 import { MorphingSearchBar } from '@/components/search/MorphingSearchBar'
@@ -54,12 +46,6 @@ export default function SearchPage() {
         status: [],
         sortBy: 'relevance'
     })
-
-    // AI mode state
-    const [aiMode, setAiMode] = React.useState(false)
-    const [aiLoading, setAiLoading] = React.useState(false)
-    const [aiSuggestion, setAiSuggestion] = React.useState<string | null>(null)
-    const [aiResults, setAiResults] = React.useState<any[]>([])
 
     // Type dropdown state for mobile
     const [isTypeDropdownOpen, setIsTypeDropdownOpen] = React.useState(false)
@@ -127,54 +113,9 @@ export default function SearchPage() {
         }
     }, [entityTypeFilter, detailedFilters])
 
-    // AI Search handler
-    const performAiSearch = React.useCallback(async (q: string) => {
-        if (!q.trim()) return
-        setAiLoading(true)
-        setAiSuggestion(null)
-        setAiResults([])
-        try {
-            const response = await smartSearch(q)
-            if (response.results) setAiResults(response.results)
-            if (response.suggestion) setAiSuggestion(response.suggestion)
-        } catch (err) {
-            console.error('AI Search error:', err)
-        } finally {
-            setAiLoading(false)
-        }
-    }, [])
-
-    // Toggle AI Mode
-    const toggleAiMode = () => {
-        const newMode = !aiMode
-        setAiMode(newMode)
-        if (!newMode) {
-            // Clear everything when turning off
-            setQuery('')
-            setResults([])
-            setStaleResults([])
-            setAiResults([])
-            setAiSuggestion(null)
-            // Remove query param
-            const params = new URLSearchParams(searchParams.toString())
-            params.delete('q')
-            window.history.replaceState(null, '', `?${params.toString()}`)
-        }
-        // NOTE: We do NOT auto-trigger AI search on toggle anymore, waiting for user confirmation (Enter/Click)
-    }
-
-    // Handle Input Keys
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter' && aiMode) {
-            e.preventDefault()
-            performAiSearch(query)
-        }
-    }
 
     // Debounce search (Standard Mode ONLY)
     React.useEffect(() => {
-        if (aiMode) return // Start AI search only manually
-
         if (query.trim() === '') {
             setResults([])
             setStaleResults([])
@@ -189,11 +130,11 @@ export default function SearchPage() {
         }, 150)
         return () => clearTimeout(timer)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [query, aiMode])
+    }, [query])
 
-    // Re-search when filters change (only relevant for normal search)
+    // Re-search when filters change
     React.useEffect(() => {
-        if (query.trim() && !aiMode) {
+        if (query.trim()) {
             search(query, results)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -202,7 +143,6 @@ export default function SearchPage() {
     // Update URL logic to rely on `type` param mapping
     React.useEffect(() => {
         const timer = setTimeout(() => {
-            // ... (URL sync logic remains the same)
             const params = new URLSearchParams(searchParams.toString())
             if (query) params.set('q', query)
             else params.delete('q')
@@ -222,7 +162,7 @@ export default function SearchPage() {
         return () => clearTimeout(timer)
     }, [query, entityTypeFilter, searchParams])
 
-    const displayResults = aiMode ? aiResults : (loading && staleResults.length > 0 ? staleResults : deferredResults)
+    const displayResults = loading && staleResults.length > 0 ? staleResults : deferredResults
 
     // Memoize grouped results to prevent recalculation
     const grouped = React.useMemo(() => {
@@ -288,12 +228,10 @@ export default function SearchPage() {
                                 mode="input"
                                 query={query}
                                 onQueryChange={setQuery}
-                                onSubmit={aiMode ? () => performAiSearch(query) : undefined}
-                                aiMode={aiMode}
-                                loading={loading || aiLoading}
+                                loading={loading}
                                 autoFocus={true}
                                 rightContent={
-                                    hasActiveQuery && !loading && !aiMode && (
+                                    hasActiveQuery && !loading && (
                                         <div className={clsx(
                                             "hidden sm:flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded",
                                             searchStrategy === 'hybrid'
@@ -312,13 +250,9 @@ export default function SearchPage() {
                                 {/* Entity Type Dropdown */}
                                 <div className="relative shrink-0" ref={typeDropdownRef}>
                                     <button
-                                        onClick={() => !aiMode && setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-                                        disabled={aiMode}
+                                        onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
                                         className={clsx(
-                                            "flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg",
-                                            aiMode
-                                                ? "bg-neutral-800 text-neutral-500 cursor-not-allowed opacity-50"
-                                                : "bg-white text-black hover:bg-neutral-200"
+                                            "flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg bg-white text-black hover:bg-neutral-200"
                                         )}
                                     >
                                         {/* Dynamic Icon based on selection */}
@@ -331,17 +265,15 @@ export default function SearchPage() {
                                         <span>
                                             {entityTypes.find(t => t.value === (currentEntityType || 'all'))?.label}
                                         </span>
-                                        {!aiMode && (
-                                            <ChevronDown className={clsx(
-                                                "h-3 w-3 ml-1 opacity-50 transition-transform duration-200",
-                                                isTypeDropdownOpen ? "rotate-180" : ""
-                                            )} />
-                                        )}
+                                        <ChevronDown className={clsx(
+                                            "h-3 w-3 ml-1 opacity-50 transition-transform duration-200",
+                                            isTypeDropdownOpen ? "rotate-180" : ""
+                                        )} />
                                     </button>
 
                                     {/* Dropdown Menu */}
                                     <AnimatePresence>
-                                        {!aiMode && isTypeDropdownOpen && (
+                                        {isTypeDropdownOpen && (
                                             <motion.div
                                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -374,74 +306,30 @@ export default function SearchPage() {
                                     </AnimatePresence>
                                 </div>
 
-                                {/* Dynamic Filters Area (Only show when NOT in AI mode) */}
-                                {!aiMode && (
-                                    <div className="flex-1 w-full md:w-auto">
-                                        <AnimatePresence mode="wait">
-                                            <motion.div
-                                                key={currentEntityType || 'all'}
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                exit={{ opacity: 0, x: -10 }}
-                                                transition={{ duration: 0.2 }}
-                                                className="flex items-center flex-wrap gap-2"
-                                            >
-                                                <SearchFilters
-                                                    entityType={currentEntityType}
-                                                    filters={detailedFilters}
-                                                    onChange={setDetailedFilters}
-                                                />
-                                            </motion.div>
-                                        </AnimatePresence>
-                                    </div>
-                                )}
-
-                                {/* AI Toggle Switch (Far Right) */}
-                                <div className="ml-auto pl-4 flex items-center gap-3 shrink-0">
-                                    <span className={clsx("text-xs font-bold uppercase tracking-wider transition-colors hidden sm:block", aiMode ? "text-burgundy-light" : "text-neutral-500")}>
-                                        AI Mode
-                                    </span>
-                                    <button
-                                        onClick={toggleAiMode}
-                                        className={clsx(
-                                            "relative h-6 w-11 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-burgundy-main/50 focus:ring-offset-2 focus:ring-offset-black",
-                                            aiMode ? "bg-burgundy-main" : "bg-neutral-800"
-                                        )}
-                                    >
+                                {/* Dynamic Filters Area */}
+                                <div className="flex-1 w-full md:w-auto">
+                                    <AnimatePresence mode="wait">
                                         <motion.div
-                                            className="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-sm"
-                                            animate={{ x: aiMode ? 20 : 0 }}
-                                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                                        />
-                                    </button>
+                                            key={currentEntityType || 'all'}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: -10 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="flex items-center flex-wrap gap-2"
+                                        >
+                                            <SearchFilters
+                                                entityType={currentEntityType}
+                                                filters={detailedFilters}
+                                                onChange={setDetailedFilters}
+                                            />
+                                        </motion.div>
+                                    </AnimatePresence>
                                 </div>
                             </div>
 
                         </motion.div>
                     </div>
                 </motion.div>
-
-                {/* AI Suggestion Banner */}
-                <AnimatePresence>
-                    {aiMode && aiSuggestion && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="w-full max-w-3xl mx-auto mb-6"
-                        >
-                            <div className="bg-burgundy-main/10 border border-burgundy-main/30 rounded-xl p-4">
-                                <div className="flex items-start gap-3">
-                                    <Brain className="h-5 w-5 text-burgundy-light shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm font-medium text-burgundy-light mb-1">AI Suggestion</p>
-                                        <p className="text-sm text-neutral-300">{aiSuggestion}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
 
                 {/* Results Container */}
                 <AnimatePresence mode="wait">
@@ -454,20 +342,11 @@ export default function SearchPage() {
                             className="w-full pb-20 space-y-8"
                         >
                             {/* No Results State */}
-                            {displayResults.length === 0 && !loading && !aiLoading && (
+                            {displayResults.length === 0 && !loading && (
                                 <div className="text-center py-20">
                                     <p className="text-xl font-bold text-neutral-600">
-                                        {aiMode ? "AI couldn't find anything related to that." : `No results found for "${query}"`}
+                                        No results found for "{query}"
                                     </p>
-                                    {!aiMode && (
-                                        <button
-                                            onClick={() => { toggleAiMode() }}
-                                            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-burgundy-main/10 text-burgundy-light border border-burgundy-main/20 hover:bg-burgundy-main hover:text-white transition-colors text-sm font-medium"
-                                        >
-                                            <Sparkles className="h-4 w-4" />
-                                            Try AI Search
-                                        </button>
-                                    )}
                                 </div>
                             )}
 
@@ -497,7 +376,7 @@ export default function SearchPage() {
 
                                         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                                             {items.map((item: any) => (
-                                                <SearchResultCard key={item.id} item={item} aiMode={aiMode} />
+                                                <SearchResultCard key={item.id} item={item} />
                                             ))}
                                         </div>
                                     </motion.div>

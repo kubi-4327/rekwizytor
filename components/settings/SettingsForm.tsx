@@ -149,15 +149,15 @@ export function SettingsForm({ user }: { user: UserData }) {
                 <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="text-base font-medium text-white">{tSettings('structureTitle')}</h3>
-                            <p className="text-sm text-neutral-400 mt-1">{tSettings('structureDescription')}</p>
+                            <h3 className="text-base font-medium text-white">{tSettings('statsTitle')}</h3>
+                            <p className="text-sm text-neutral-400 mt-1">{tSettings('statsDescription')}</p>
                         </div>
                         <Link
-                            href="/items/structure"
+                            href="/ai-stats"
                             className="flex items-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors font-medium text-sm border border-neutral-700"
                         >
-                            <SettingsIcon className="w-4 h-4" />
-                            {tSettings('manageStructure')}
+                            <BarChart className="w-4 h-4" />
+                            {tSettings('viewStats')}
                         </Link>
                     </div>
 
