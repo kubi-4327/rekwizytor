@@ -180,7 +180,7 @@ export function ScheduleShowDialog({ isOpen, onClose, performanceId, performance
                 // EDIT MODE UPDATE
                 const item = queue[0] // Should be only one
                 console.log('Updating show:', { editData, item, performanceId })
-                const dateTime = item.date.toISOString()
+                const dateTime = format(item.date, "yyyy-MM-dd'T'HH:mm:ssXXX")
 
                 const { error: updateError } = await supabase
                     .from('scene_checklists')
@@ -199,89 +199,31 @@ export function ScheduleShowDialog({ isOpen, onClose, performanceId, performance
 
             } else {
                 // CREATE MODE
-                // 1. Fetch master props and defined scenes (once for all)
-                const [propsResult, scenesResult] = await Promise.all([
-                    supabase
-                        .from('performance_items')
-                        .select('*')
-                        .eq('performance_id', performanceId),
-                    supabase
-                        .from('scenes')
-                        .select('*')
-                        .eq('performance_id', performanceId)
-                ])
+                // Create a SINGLE checklist row for the entire performance run.
+                // The new Live View (LiveNoteView) uses this single row to store state for ALL scenes in the 'checklist_state' JSON column.
 
-                const masterProps = propsResult.data || []
-                const definedScenes = scenesResult.data || []
+                // Check if one already exists for this exact time? Ideally we allow multiple if really needed, but likely user just wants one.
+                // For now, just insert.
 
-                if (propsResult.error) throw propsResult.error
-                if (scenesResult.error) throw scenesResult.error
-
-                // Prepare data structures
-                const propsByScene: Record<string, typeof masterProps> = {}
-                if (masterProps.length > 0) {
-                    masterProps.forEach(prop => {
-                        const scene = prop.scene_number || '1'
-                        if (!propsByScene[scene]) {
-                            propsByScene[scene] = []
-                        }
-                        propsByScene[scene].push(prop)
-                    })
-                }
-
-                // Process each scheduled item in the queue
                 for (const item of queue) {
-                    const dateTime = item.date.toISOString()
+                    // Use date-fns format with offset (XXX) to ensure we send local time + offset.
+                    // If DB column is TIMESTAMP (no TZ), it stores the local time numbers (17:33).
+                    // If DB column is TIMESTAMPTZ, it handles the offset correctly.
+                    const dateTime = format(item.date, "yyyy-MM-dd'T'HH:mm:ssXXX")
 
-                    if (masterProps.length === 0) {
-                        // Create empty checklist if no props
-                        const { error: insertError } = await supabase
-                            .from('scene_checklists')
-                            .insert({
-                                performance_id: performanceId,
-                                show_date: dateTime,
-                                scene_number: '1',
-                                scene_name: 'General',
-                                is_active: false,
-                                cast: item.cast
-                            })
+                    const { error: insertError } = await supabase
+                        .from('scene_checklists')
+                        .insert({
+                            performance_id: performanceId,
+                            show_date: dateTime,
+                            scene_number: '1', // Default/Dummy value as table requires it or legacy compat
+                            scene_name: 'Live View', // Master container
+                            is_active: false,
+                            cast: item.cast,
+                            checklist_state: {} // Initialize empty state
+                        })
 
-                        if (insertError) throw insertError
-                    } else {
-                        // Create checklists for each scene
-                        for (const [sceneNum, props] of Object.entries(propsByScene)) {
-                            const definedScene = definedScenes.find(s => s.scene_number === parseInt(sceneNum))
-                            const sceneName = definedScene?.name || props[0].scene_name
-
-                            const { data: checklist, error: insertError } = await supabase
-                                .from('scene_checklists')
-                                .insert({
-                                    performance_id: performanceId,
-                                    show_date: dateTime,
-                                    scene_number: sceneNum,
-                                    scene_name: sceneName,
-                                    is_active: false,
-                                    cast: item.cast
-                                })
-                                .select()
-                                .single()
-
-                            if (insertError) throw insertError
-
-                            const checklistItems = props.map(prop => ({
-                                scene_checklist_id: checklist.id,
-                                item_id: prop.item_id,
-                                is_prepared: false,
-                                is_on_stage: false
-                            }))
-
-                            const { error: itemsError } = await supabase
-                                .from('scene_checklist_items')
-                                .insert(checklistItems)
-
-                            if (itemsError) throw itemsError
-                        }
-                    }
+                    if (insertError) throw insertError
                 }
             }
 

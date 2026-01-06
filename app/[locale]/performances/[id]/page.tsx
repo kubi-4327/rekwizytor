@@ -41,43 +41,77 @@ export default async function ProductionDetailsPage({ params }: Props) {
         email: supabaseUser.email
     } : null
 
-    const { data: production } = await supabase
-        .from('performances')
-        .select('*')
-        .eq('id', id)
-        .single()
+    // Execute all queries in parallel for ~3-5x faster loading
+    const [
+        productionResult,
+        scheduledShowsResult,
+        assignedPropsResult,
+        scenesResult,
+        notesResult,
+        allPropsResult
+    ] = await Promise.all([
+        // Performance details - full row needed for PerformanceDetailActions
+        supabase
+            .from('performances')
+            .select('*')
+            .eq('id', id)
+            .single(),
+
+        // Scheduled shows (checklists) - all fields needed for ScheduledShowsList
+        supabase
+            .from('scene_checklists')
+            .select('*')
+            .eq('performance_id', id)
+            .order('show_date', { ascending: true }),
+
+        // Assigned props (performance_items) - Legacy system for Scene View
+        supabase
+            .from('performance_items')
+            .select(`
+                *,
+                items (
+                    name,
+                    image_url
+                )
+            `)
+            .eq('performance_id', id)
+            .order('scene_number', { ascending: true })
+            .returns<PerformanceItem[]>(),
+
+        // Scenes for Act info - all fields needed for export
+        supabase
+            .from('scenes')
+            .select('*')
+            .eq('performance_id', id)
+            .returns<Scene[]>(),
+
+        // Notes for this performance - all fields needed for export
+        supabase
+            .from('notes')
+            .select('*')
+            .eq('performance_id', id)
+            .order('is_master', { ascending: false })
+            .order('updated_at', { ascending: false }),
+
+        // All props for checklist - select only existing columns
+        supabase
+            .from('performance_props')
+            .select('id, item_name, is_checked, order, performance_id, created_at')
+            .eq('performance_id', id)
+            .order('order', { ascending: true })
+            .order('created_at', { ascending: true })
+    ])
+
+    const production = productionResult.data
+    const scheduledShows = scheduledShowsResult.data
+    const assignedProps = assignedPropsResult.data
+    const scenes = scenesResult.data
+    const notes = notesResult.data
+    const allProps = allPropsResult.data
 
     if (!production) {
         notFound()
     }
-
-    // Fetch scheduled shows (checklists)
-    const { data: scheduledShows } = await supabase
-        .from('scene_checklists')
-        .select('*')
-        .eq('performance_id', id)
-        .order('show_date', { ascending: true })
-
-    // Fetch assigned props (performance_items) - Legacy system for Scene View
-    const { data: assignedProps } = await supabase
-        .from('performance_items')
-        .select(`
-        *,
-        items (
-            name,
-            image_url
-        )
-    `)
-        .eq('performance_id', id)
-        .order('scene_number', { ascending: true })
-        .returns<PerformanceItem[]>()
-
-    // Fetch scenes for Act info
-    const { data: scenes } = await supabase
-        .from('scenes')
-        .select('*')
-        .eq('performance_id', id)
-        .returns<Scene[]>()
 
     // Helper to get Act number
     const getActNumber = (sceneNum: string | null) => {
@@ -95,26 +129,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
         propsByAct[actNum].push(prop)
     })
 
-
-    // Fetch notes for this performance
-    const { data: notes } = await supabase
-        .from('notes')
-        .select('*')
-        .eq('performance_id', id)
-        .order('is_master', { ascending: false })
-        .order('updated_at', { ascending: false })
-
     const sceneNote = notes?.find(n => n.title.startsWith('Notatka sceniczna')) || null
-
-
-
-    // Fetch all props for checklist
-    const { data: allProps } = await supabase
-        .from('performance_props')
-        .select('*')
-        .eq('performance_id', id)
-        .order('order', { ascending: true })
-        .order('created_at', { ascending: true })
 
     return (
         <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
@@ -132,6 +147,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
                                     src={production.image_url}
                                     alt={production.title}
                                     fill
+                                    priority
                                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                 />
@@ -218,6 +234,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
                         scheduledShows={scheduledShows || []}
                         productionTitle={production.title}
                         performanceId={id}
+                        sceneNote={sceneNote}
                         performanceColor={production.color}
                     />
 

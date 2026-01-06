@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { LayoutGrid, List as ListIcon, Layers, Calendar, ChevronRight } from 'lucide-react'
+import { Layers, Calendar, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Database } from '@/types/supabase'
@@ -9,6 +9,7 @@ import { MorphingSearchBar } from '@/components/search/MorphingSearchBar'
 import { useTranslations } from 'next-intl'
 import { format } from 'date-fns'
 import { FilterBar } from '@/components/ui/FilterBar'
+import { ViewToggle } from '@/components/ui/ViewToggle'
 import { clsx } from 'clsx'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -19,7 +20,10 @@ type Props = {
     performances: Performance[]
 }
 
-const PerformanceListItem = ({ show }: { show: Performance }) => {
+// Tiny blur placeholder for faster image loading (LCP optimization)
+const BLUR_PLACEHOLDER = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAADAAQDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBEQCEAwEPwAB/9k="
+
+const PerformanceListItem = ({ show, index }: { show: Performance; index: number }) => {
     const t = useTranslations('PerformancesList')
     const tStatus = useTranslations('PerformancesList.statuses')
 
@@ -43,6 +47,9 @@ const PerformanceListItem = ({ show }: { show: Performance }) => {
                             src={show.thumbnail_url}
                             alt={show.title}
                             fill
+                            priority={index < 4}
+                            placeholder="blur"
+                            blurDataURL={BLUR_PLACEHOLDER}
                             className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
                         />
                     ) : (
@@ -84,7 +91,7 @@ const PerformanceListItem = ({ show }: { show: Performance }) => {
     )
 }
 
-const PerformanceGridItem = ({ show }: { show: Performance }) => {
+const PerformanceGridItem = ({ show, index }: { show: Performance; index: number }) => {
     const t = useTranslations('PerformancesList')
     const tStatus = useTranslations('PerformancesList.statuses')
 
@@ -109,13 +116,15 @@ const PerformanceGridItem = ({ show }: { show: Performance }) => {
                                     alt={show.title}
                                     fill
                                     className="object-cover blur-2xl opacity-50 scale-125"
-                                    priority
                                 />
                                 {/* Main Image */}
                                 <Image
                                     src={show.image_url}
                                     alt={show.title}
                                     fill
+                                    priority={index < 4}
+                                    placeholder="blur"
+                                    blurDataURL={BLUR_PLACEHOLDER}
                                     className="object-cover transition-transform duration-700 group-hover:scale-105 opacity-80 group-hover:opacity-100"
                                 />
                             </>
@@ -190,30 +199,7 @@ export function PerformancesList({ performances }: Props) {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                    <div className="flex bg-white/5 border border-white/5 rounded-xl p-1">
-                        <button
-                            onClick={() => handleViewModeChange('list')}
-                            className={clsx(
-                                "p-2 rounded-lg transition-all",
-                                viewMode === 'list'
-                                    ? 'bg-white/10 text-white shadow-sm'
-                                    : 'text-neutral-500 hover:text-neutral-300'
-                            )}
-                        >
-                            <ListIcon className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => handleViewModeChange('grid')}
-                            className={clsx(
-                                "p-2 rounded-lg transition-all",
-                                viewMode === 'grid'
-                                    ? 'bg-white/10 text-white shadow-sm'
-                                    : 'text-neutral-500 hover:text-neutral-300'
-                            )}
-                        >
-                            <LayoutGrid className="w-4 h-4" />
-                        </button>
-                    </div>
+                    <ViewToggle viewMode={viewMode} onViewModeChange={handleViewModeChange} />
                 </div>
             </FilterBar>
 
@@ -227,8 +213,8 @@ export function PerformancesList({ performances }: Props) {
                         exit={{ opacity: 0 }}
                         className="space-y-3"
                     >
-                        {filteredPerformances.map((show) => (
-                            <PerformanceListItem key={show.id} show={show} />
+                        {filteredPerformances.map((show, index) => (
+                            <PerformanceListItem key={show.id} show={show} index={index} />
                         ))}
                     </motion.div>
                 ) : (
@@ -239,8 +225,8 @@ export function PerformancesList({ performances }: Props) {
                         exit={{ opacity: 0 }}
                         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                     >
-                        {filteredPerformances.map((show) => (
-                            <PerformanceGridItem key={show.id} show={show} />
+                        {filteredPerformances.map((show, index) => (
+                            <PerformanceGridItem key={show.id} show={show} index={index} />
                         ))}
                     </motion.div>
                 )}

@@ -5,11 +5,12 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import NoteEditor, { NoteEditorRef } from '@/components/notes/NoteEditor'
 import SceneNoteEditor from '@/components/notes/SceneNoteEditor'
-import { ArrowLeft, Share, Copy, Download, ChevronDown, Pencil, Check, Folder } from 'lucide-react'
+import { ArrowLeft, Share, Copy, Download, ChevronDown, Pencil, Check, Folder, Layers } from 'lucide-react'
 import Link from 'next/link'
 import { extractMentions } from '@/components/notes/utils'
 import { useTranslations } from 'next-intl'
 import { AnimatePresence, motion } from 'framer-motion'
+import { DropdownAction } from '@/components/ui/DropdownAction'
 
 export default function NoteDetailPage() {
     const t = useTranslations('NoteDetail')
@@ -257,27 +258,49 @@ export default function NoteDetailPage() {
                             )}
 
                             {/* View/Edit Toggle */}
-                            <button
-                                onClick={toggleEditMode}
-                                className={`
-                                    flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all
-                                    ${isEditing
-                                        ? 'bg-amber-500 text-black hover:bg-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                                        : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white'}
-                                `}
-                            >
-                                {isEditing ? (
-                                    <>
-                                        <Check size={14} strokeWidth={3} />
-                                        <span>{t('done')}</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Pencil size={14} />
-                                        <span>{t('edit')}</span>
-                                    </>
-                                )}
-                            </button>
+                            {(title.startsWith('Notatka sceniczna') && note.performance_id && !isEditing) ? (
+                                <DropdownAction
+                                    label={t('edit')}
+                                    icon={<Pencil size={14} />}
+                                    variant="secondary"
+                                    className="bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white border-none rounded-full px-3 py-1.5 h-auto text-xs font-bold"
+                                    align="right"
+                                    items={[
+                                        {
+                                            label: t('editNote'),
+                                            icon: <Pencil size={14} />,
+                                            onClick: toggleEditMode
+                                        },
+                                        {
+                                            label: t('manageScenes'),
+                                            icon: <Layers size={14} />,
+                                            onClick: () => router.push(`/performances/${note.performance_id}/scenes`)
+                                        }
+                                    ]}
+                                />
+                            ) : (
+                                <button
+                                    onClick={toggleEditMode}
+                                    className={`
+                                        flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all
+                                        ${isEditing
+                                            ? 'bg-amber-500 text-black hover:bg-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                                            : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white'}
+                                    `}
+                                >
+                                    {isEditing ? (
+                                        <>
+                                            <Check size={14} strokeWidth={3} />
+                                            <span>{t('done')}</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Pencil size={14} />
+                                            <span>{t('edit')}</span>
+                                        </>
+                                    )}
+                                </button>
+                            )}
 
                             {/* Export Menu (Only in View Mode? Or both? User said "export allowed" in view mode. Probably both is fine, but maybe hide in edit mode to reduce clutter) */}
                             {!isEditing && (

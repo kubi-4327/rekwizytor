@@ -10,15 +10,16 @@ export default async function LivePerformancePage({ params }: { params: Promise<
     const { id } = await params
     const supabase = await createClient()
 
-    // 1. Fetch Master Note (or most recent note)
-    const { data: note } = await supabase
+    // 1. Fetch Notes to find Scene Note or Master
+    const { data: notes } = await supabase
         .from('notes')
         .select('*')
         .eq('performance_id', id)
-        .order('is_master', { ascending: false }) // Master first, then others
+        .order('is_master', { ascending: false })
         .order('updated_at', { ascending: false })
-        .limit(1)
-        .single()
+
+    // Prefer "Notatka sceniczna", otherwise fallback to master/first
+    const note = notes?.find(n => n.title.startsWith('Notatka sceniczna')) || notes?.[0]
 
     // 2. Fetch Active Checklist Run (if any)
     const { data: activeChecklist } = await supabase

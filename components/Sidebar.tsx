@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
+import { isFeatureEnabled } from '@/utils/features'
 
 export function Sidebar() {
     const pathname = usePathname()
@@ -24,6 +25,9 @@ export function Sidebar() {
         { name: t('groups'), href: '/groups', icon: Tag },
         { name: t('notes'), href: '/notes', icon: Notebook },
         { name: t('checklists'), href: '/checklists', icon: ClipboardList },
+        ...(isFeatureEnabled('EXPERIMENTAL_MAPPING') ? [
+            { name: "Mapowanie (Experymentalne)", href: '/mapping', icon: Sparkles }
+        ] : [])
     ]
 
     const handleSignOut = async () => {

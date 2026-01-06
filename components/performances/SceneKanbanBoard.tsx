@@ -1,31 +1,12 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
-import { Scene } from '@/types/supabase' // Assuming this type exists or defining strict shape
+import { useMemo, useState } from 'react'
 import { Trash2, GripVertical, Plus, Loader2 } from 'lucide-react'
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent,
-    DragOverEvent,
-    DragStartEvent,
-    DragOverlay,
-    defaultDropAnimationSideEffects,
-} from '@dnd-kit/core'
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    verticalListSortingStrategy,
-    useSortable,
-} from '@dnd-kit/sortable'
+import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { KanbanBoard, KanbanColumn, KanbanItem } from '@/components/ui/KanbanBoard'
 
-// Define local Scene type if not imported, to be safe matching ManageScenesForm
+// Define local Scene type
 export type SceneItem = {
     id: string
     scene_number: number
@@ -33,221 +14,215 @@ export type SceneItem = {
     act_number: number
 }
 
+// Extend SceneItem to satisfy KanbanItem
+type KanbanSceneItem = SceneItem & { columnId: string | number }
+
 type Props = {
     scenes: SceneItem[]
     onReorder: (newScenes: SceneItem[]) => void
     onUpdate: (id: string, updates: Partial<SceneItem>) => void
     onRemove: (id: string) => void
-    onAdd: (act: number, name: string) => Promise<void> // Helper for quick add
+    onRemoveAct: (act: number) => void
+    onAdd: (act: number, name: string) => Promise<void>
 }
 
-export function SceneKanbanBoard({ scenes, onReorder, onUpdate, onRemove, onAdd }: Props) {
-    const [activeId, setActiveId] = useState<string | null>(null)
-    const [addingToAct, setAddingToAct] = useState<number | null>(null) // Track loading state for quick add per Act
+export function SceneKanbanBoard({ scenes, onReorder, onUpdate, onRemove, onRemoveAct, onAdd }: Props) {
+    const [addingToAct, setAddingToAct] = useState<number | null>(null)
     const [quickAddValues, setQuickAddValues] = useState<Record<number, string>>({})
+    const [showInputForAct, setShowInputForAct] = useState<Record<number, boolean>>({})
 
     const acts = useMemo(() => {
-        const uniqueActs = Array.from(new Set(scenes.map(s => s.act_number))).sort((a, b) => a - b)
+        const validScenes = scenes.filter(s => typeof s.act_number === 'number')
+        const uniqueActs = Array.from(new Set(validScenes.map(s => s.act_number))).sort((a, b) => a - b)
         if (uniqueActs.length === 0) return [1]
-        // Ensure strictly 1, 2, 3... if needed? Or just show what exists?
-        // Let's show what exists + maybe a way to add an empty act?
-        // User asked for "Acts as separated zones".
-        // If an Act has no scenes, it might be hidden here if we map from scenes.
-        // But normally we at least have Act 1.
         return uniqueActs
     }, [scenes])
 
-    const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: 8,
-            },
-        }),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
-        })
-    )
+    const nextActNumber = acts.length > 0 ? Math.max(...acts) + 1 : 1
 
-    function handleDragStart(event: DragStartEvent) {
-        setActiveId(event.active.id as string)
+    // Map scenes to Kanban items
+    const kanbanItems: KanbanSceneItem[] = useMemo(() => scenes.map(s => ({
+        ...s,
+        columnId: s.act_number
+    })), [scenes])
+
+    // Map acts to Kanban columns
+    const columns: KanbanColumn[] = acts.map(act => ({
+        id: act,
+        title: `Akt ${act}`
+    }))
+
+    const handleItemReorder = (newItems: KanbanSceneItem[]) => {
+        // Convert back to SceneItem and update act_number based on columnId
+        const newScenes = newItems.map(item => ({
+            id: item.id,
+            scene_number: item.scene_number, // This might need re-calc which happens in onReorder usually?
+            name: item.name,
+            act_number: Number(item.columnId)
+        }))
+
+        // Verify sequence and re-number if needed
+        const processedScenes = resequenceScenes(newScenes)
+        onReorder(processedScenes)
     }
 
-    function handleDragOver(event: DragOverEvent) {
-        const { active, over } = event
-        if (!over) return
+    const resequenceScenes = (items: SceneItem[]): SceneItem[] => {
+        const uniqueActs = Array.from(new Set(items.map(s => s.act_number))).sort((a, b) => a - b)
+        let result = [...items]
 
-        const activeScene = scenes.find(s => s.id === active.id)
-        if (!activeScene) return
+        uniqueActs.forEach(act => {
+            // Get scenes for this act
+            const actScenes = result.filter(s => s.act_number === act)
+            // They are already in the order provided by the drag-drop in `items` array? 
+            // Yes, user reordered list implies index order.
 
-        const isOverContainer = acts.some(act => `act-${act}` === over.id)
-        const isOverScene = scenes.some(s => s.id === over.id)
-
-        // We only care about visual updates during drag if we want smooth movement between lists
-        // dnd-kit handles the overlay position.
-        // We generally shouldn't mutate state here unless we want to simulate the move "live".
-    }
-
-    function handleDragEnd(event: DragEndEvent) {
-        const { active, over } = event
-        setActiveId(null)
-
-        if (!over) return
-
-        const activeScene = scenes.find(s => s.id === active.id)
-        if (!activeScene) return
-
-        const isOverContainer = acts.some(act => `act-${act}` === over.id)
-        const isOverScene = scenes.some(s => s.id === over.id)
-
-        let newScenes = [...scenes]
-
-        if (isOverContainer) {
-            // Dropped on act header/container
-            const actNumber = parseInt(over.id.toString().replace('act-', ''))
-            if (activeScene.act_number !== actNumber) {
-                const sceneIndex = newScenes.findIndex(s => s.id === active.id)
-                newScenes[sceneIndex] = { ...newScenes[sceneIndex], act_number: actNumber }
-            }
-        } else if (isOverScene) {
-            const overScene = scenes.find(s => s.id === over.id)
-            if (!overScene) return
-
-            const oldIndex = newScenes.findIndex(s => s.id === active.id)
-            const newIndex = newScenes.findIndex(s => s.id === over.id)
-
-            if (activeScene.act_number !== overScene.act_number) {
-                newScenes[oldIndex] = { ...newScenes[oldIndex], act_number: overScene.act_number }
-            }
-            newScenes = arrayMove(newScenes, oldIndex, newIndex)
-        }
-
-        // Re-sequence
-        const actOffsets: Record<number, number> = {} // If we wanted to preserve offsets, but user wants clean numbering here for DB?
-        // Actually, if we are in "Management" mode, usually we just want 1, 2, 3 per act.
-        // Unless we have some "legacy" acts. 
-        // Let's stick to 1-based sequential for consistency.
-
-        const uniqueActsInNew = Array.from(new Set(newScenes.map(s => s.act_number))).sort((a, b) => a - b)
-        uniqueActsInNew.forEach(act => {
-            const actScenes = newScenes.filter(s => s.act_number === act)
-            // Preserving order in newScenes is tricky because filter returns reference? No, objects are ref.
-            // But we need to know the order relative to newScenes list?
-            // "newScenes" is the global list. If we sorted global list?
-            // "arrayMove" updates the global list order.
-            // So iterating newScenes is correct order.
-
-            let count = 1
-            newScenes.forEach((s, idx) => {
-                if (s.act_number === act) {
-                    if (s.scene_number !== count) {
-                        newScenes[idx] = { ...newScenes[idx], scene_number: count }
-                    }
-                    count++
+            // Re-assign scene numbers
+            actScenes.forEach((scene, index) => {
+                const globalIndex = result.findIndex(s => s.id === scene.id)
+                if (result[globalIndex].scene_number !== index + 1) {
+                    result[globalIndex] = { ...result[globalIndex], scene_number: index + 1 }
                 }
             })
         })
-
-        onReorder(newScenes)
+        return result
     }
 
     const handleQuickAdd = async (act: number) => {
-        const name = quickAddValues[act]?.trim() || ''
-        if (!name) return
+        const name = quickAddValues[act]?.trim() || `Scena ${scenes.filter(s => s.act_number === act).length + 1}`
 
         setAddingToAct(act)
         try {
             await onAdd(act, name)
             setQuickAddValues(prev => ({ ...prev, [act]: '' }))
+            setShowInputForAct(prev => ({ ...prev, [act]: false }))
         } finally {
             setAddingToAct(null)
         }
     }
 
-    return (
-        <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-        >
-            <div className="flex flex-col lg:flex-row gap-6 overflow-x-auto pb-6">
-                {acts.map(act => {
-                    const scenesInAct = scenes.filter(s => s.act_number === act)
+    const handleAddAct = async () => {
+        await onAdd(nextActNumber, 'Scene 1')
+    }
 
-                    return (
-                        <div key={act} className="flex-1 min-w-[300px] border border-neutral-800 rounded-xl bg-neutral-900 overflow-hidden flex flex-col">
-                            {/* Header */}
-                            <div className="p-4 border-b border-neutral-800 bg-neutral-950 flex justify-between items-center">
-                                <span className="font-bold text-white">Act {act}</span>
-                                <span className="text-xs text-neutral-500 font-mono bg-neutral-900 px-2 py-1 rounded-full border border-neutral-800">
-                                    {scenesInAct.length}
-                                </span>
-                            </div>
+    // --- Renderers ---
 
-                            {/* List */}
-                            <div className="flex-1 p-3 min-h-[100px] max-h-[70vh] overflow-y-auto space-y-2">
-                                <SortableContext
-                                    id={`act-${act}`}
-                                    items={scenesInAct.map(s => s.id)}
-                                    strategy={verticalListSortingStrategy}
-                                >
-                                    {scenesInAct.map((scene) => (
-                                        <SortableScene
-                                            key={scene.id}
-                                            scene={scene}
-                                            onUpdate={onUpdate}
-                                            onRemove={onRemove}
-                                        />
-                                    ))}
-                                    {scenesInAct.length === 0 && (
-                                        <div className="h-full flex items-center justify-center text-neutral-600 italic text-sm py-8">
-                                            No scenes in Act {act}
-                                        </div>
-                                    )}
-                                </SortableContext>
-                            </div>
-
-                            {/* Quick Add Footer */}
-                            <div className="p-3 border-t border-neutral-800 bg-neutral-950/50">
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Add scene..."
-                                        className="flex-1 bg-neutral-900 border border-neutral-800 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-neutral-600"
-                                        value={quickAddValues[act] || ''}
-                                        onChange={(e) => setQuickAddValues({ ...quickAddValues, [act]: e.target.value })}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') handleQuickAdd(act)
-                                        }}
-                                        disabled={addingToAct === act}
-                                    />
-                                    <button
-                                        onClick={() => handleQuickAdd(act)}
-                                        disabled={addingToAct === act}
-                                        className="p-2 rounded bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white transition-colors disabled:opacity-50"
-                                    >
-                                        {addingToAct === act ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )
-                })}
+    const renderColumnHeader = (column: KanbanColumn, items: KanbanSceneItem[]) => {
+        const actNumber = Number(column.id)
+        return (
+            <div className="p-4 border-b border-neutral-800 bg-neutral-900/80 rounded-t-xl flex justify-between items-center backdrop-blur-sm">
+                <div className="flex items-center gap-2">
+                    <span className="font-bold text-white text-lg">Akt {actNumber}</span>
+                    <span className="text-xs text-neutral-500 font-mono bg-neutral-800 px-2.5 py-1 rounded-full border border-neutral-700">
+                        {items.length}
+                    </span>
+                </div>
+                <button
+                    onClick={() => onRemoveAct(actNumber)}
+                    className="p-1.5 text-neutral-600 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors opacity-0 group-hover/act:opacity-100"
+                    title="Usuń Akt"
+                >
+                    <Trash2 className="w-4 h-4" />
+                </button>
             </div>
+        )
+    }
 
-            <DragOverlay>
-                {activeId ? (
-                    <div className="p-4 bg-neutral-800 border border-neutral-600 rounded-lg shadow-2xl opacity-90 text-white font-medium w-[300px]">
-                        Moving Scene...
+    const renderColumnFooter = (column: KanbanColumn, items: KanbanSceneItem[]) => {
+        const act = Number(column.id)
+        return (
+            <div className="p-3 border-t border-neutral-800/50">
+                {showInputForAct[act] ? (
+                    <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Nazwa sceny..."
+                                className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all placeholder-neutral-600 shadow-inner"
+                                value={quickAddValues[act] || ''}
+                                onChange={(e) => setQuickAddValues({ ...quickAddValues, [act]: e.target.value })}
+                                autoFocus
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleQuickAdd(act)
+                                    if (e.key === 'Escape') setShowInputForAct(prev => ({ ...prev, [act]: false }))
+                                }}
+                                disabled={addingToAct === act}
+                            />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowInputForAct(prev => ({ ...prev, [act]: false }))}
+                                className="px-3 py-1.5 text-xs text-neutral-400 hover:text-white transition-colors"
+                            >
+                                Anuluj
+                            </button>
+                            <button
+                                onClick={() => handleQuickAdd(act)}
+                                disabled={addingToAct === act}
+                                className="px-3 py-1.5 bg-white text-black text-xs font-bold rounded hover:bg-neutral-200 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                            >
+                                {addingToAct === act ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                                Dodaj
+                            </button>
+                        </div>
                     </div>
-                ) : null}
-            </DragOverlay>
-        </DndContext>
+                ) : (
+                    <button
+                        onClick={() => setShowInputForAct(prev => ({ ...prev, [act]: true }))}
+                        className="w-full py-2.5 flex items-center justify-center gap-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-all text-sm font-medium border border-transparent hover:border-neutral-700 group"
+                    >
+                        <div className="w-5 h-5 rounded-full border border-neutral-600 flex items-center justify-center group-hover:border-white group-hover:bg-white/10 transition-colors">
+                            <Plus className="w-3 h-3" />
+                        </div>
+                        Dodaj Scenę
+                    </button>
+                )}
+            </div>
+        )
+    }
+
+    const renderItem = (item: KanbanSceneItem, isOverlay?: boolean) => {
+        return (
+            <SortableScene
+                key={item.id}
+                scene={item}
+                onUpdate={onUpdate}
+                onRemove={onRemove}
+                isOverlay={isOverlay}
+            />
+        )
+    }
+
+    const renderExtraActions = (
+        <button
+            onClick={handleAddAct}
+            className="flex-shrink-0 w-full lg:w-[320px] h-auto border-2 border-dashed border-neutral-800 rounded-xl flex flex-col items-center justify-center text-neutral-500 hover:text-white hover:border-neutral-600 hover:bg-neutral-900 transition-all gap-2 group min-h-[150px] py-8"
+        >
+            <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center group-hover:bg-neutral-700 transition-colors">
+                <Plus className="w-5 h-5" />
+            </div>
+            <span className="text-sm font-medium">Nowy Akt</span>
+        </button>
+    )
+
+    return (
+        <div className="wrapper-class-if-needed">
+            <KanbanBoard
+                items={kanbanItems}
+                columns={columns}
+                renderItem={renderItem}
+                renderColumnHeader={renderColumnHeader}
+                renderColumnFooter={renderColumnFooter}
+                onItemReorder={handleItemReorder}
+                extraActions={renderExtraActions}
+            />
+        </div>
     )
 }
 
-function SortableScene({ scene, onUpdate, onRemove }: { scene: SceneItem, onUpdate: (id: string, updates: Partial<SceneItem>) => void, onRemove: (id: string) => void }) {
+function SortableScene({ scene, onUpdate, onRemove, isOverlay }: { scene: SceneItem, onUpdate: (id: string, updates: Partial<SceneItem>) => void, onRemove: (id: string) => void, isOverlay?: boolean }) {
+    const [isEditing, setIsEditing] = useState(false)
+    const [tempName, setTempName] = useState(scene.name || '')
+
     const {
         attributes,
         listeners,
@@ -255,12 +230,30 @@ function SortableScene({ scene, onUpdate, onRemove }: { scene: SceneItem, onUpda
         transform,
         transition,
         isDragging,
-    } = useSortable({ id: scene.id })
+    } = useSortable({ id: scene.id, disabled: isEditing })
 
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.4 : 1,
+    }
+
+    const handleBlur = () => {
+        setIsEditing(false)
+        if (tempName !== scene.name) {
+            onUpdate(scene.id, { name: tempName })
+        }
+    }
+
+    if (isOverlay) {
+        return (
+            <div className="p-4 bg-neutral-800 border border-neutral-600 rounded-lg shadow-2xl opacity-90 text-white font-medium w-[300px] flex items-center gap-3">
+                <div className="w-8 h-8 flex-shrink-0 bg-neutral-900 border border-neutral-800 rounded flex items-center justify-center text-white font-mono font-bold text-sm">
+                    {scene.scene_number}
+                </div>
+                <span>{scene.name}</span>
+            </div>
+        )
     }
 
     return (
@@ -269,7 +262,7 @@ function SortableScene({ scene, onUpdate, onRemove }: { scene: SceneItem, onUpda
             style={style}
             className="group flex items-center gap-3 p-3 rounded-lg border border-neutral-800 bg-neutral-950/80 hover:border-neutral-700 transition-all shadow-sm"
         >
-            <div {...attributes} {...listeners} className="cursor-grab text-neutral-600 hover:text-neutral-400">
+            <div {...attributes} {...listeners} className="cursor-grab text-neutral-600 hover:text-neutral-400 p-1">
                 <GripVertical className="w-4 h-4" />
             </div>
 
@@ -278,14 +271,36 @@ function SortableScene({ scene, onUpdate, onRemove }: { scene: SceneItem, onUpda
                 {scene.scene_number}
             </div>
 
-            {/* Name Input */}
-            <input
-                type="text"
-                value={scene.name || ''}
-                onChange={(e) => onUpdate(scene.id, { name: e.target.value })}
-                placeholder="Scene Name"
-                className="flex-1 bg-transparent border-none p-0 text-sm text-white placeholder-neutral-600 focus:outline-none focus:ring-0"
-            />
+            {/* Name Input/Text */}
+            <div className="flex-1 min-w-0">
+                {isEditing ? (
+                    <input
+                        type="text"
+                        value={tempName}
+                        onChange={(e) => setTempName(e.target.value)}
+                        onBlur={handleBlur}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleBlur()
+                            if (e.key === 'Escape') {
+                                setTempName(scene.name || '')
+                                setIsEditing(false)
+                            }
+                        }}
+                        className="w-full bg-neutral-900 border border-neutral-700 rounded px-2 py-0.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                        autoFocus
+                    />
+                ) : (
+                    <span
+                        onClick={() => {
+                            setTempName(scene.name || '')
+                            setIsEditing(true)
+                        }}
+                        className="block w-full text-sm text-white font-medium truncate cursor-text hover:text-amber-400 transition-colors"
+                    >
+                        {scene.name || 'Bez nazwy'}
+                    </span>
+                )}
+            </div>
 
             {/* Remove */}
             <button
@@ -297,3 +312,4 @@ function SortableScene({ scene, onUpdate, onRemove }: { scene: SceneItem, onUpda
         </div>
     )
 }
+

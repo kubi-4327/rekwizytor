@@ -7,7 +7,7 @@ export interface LiveScene {
         id: string
         text: string
     }[]
-    isPreShow: boolean
+    type: 'scene' | 'act' | 'preshow'
 }
 
 function generateId(text: string, index: number): string {
@@ -22,7 +22,7 @@ export function parseNoteToLiveScenes(content: JSONContent): LiveScene[] {
     if (!content.content) return []
 
     // Helper to start a new scene
-    const startScene = (name: string, isPreShow: boolean = false) => {
+    const startScene = (name: string, type: 'scene' | 'act' | 'preshow' = 'scene') => {
         if (currentScene && currentScene.items.length === 0) {
             // Remove empty previous scene if it was just a header without items? 
             // optional behavior, but let's keep it to allow empty scenes as transitions
@@ -31,24 +31,30 @@ export function parseNoteToLiveScenes(content: JSONContent): LiveScene[] {
             id: generateId(name, scenes.length),
             name: name,
             items: [],
-            isPreShow
+            type
         }
         scenes.push(currentScene)
     }
 
     // Default first scene if content starts without a header
-    startScene("Wstęp", false)
+    startScene("Wstęp", 'scene')
 
     content.content.forEach((node, index) => {
         const type = node.type
 
         if (type === 'heading') {
             const text = node.content?.[0]?.text || 'Bez tytułu'
-            const isPreShow = text.toLowerCase().includes('przed spektaklem') ||
-                text.toLowerCase().includes('stage 0') ||
-                text.toLowerCase().includes('before show')
+            const lowerText = text.toLowerCase()
 
-            startScene(text, isPreShow)
+            let sceneType: 'scene' | 'act' | 'preshow' = 'scene'
+
+            if (lowerText.includes('przed spektaklem') || lowerText.includes('stage 0') || lowerText.includes('before show')) {
+                sceneType = 'preshow'
+            } else if (lowerText.startsWith('akt') || lowerText.startsWith('act')) {
+                sceneType = 'act'
+            }
+
+            startScene(text, sceneType)
         } else if (type === 'bulletList' || type === 'orderedList') {
             if (node.content) {
                 node.content.forEach((listItem) => {
@@ -82,6 +88,18 @@ export function parseNoteToLiveScenes(content: JSONContent): LiveScene[] {
                         }
                     })
                 })
+            }
+        } else if (type === 'paragraph') {
+            // Treat top-level paragraphs (under a header) as items too? 
+            // Yes, user might just write lines.
+            if (node.content) {
+                const itemText = node.content.map(c => c.text).join('')
+                if (currentScene && itemText.trim()) {
+                    currentScene.items.push({
+                        id: generateId(itemText, globalIndex++),
+                        text: itemText
+                    })
+                }
             }
         }
     })

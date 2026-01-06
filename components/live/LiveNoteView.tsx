@@ -187,7 +187,7 @@ export function LiveNoteView({ performanceId, scenes, activeChecklist }: LiveNot
     }
 
     // -- RENDER: PreShow / Stage 0 --
-    if (currentScene.isPreShow) {
+    if (currentScene.type === 'preshow') {
         return (
             <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
                 {/* Header (No Timer) */}
@@ -245,6 +245,63 @@ export function LiveNoteView({ performanceId, scenes, activeChecklist }: LiveNot
                         Rozpocznij Spektakl
                         <ArrowRight className="w-5 h-5" />
                     </button>
+                </div>
+            </div>
+        )
+    }
+
+    // -- RENDER: ACT Title Card --
+    if (currentScene.type === 'act') {
+        return (
+            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
+                {/* Background Decoration */}
+                <div className="absolute inset-0 bg-gradient-to-b from-neutral-900/50 to-black pointer-events-none" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-burgundy-main to-transparent opacity-50" />
+
+                <div className="relative z-10 max-w-lg w-full space-y-12">
+
+                    {/* Title */}
+                    <div className="space-y-4">
+                        <span className="text-burgundy-main font-mono text-sm uppercase tracking-[0.2em]">Nowy Etap</span>
+                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white">
+                            {currentScene.name}
+                        </h1>
+                    </div>
+
+                    {/* Stats / Info */}
+                    <div className="grid grid-cols-2 gap-4 py-8 border-y border-white/10">
+                        <div className="flex flex-col items-center gap-2">
+                            <span className="text-neutral-500 text-xs uppercase tracking-wider">Czas Trwania</span>
+                            <span className="text-2xl font-mono font-bold text-neutral-200">
+                                {formatDuration(currentDuration)}
+                            </span>
+                        </div>
+                        <div className="flex flex-col items-center gap-2">
+                            <span className="text-neutral-500 text-xs uppercase tracking-wider">Następna Scena</span>
+                            <span className="text-xl font-bold text-neutral-200 truncate max-w-[150px]">
+                                {nextScene?.name || 'Koniec'}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="space-y-4">
+                        <button
+                            onClick={handleNextScene}
+                            className="w-full py-5 bg-white text-black rounded-2xl font-bold text-xl hover:bg-neutral-200 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-white/5"
+                        >
+                            Rozpocznij {currentScene.name}
+                            <ArrowRight className="w-6 h-6" />
+                        </button>
+
+                        <button
+                            onClick={() => router.push(`/performances/${performanceId}`)}
+                            className="w-full py-4 bg-transparent text-neutral-400 hover:text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-white/5 hover:border-white/20"
+                        >
+                            <X className="w-4 h-4" />
+                            Wyjście (Timer w tle)
+                        </button>
+                    </div>
                 </div>
             </div>
         )

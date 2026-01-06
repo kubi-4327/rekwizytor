@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, Loader2, Wand2, ChevronDown, CheckCheck, ArrowLeft } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { Plus, Trash2, Loader2, Wand2, ChevronDown, CheckCheck, ArrowLeft, Layers } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { SceneImportWizard } from './SceneImportWizard'
 import { SceneKanbanBoard } from './SceneKanbanBoard'
@@ -22,9 +24,11 @@ type Props = {
     performanceId: string
     initialScenes: Scene[]
     performanceColor?: string | null
+    pageTitle: string
+    pageSubtitle?: string
 }
 
-export function ManageScenesForm({ performanceId, initialScenes, performanceColor }: Props) {
+export function ManageScenesForm({ performanceId, initialScenes, performanceColor, pageTitle, pageSubtitle }: Props) {
     const t = useTranslations('ManageScenesForm')
     const [scenes, setScenes] = useState<Scene[]>(initialScenes)
     const [loading, setLoading] = useState(false)
@@ -177,6 +181,20 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
         }
     }
 
+    const handleDeleteAct = async (actNumber: number) => {
+        if (!confirm(t('deleteActConfirm', { actNumber }))) return
+        setScenes(scenes.filter(s => s.act_number !== actNumber))
+        try {
+            const { error } = await supabase.from('scenes').delete().eq('performance_id', performanceId).eq('act_number', actNumber)
+            if (error) throw error
+            router.refresh()
+        } catch (error) {
+            console.error('Error deleting act:', error)
+            alert(t('deleteError'))
+            router.refresh()
+        }
+    }
+
     return (
         <div className="space-y-6">
             <SmartSyncDialog
@@ -195,61 +213,33 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
                 />
             )}
 
-            <div className="flex justify-between items-center bg-neutral-900/50 p-4 rounded-xl border border-neutral-800">
-                <div className="flex items-center gap-4">
-                    <button onClick={handleBackWithCheck} className="p-2 hover:bg-neutral-800 rounded-full text-neutral-400 hover:text-white transition-colors">
-                        <ArrowLeft className="w-5 h-5" />
-                    </button>
-                    <h3 className="text-lg font-medium text-white flex items-center">
-                        <span className="w-2 h-8 rounded-full mr-3" style={{ backgroundColor: performanceColor || '#C92F3E' }} />
-                        {t('manageScenes')}
-                    </h3>
-                </div>
-
-                <div className="relative flex gap-2">
-                    <button
-                        onClick={handleBackWithCheck}
-                        className="hidden sm:flex items-center gap-2 px-4 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-md transition-colors"
-                    >
-                        <CheckCheck className="w-4 h-4" />
-                        Done
-                    </button>
-
-                    <button
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#C92F3E] text-white text-sm font-medium rounded-md hover:bg-[#A62733] transition-colors"
-                    >
-                        <Plus className="w-4 h-4" />
-                        {t('addScene')}
-                        <ChevronDown className={`w-4 h-4 ml-1 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {isMenuOpen && (
-                        <div className="absolute right-0 mt-12 w-48 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl z-50 overflow-hidden">
-                            <button
-                                onClick={() => { setIsMenuOpen(false) }}
-                                className="w-full text-left px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-800 flex items-center gap-2"
-                            >
-                                <Plus className="w-4 h-4" />
-                                {t('manualEntry')}
-                            </button>
-                            <button
-                                onClick={() => { setIsMenuOpen(false); setShowWizard(true) }}
-                                className="w-full text-left px-4 py-3 text-sm text-purple-400 hover:bg-neutral-800 flex items-center gap-2 border-t border-neutral-800"
-                            >
-                                <Wand2 className="w-4 h-4" />
-                                {t('aiImport')}
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
+            <PageHeader
+                title={pageTitle}
+                subtitle={pageSubtitle}
+                icon={<Layers className="w-6 h-6 text-white" />}
+                iconColor="text-purple-400"
+            >
+                <Button
+                    variant="ghost"
+                    onClick={() => setShowWizard(true)}
+                    leftIcon={<Wand2 className="w-4 h-4" />}
+                >
+                    {t('aiImport')}
+                </Button>
+                <Button
+                    onClick={handleBackWithCheck}
+                    leftIcon={<CheckCheck className="w-4 h-4" />}
+                >
+                    Done
+                </Button>
+            </PageHeader>
 
             <SceneKanbanBoard
                 scenes={scenes}
                 onReorder={handleReorder}
                 onUpdate={handleUpdate}
                 onRemove={handleDelete}
+                onRemoveAct={handleDeleteAct}
                 onAdd={handleQuickAdd}
             />
         </div>

@@ -4,7 +4,8 @@ import { getIconComponent } from '@/utils/icon-map'
 import { Folder } from 'lucide-react'
 
 // Function to rasterize icon to PNG
-export async function rasterizeIcon(iconName: string): Promise<string | null> {
+// Function to rasterize icon to PNG
+export async function rasterizeIcon(iconName: string, color: string = '#000000'): Promise<string | null> {
     if (!iconName) return null
     if (typeof window === 'undefined') return null
 
@@ -14,7 +15,7 @@ export async function rasterizeIcon(iconName: string): Promise<string | null> {
         width: 100,
         height: 100,
         strokeWidth: 2,
-        color: '#000000'
+        color: color
     }))
 
     const canvas = document.createElement('canvas')

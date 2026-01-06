@@ -33,7 +33,7 @@ const SceneContentEditor = ({ initialContent, onUpdate, isReadOnly }: SceneEdito
                     keepMarks: true,
                     keepAttributes: false,
                 },
-                listItem: true,
+                // listItem: {}, // Default is fine
             }),
             Placeholder.configure({
                 placeholder: 'Notatki do sceny...',

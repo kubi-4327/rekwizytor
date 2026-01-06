@@ -84,7 +84,7 @@
         "noActivity": "Brak ostatniej aktywności do wyświetlenia.",
         "nearestPerformance": "Najbliższy Spektakl",
         "noUpcomingPerformances": "Brak nadchodzących spektakli",
-        "manageProduction": "Zarządzaj",
+        "manageProduction": "Przejdź",
         "daysLeft": "{count, plural, one {za 1 dzień} few {za # dni} many {za # dni} other {za # dni}}",
         "today": "Dzisiaj!",
         "recentMentions": "Ostatnie Wzmianki",
@@ -131,12 +131,30 @@
         "subtitle": "Przeglądaj i zarządzaj grupami rekwizytów.",
         "allGroups": "Wszystkie Grupy",
         "editGroup": "Edytuj Grupę",
+        "createGroup": "Nowa Grupa",
         "name": "Nazwa",
         "icon": "Ikona",
         "searchIcons": "Szukaj ikon (np. pudło, krzesło)...",
         "suggested": "Sugerowane",
         "cancel": "Anuluj",
-        "save": "Zapisz Zmiany"
+        "save": "Zapisz Zmiany",
+        "details": {
+            "created": "Utworzono",
+            "type": "Typ"
+        },
+        "actions": {
+            "edit": "Edytuj",
+            "delete": "Usuń"
+        },
+        "labels": {
+            "print": "Drukuj Etykietę",
+            "generating": "Generowanie...",
+            "success": "Etykieta wygenerowana",
+            "error": "Błąd generowania"
+        },
+        "locations": {
+            "unassigned": "Nieprzypisane"
+        }
     },
     "Items": {
         "title": "Magazyn Rekwizytów",
@@ -264,7 +282,7 @@
     },
     "ManageScenes": {
         "backToProduction": "Powrót do Spektakli",
-        "title": "Zarządzaj Scenami: {title}",
+        "title": "Zarządzaj Scenami",
         "subtitle": "Zdefiniuj strukturę sztuki (Akty i Sceny)."
     },
     "ManageProps": {
@@ -505,6 +523,7 @@
         "sceneName": "Nazwa Sceny",
         "noScenes": "Nie zdefiniowano jeszcze scen. Zacznij od dodania Sceny 1 Aktu 1.",
         "deleteConfirm": "Jesteś pewien? To usunie definicję sceny.",
+        "deleteActConfirm": "Czy na pewno chcesz usunąć Akt {actNumber} i wszystkie jego sceny?",
         "addError": "Nie udało się dodać sceny",
         "deleteError": "Nie udało się usunąć sceny",
         "updateError": "Nie udało się zaktualizować sceny",
@@ -614,7 +633,11 @@
         },
         "sceneBreakdown": "Lista Scen",
         "scene": "Scena {number}",
-        "edit": "Edytuj"
+        "edit": "Edytuj",
+        "confirmDelete": "Czy na pewno chcesz usunąć ten termin? Usunie to zaplanowane wydarzenie.",
+        "deleteSuccess": "Termin usunięty pomyślnie",
+        "deleteError": "Błąd podczas usuwania terminu",
+        "noScenesFound": "Nie znaleziono scen w notatce scenicznej."
     },
     "ReviewList": {
         "allCaughtUp": "Wszystko sprawdzone!",
@@ -756,6 +779,8 @@
         "copied": "Skopiowano do schowka! Możesz teraz wkleić do Notion, Evernote itp.",
         "loading": "Ładowanie...",
         "edit": "Edytuj",
+        "editNote": "Edytuj Notatkę",
+        "manageScenes": "Zarządzaj Scenami",
         "done": "Gotowe"
     },
     "FastAddForm": {

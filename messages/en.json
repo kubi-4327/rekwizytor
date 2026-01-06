@@ -129,6 +129,7 @@
         "subtitle": "Browse and manage prop groups.",
         "allGroups": "All Groups",
         "editGroup": "Edit Group",
+        "createGroup": "New Group",
         "name": "Name",
         "icon": "Icon",
         "searchIcons": "Search icons (e.g. box, chair)...",

@@ -180,7 +180,10 @@ export type Database = {
           deleted_at: string | null
           description: string | null
           id: string
+          map_image_url: string | null
+          map_svg: string | null
           name: string
+          pins_data: Json | null
           type: Database["public"]["Enums"]["location_type_enum"]
         }
         Insert: {
@@ -189,7 +192,10 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           id?: string
+          map_image_url?: string | null
+          map_svg?: string | null
           name: string
+          pins_data?: Json | null
           type?: Database["public"]["Enums"]["location_type_enum"]
         }
         Update: {
@@ -198,7 +204,10 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           id?: string
+          map_image_url?: string | null
+          map_svg?: string | null
           name?: string
+          pins_data?: Json | null
           type?: Database["public"]["Enums"]["location_type_enum"]
         }
         Relationships: [

@@ -19,12 +19,19 @@ type Props = {
     productionTitle: string
     performanceId: string
     performanceColor?: string | null
+    sceneNote?: { content: any } | null
 }
 
-export function ScheduledShowsList({ scheduledShows, productionTitle, performanceId, performanceColor }: Props) {
+export function ScheduledShowsList({ scheduledShows, productionTitle, performanceId, performanceColor, sceneNote }: Props) {
     const t = useTranslations('ScheduledShowsList')
     const { formatTime } = useTimeFormat()
     const [selectedShowDate, setSelectedShowDate] = useState<string | null>(null)
+
+    // ... (rest of logic)
+
+    // ... inside render:
+    // This is handled by passing sceneNote directly where we render the modal
+
 
     // Group shows by date
     const showsByDate: Record<string, ScheduledShow[]> = {}
@@ -216,6 +223,7 @@ END:VCALENDAR`
                     shows={showsByDate[selectedShowDate]}
                     productionTitle={productionTitle}
                     performanceColor={performanceColor}
+                    sceneNote={sceneNote}
                 />
             )}
 

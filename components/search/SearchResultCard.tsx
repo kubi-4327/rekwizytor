@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import type { SearchResult } from '@/app/actions/unified-search'
 import { notify } from '@/utils/notify'
+import { rasterizeIcon } from '@/utils/icon-rasterizer'
 import { useTranslations } from 'next-intl'
 
 // --- Helper Functions (moved from page.tsx to be self-contained) ---
@@ -204,11 +205,11 @@ const getEntityActions = (item: SearchResult, t: any): QuickAction[] => {
         case 'group':
             return [
                 {
-                    id: 'view-items',
-                    label: 'View Items',
-                    shortLabel: 'Items',
+                    id: 'view-details',
+                    label: 'View Details',
+                    shortLabel: 'Details',
                     icon: List,
-                    getUrl: (i) => `/items?groupId=${i.id}`
+                    getUrl: (i) => `/groups?viewGroup=${i.id}`
                 },
                 {
                     id: 'labels',
@@ -222,7 +223,12 @@ const getEntityActions = (item: SearchResult, t: any): QuickAction[] => {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                    groups: [{ id: i.id, name: i.name }]
+                                    groups: [{
+                                        id: i.id,
+                                        name: i.name,
+                                        locationName: i.metadata?.location_name,
+                                        iconImage: await rasterizeIcon(i.metadata?.icon || 'Folder', i.metadata?.color || '#000000')
+                                    }]
                                 })
                             })
                             if (!response.ok) throw new Error('Label generation failed')
@@ -245,7 +251,7 @@ const getEntityActions = (item: SearchResult, t: any): QuickAction[] => {
                     label: 'Edit Group',
                     shortLabel: 'Edit',
                     icon: Pencil,
-                    getUrl: (i) => `/groups?edit=${i.id}`
+                    getUrl: (i) => `/groups?editGroup=${i.id}`
                 }
             ]
         case 'location':
@@ -340,14 +346,15 @@ export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
         ? extractTextFromTipTap(item.description)
         : descriptionText
 
-    // Fix URL for items
+    // Fix URL for items and groups
     let itemUrl = ''
     if (item.entity_type === 'item') {
         itemUrl = `/items?view=${item.id}`
+    } else if (item.entity_type === 'group') {
+        itemUrl = `/groups?viewGroup=${item.id}`
     } else {
         itemUrl = item.url || '#' // Fallback to avoid crash
     }
-
     const itemColor = item.entity_type === 'performance' && item.metadata?.color
         ? item.metadata.color
         : undefined

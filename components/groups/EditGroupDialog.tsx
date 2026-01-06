@@ -1,21 +1,17 @@
 'use client'
 
-import { Fragment, useState, useEffect } from 'react'
-import {
-    X,
-    Folder
-} from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Folder } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
-
-import { ICONS, KEYWORD_MAPPINGS, getIconComponent } from '@/utils/icon-map'
+import { ICONS, getIconComponent } from '@/utils/icon-map'
+import { KEYWORD_MAPPINGS } from '@/utils/icon-matcher'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/types/supabase'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 
-type Group = Pick<Database['public']['Tables']['groups']['Row'],
-    'id' | 'name' | 'icon'>
+type Group = Pick<Database['public']['Tables']['groups']['Row'], 'id' | 'name' | 'icon'>
 
 type Props = {
     group: Group | null
@@ -23,29 +19,23 @@ type Props = {
     onClose: () => void
 }
 
-
-
 const getSuggestedIcons = (inputName: string): typeof ICONS => {
     if (!inputName) return []
-
     const lowerName = inputName.toLowerCase()
     const suggestions = new Set<string>()
 
-    // Check mappings
-    Object.entries(KEYWORD_MAPPINGS).forEach(([keyword, icons]) => {
-        if (lowerName.includes(keyword) || keyword.includes(lowerName)) {
-            icons.forEach(icon => suggestions.add(icon))
+    Object.entries(KEYWORD_MAPPINGS).forEach(([iconName, keywords]) => {
+        if (keywords.some(k => lowerName.includes(k) || k.includes(lowerName))) {
+            suggestions.add(iconName)
         }
     })
 
-    // Check direct name matches (fuzzy)
     ICONS.forEach(item => {
         if (item.name.toLowerCase().includes(lowerName)) {
             suggestions.add(item.name)
         }
     })
 
-    // Return top 5 icon objects
     return Array.from(suggestions)
         .map(name => ICONS.find(i => i.name === name))
         .filter((i): i is typeof ICONS[0] => !!i)
@@ -57,78 +47,55 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
     const supabase = createClient()
     const router = useRouter()
 
-    const [name, setName] = useState('')
     const [selectedIcon, setSelectedIcon] = useState<string | null>(null)
     const [searchTerm, setSearchTerm] = useState('')
     const [isSaving, setIsSaving] = useState(false)
 
     useEffect(() => {
-        if (group) {
-            setName(group.name)
-
-            // Auto-assign logic:
-            // 1. Use existing icon if any
-            // 2. Try to find suggested icon from name (first match)
-            // 3. Fallback to 'Folder'
-            const suggested = getSuggestedIcons(group.name)
-            const autoIcon = group.icon || suggested[0]?.name || 'Folder'
-
-            setSelectedIcon(autoIcon)
+        if (isOpen && group) {
+            setSelectedIcon(group.icon || 'Folder')
+            setSearchTerm('')
         }
-    }, [group])
+    }, [isOpen, group])
 
     const handleSave = async () => {
         if (!group) return
+
         setIsSaving(true)
         try {
+            const iconToSave = selectedIcon || 'Folder'
             const { error } = await supabase
                 .from('groups')
-                .update({
-                    name,
-                    icon: selectedIcon
-                })
+                .update({ icon: iconToSave })
                 .eq('id', group.id)
 
             if (error) throw error
-
             router.refresh()
             onClose()
         } catch (error) {
-            console.error('Failed to update group:', error)
+            console.error('Failed to save icon:', error)
         } finally {
             setIsSaving(false)
         }
     }
 
-    // Helper text for translation fallback
-    const labelTitle = t('editGroup', { defaultMessage: 'Edit Group' })
-    const labelName = t('name', { defaultMessage: 'Name' })
-    const labelIcon = t('icon', { defaultMessage: 'Icon' })
-    const placeholderSearch = t('searchIcons', { defaultMessage: 'Search icons (e.g. box, krzesło)...' })
-    const labelSuggested = t('suggested', { defaultMessage: 'Suggested' })
-    const labelCancel = t('cancel', { defaultMessage: 'Cancel' })
-    const labelSave = t('save', { defaultMessage: 'Save Changes' })
+    if (!group) return null
+
+    const labelIcon = t('icon', { defaultMessage: 'Ikona' })
+    const placeholderSearch = t('searchIcons', { defaultMessage: 'Szukaj ikon...' })
+    const labelSuggested = t('suggested', { defaultMessage: 'Sugerowane' })
+    const labelCancel = t('cancel', { defaultMessage: 'Anuluj' })
+    const labelSave = t('save', { defaultMessage: 'Zapisz' })
+
+    const suggestedIcons = getSuggestedIcons(group.name)
 
     return (
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title={labelTitle}
+            title={`Ikona: ${group.name}`}
         >
             <div className="space-y-6 mt-4">
-                <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-neutral-400 mb-2">
-                        {labelName}
-                    </label>
-                    <input
-                        type="text"
-                        id="name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="block w-full rounded-md border-0 bg-neutral-900 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-neutral-800 placeholder:text-neutral-500 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
-                    />
-                </div>
-
                 <div>
                     <label className="block text-sm font-medium text-neutral-400 mb-2">
                         {labelIcon}
@@ -141,15 +108,16 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="block w-full rounded-md border-0 bg-neutral-900 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-neutral-800 placeholder:text-neutral-500 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
+                            autoFocus
                         />
                     </div>
 
                     {/* Suggested Icons */}
-                    {!searchTerm && getSuggestedIcons(name).length > 0 && (
+                    {!searchTerm && suggestedIcons.length > 0 && (
                         <div className="mb-3">
                             <p className="text-xs text-neutral-500 mb-2">{labelSuggested}</p>
                             <div className="flex gap-2">
-                                {getSuggestedIcons(name).map((item) => (
+                                {suggestedIcons.map((item) => (
                                     <button
                                         key={`suggested-${item.name}`}
                                         onClick={() => setSelectedIcon(item.name)}
@@ -170,16 +138,11 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
                         {ICONS
                             .filter(item => {
                                 const lowerSearch = searchTerm.toLowerCase()
-                                // Direct name match
                                 if (item.name.toLowerCase().includes(lowerSearch)) return true
-
-                                // Reverse lookup in mappings to allow searching by Polish term in the input
-                                // E.g. user types "krzesło", we find 'Armchair' in mapping['krzesło']
-                                const polishMatches = Object.entries(KEYWORD_MAPPINGS)
-                                    .filter(([key]) => key.includes(lowerSearch))
-                                    .flatMap(([, icons]) => icons)
-
-                                return polishMatches.includes(item.name)
+                                const matchingIcons = Object.entries(KEYWORD_MAPPINGS)
+                                    .filter(([, keywords]) => keywords.some(k => k.includes(lowerSearch)))
+                                    .map(([iconName]) => iconName)
+                                return matchingIcons.includes(item.name)
                             })
                             .map((item) => (
                                 <button
@@ -220,4 +183,3 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
         </Modal>
     )
 }
-
