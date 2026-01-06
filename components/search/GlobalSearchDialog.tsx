@@ -60,7 +60,6 @@ export function GlobalSearchDialog({ isOpen, onClose, initialContext }: GlobalSe
     const entityTypes = React.useMemo(() => [
         { value: 'all', label: 'All', icon: LayoutGrid },
         { value: 'performance', label: t('productions'), icon: Layers },
-        { value: 'item', label: t('items'), icon: Box },
         { value: 'group', label: t('groups'), icon: Box },
         { value: 'location', label: t('locations'), icon: MapPin },
         { value: 'note', label: t('notes'), icon: StickyNote },
@@ -402,7 +401,7 @@ export function GlobalSearchDialog({ isOpen, onClose, initialContext }: GlobalSe
                                                 <div className={`p-1.5 rounded-md bg-white/5 ${config.colorClass}`}>
                                                     <Icon className="h-4 w-4" />
                                                 </div>
-                                                <h2 className="text-sm font-bold text-neutral-400 uppercase tracking-widest">
+                                                <h2 className="text-xs font-bold text-neutral-500 uppercase tracking-widest">
                                                     {config.label}
                                                 </h2>
                                                 <div className="h-px flex-1 bg-neutral-800"></div>

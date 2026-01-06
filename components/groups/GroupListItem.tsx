@@ -63,17 +63,7 @@ export function GroupListItem({ group, subgroupCount = 0, onClick, onEdit }: Gro
                             locationName={group.locations?.name || undefined}
                         />
                     </div>
-                    <button
-                        onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            onEdit?.(group)
-                        }}
-                        className="p-1.5 text-neutral-500 hover:text-white hover:bg-neutral-700 rounded-md transition-colors"
-                        title="Edytuj grupę"
-                    >
-                        <Edit2 className="w-4 h-4" />
-                    </button>
+
                     <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-neutral-400" />
                 </div>
             </div>

@@ -1,5 +1,6 @@
 'use client'
 
+import { checkSignupAllowed } from '@/app/actions/auth-check'
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -47,6 +48,13 @@ export default function LoginPage() {
                 return
             }
 
+            const { allowed, message } = await checkSignupAllowed()
+            if (!allowed) {
+                setError(message || t('userLimitReached'))
+                setLoading(false)
+                return
+            }
+
             const { error } = await supabase.auth.signUp({
                 email,
                 password,
@@ -77,10 +85,7 @@ export default function LoginPage() {
         setLoading(false)
     }
 
-    const fillTestData = () => {
-        setEmail('inspector@theater.com')
-        setPassword('password123')
-    }
+
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-neutral-950 p-4 text-neutral-200 relative overflow-hidden">
@@ -215,20 +220,12 @@ export default function LoginPage() {
                             type="submit"
                             variant="primary"
                             isLoading={loading}
-                            className="bg-white text-black hover:bg-neutral-200 shadow-lg shadow-white/5"
+                            className="w-full"
                         >
                             {isSignUp ? t('signUp') : t('signIn')}
                         </Button>
 
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={fillTestData}
-                            leftIcon={<Sparkles className="w-4 h-4 text-yellow-500" />}
-                            className="border-neutral-800 bg-neutral-900/80 backdrop-blur-sm text-neutral-300 hover:bg-neutral-800"
-                        >
-                            {t('fillTestCredentials')}
-                        </Button>
+
                     </div>
                 </form>
 

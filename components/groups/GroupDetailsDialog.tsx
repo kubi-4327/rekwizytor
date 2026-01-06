@@ -138,7 +138,7 @@ export function GroupDetailsDialog({
 
             <div className="p-6 space-y-6">
                 {/* Metadata Grid */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                     <div className="p-3 rounded-xl bg-neutral-800/50 border border-neutral-800 space-y-1 hover:bg-neutral-800 transition-colors">
                         <div className="flex items-center gap-2 text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                             <Calendar className="w-3.5 h-3.5" />
@@ -148,16 +148,7 @@ export function GroupDetailsDialog({
                             {formattedDate}
                         </div>
                     </div>
-                    {/* Placeholder for item count or other metric if needed */}
-                    <div className="p-3 rounded-xl bg-neutral-800/50 border border-neutral-800 space-y-1 hover:bg-neutral-800 transition-colors">
-                        <div className="flex items-center gap-2 text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                            <Folder className="w-3.5 h-3.5" />
-                            {t('details.type')}
-                        </div>
-                        <div className="text-sm font-medium text-neutral-300">
-                            {t('title')}
-                        </div>
-                    </div>
+
                 </div>
 
                 {/* Actions */}

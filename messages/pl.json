@@ -210,6 +210,14 @@
         "queriesAnalyzed": "Przeanalizowane zapytania",
         "generations": "Generacje",
         "descriptionsGenerated": "Wygenerowane opisy",
+        "visionAnalysis": "Analiza Wizualna",
+        "imagesAnalyzed": "Przeanalizowane zdjęcia",
+        "mappingAI": "Mapy AI",
+        "mapsGenerated": "Wygenerowane mapy",
+        "queryCorrection": "Korekta Zapytań",
+        "queriesCorrected": "Poprawione zapytania",
+        "monthlyBreakdown": "Podział Miesięczny",
+        "operationsCount": "operacji",
         "recentOperations": "Ostatnie Operacje",
         "table": {
             "time": "Czas",
@@ -222,7 +230,13 @@
         "operations": {
             "fastAdd": "Szybkie Dodanie",
             "smartSearch": "Inteligentne Wyszukiwanie",
-            "generateDesc": "Generowanie Opisu"
+            "generateDesc": "Generowanie Opisu",
+            "createItem": "Tworzenie Przedmiotu",
+            "scanScenes": "Skanowanie Scen",
+            "visionGroup": "Wizja: Grupa",
+            "visionProps": "Wizja: Rekwizyty",
+            "mappingAI": "Mapowanie AI",
+            "queryCorrection": "Korekta Zapytania"
         },
         "noLogs": "Nie znaleziono jeszcze żadnych logów. Wykonaj operacje AI, aby zobaczyć dane.",
         "costBreakdown": "Podział Kosztów",

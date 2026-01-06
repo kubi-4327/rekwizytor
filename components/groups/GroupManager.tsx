@@ -193,6 +193,7 @@ export function GroupManager({ initialGroups, locations }: GroupManagerProps) {
                                                         onChange={e => setEditName(e.target.value)}
                                                         className="bg-neutral-950 border border-neutral-700 rounded px-3 py-1.5 text-sm text-white flex-1"
                                                         autoFocus
+                                                        onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
                                                     />
                                                     <select
                                                         value={editLocationId || 'null'}
@@ -202,7 +203,7 @@ export function GroupManager({ initialGroups, locations }: GroupManagerProps) {
                                                         <option value="null">Brak lokalizacji</option>
                                                         {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                                                     </select>
-                                                    <Button size="sm" variant="primary" onClick={saveEdit}>Zapisz</Button>
+
                                                     <Button size="sm" variant="secondary" onClick={() => setEditingId(null)}>X</Button>
                                                 </div>
                                             ) : (

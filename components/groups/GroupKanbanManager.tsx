@@ -372,6 +372,56 @@ export function GroupKanbanManager({ initialGroups, locations: initialLocations 
         setIsEditDialogOpen(true)
     }
 
+    const [deleteLocationId, setDeleteLocationId] = useState<string | null>(null)
+
+    // Save when mouse leaves the Kanban area
+    const handleMouseLeave = useCallback(() => {
+        if (Object.keys(pendingUpdates.current).length > 0) {
+            console.log('Mouse left Kanban, saving pending changes')
+            savePendingChanges()
+        }
+    }, [savePendingChanges])
+
+    const handleDeleteLocation = async (id: string) => {
+        setDeleteLocationId(null) // Close modal first
+        try {
+            // 1. Update all groups locally to remove location
+            setGroups(prev => prev.map(g =>
+                g.location_id === id ? { ...g, location_id: null } : g
+            ))
+
+            // 2. Remove location locally
+            setLocations(prev => prev.filter(l => l.id !== id))
+
+            // 3. Database operations
+            // First, unassign groups in DB (update where location_id is id)
+            // Note: RLS might handle this if cascade is set, but better safe.
+            const { error: groupsError } = await supabase
+                .from('groups')
+                .update({ location_id: null })
+                .eq('location_id', id)
+
+            if (groupsError) throw groupsError
+
+            // Then delete location
+            const { error: locError } = await supabase
+                .from('locations')
+                .delete()
+                .eq('id', id)
+
+            if (locError) throw locError
+
+            notify.success('Usunięto miejsce')
+            router.refresh()
+        } catch (e) {
+            console.error(e)
+            notify.error('Błąd usuwania miejsca')
+            // Optionally revert local state here if strict consistency needed, 
+            // but refresh usually fixes it.
+            router.refresh()
+        }
+    }
+
     const renderColumnHeader = (col: KanbanColumn, items: any[]) => {
         if (col.id === COL_UNASSIGNED) {
             return (
@@ -402,32 +452,37 @@ export function GroupKanbanManager({ initialGroups, locations: initialLocations 
                         className="bg-neutral-800 border border-neutral-700 text-white text-sm rounded px-1 py-0.5 w-[200px] focus:outline-none focus:border-amber-500"
                     />
                 ) : (
-                    <span
-                        onClick={() => {
-                            setTempColumnName(col.title || '')
-                            setEditingColumnId(String(col.id))
-                        }}
-                        className="font-medium text-neutral-300 text-sm truncate pr-2 cursor-pointer hover:text-white transition-colors"
-                        title="Kliknij aby edytować nazwę"
-                    >
-                        {col.title}
-                    </span>
+                    <div className="flex items-center gap-2 overflow-hidden">
+                        <span
+                            onClick={() => {
+                                setTempColumnName(col.title || '')
+                                setEditingColumnId(String(col.id))
+                            }}
+                            className="font-medium text-neutral-300 text-sm truncate cursor-pointer hover:text-white transition-colors"
+                            title="Kliknij aby edytować nazwę"
+                        >
+                            {col.title}
+                        </span>
+                    </div>
                 )}
 
-                <span className="text-xs bg-neutral-800 text-neutral-500 px-2 py-0.5 rounded-full shrink-0">
-                    {items.length}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs bg-neutral-800 text-neutral-500 px-2 py-0.5 rounded-full">
+                        {items.length}
+                    </span>
+                    {!isEditing && (
+                        <button
+                            onClick={() => setDeleteLocationId(String(col.id))}
+                            className="p-1 text-neutral-600 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors opacity-0 group-hover/header:opacity-100"
+                            title="Usuń miejsce"
+                        >
+                            <X className="w-3.5 h-3.5" />
+                        </button>
+                    )}
+                </div>
             </div>
         )
     }
-
-    // Save when mouse leaves the Kanban area
-    const handleMouseLeave = useCallback(() => {
-        if (Object.keys(pendingUpdates.current).length > 0) {
-            console.log('Mouse left Kanban, saving pending changes')
-            savePendingChanges()
-        }
-    }, [savePendingChanges])
 
     return (
         <div
@@ -440,17 +495,7 @@ export function GroupKanbanManager({ initialGroups, locations: initialLocations 
                     Kliknij nazwę kolumny aby ją edytować. Przeciągnij karty aby zmienić lokalizację.
                 </div>
 
-                {hasPendingChanges && (
-                    <Button
-                        onClick={() => savePendingChanges()}
-                        variant="primary"
-                        size="sm"
-                        className="animate-in fade-in slide-in-from-right-4 duration-300 shadow-lg shadow-amber-500/20"
-                    >
-                        <Save className="w-4 h-4 mr-2" />
-                        Zapisz zmiany ({Object.keys(pendingUpdates.current).length})
-                    </Button>
-                )}
+
             </div>
 
             <KanbanBoard
@@ -486,6 +531,37 @@ export function GroupKanbanManager({ initialGroups, locations: initialLocations 
                 onClose={() => setIsEditDialogOpen(false)}
                 group={editGroup}
             />
+
+            {deleteLocationId && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold text-white mb-2">Usuwanie miejsca</h3>
+                            <p className="text-neutral-400 mb-6">
+                                Czy na pewno chcesz usunąć to miejsce?
+                                <br />
+                                <span className="text-amber-500 text-sm mt-2 block">
+                                    Wszystkie grupy przypisane do tego miejsca zostaną przeniesione do "Nieprzypisane".
+                                </span>
+                            </p>
+                            <div className="flex gap-3 justify-end">
+                                <Button
+                                    variant="primary" // Emphasize CANCEL as requested ("podkreślić przycisk anuluj")
+                                    onClick={() => setDeleteLocationId(null)}
+                                >
+                                    Anuluj
+                                </Button>
+                                <button
+                                    onClick={() => deleteLocationId && handleDeleteLocation(deleteLocationId)} // Function needs to be defined
+                                    className="px-4 py-2 rounded-lg text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                                >
+                                    Usuń miejsce
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

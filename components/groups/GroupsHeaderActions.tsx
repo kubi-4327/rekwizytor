@@ -139,7 +139,7 @@ export function GroupsHeaderActions({ groups, currentParentId }: GroupsHeaderAct
                 )}
             </DropdownAction>
 
-            <div className="w-px h-8 bg-neutral-800 mx-1" />
+
 
             <DropdownAction
                 label="Dodaj"

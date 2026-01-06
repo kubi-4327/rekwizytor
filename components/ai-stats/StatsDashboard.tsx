@@ -47,6 +47,24 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
         return acc
     }, {} as Record<string, number>) || {}
 
+    // Group by month for monthly breakdown
+    const byMonth = logs.reduce((acc, log) => {
+        const month = new Date(log.created_at || '').toISOString().slice(0, 7) // YYYY-MM
+        if (!acc[month]) {
+            acc[month] = { input: 0, output: 0, total: 0, count: 0 }
+        }
+        acc[month].input += log.tokens_input || 0
+        acc[month].output += log.tokens_output || 0
+        acc[month].total += log.total_tokens || 0
+        acc[month].count += 1
+        return acc
+    }, {} as Record<string, { input: number; output: number; total: number; count: number }>)
+
+    // Sort months descending (newest first)
+    const monthlyData = Object.entries(byMonth)
+        .sort(([a], [b]) => b.localeCompare(a))
+        .slice(0, 6) // Show last 6 months
+
 
 
     const formatBytes = (bytes: number) => {
@@ -124,7 +142,7 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
                     </div>
 
                     {/* Secondary Stats - Operations */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-lg">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-neutral-400 text-sm">{t('fastAdds')}</span>
@@ -157,6 +175,66 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
                                 {t('descriptionsGenerated')}
                             </div>
                         </div>
+
+                        <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-neutral-400 text-sm">{t('visionAnalysis')}</span>
+                                <Sparkles className="h-4 w-4 text-blue-400" />
+                            </div>
+                            <div className="text-2xl font-bold text-white">{(byType['vision_group'] || 0) + (byType['vision_props'] || 0)}</div>
+                            <div className="text-xs text-neutral-500 mt-1">
+                                {t('imagesAnalyzed')}
+                            </div>
+                        </div>
+
+                        <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-neutral-400 text-sm">{t('mappingAI')}</span>
+                                <DatabaseIcon className="h-4 w-4 text-green-400" />
+                            </div>
+                            <div className="text-2xl font-bold text-white">{byType['mapping_ai'] || 0}</div>
+                            <div className="text-xs text-neutral-500 mt-1">
+                                {t('mapsGenerated')}
+                            </div>
+                        </div>
+
+                        <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-neutral-400 text-sm">{t('queryCorrection')}</span>
+                                <ArrowRightLeft className="h-4 w-4 text-purple-400" />
+                            </div>
+                            <div className="text-2xl font-bold text-white">{byType['query_correction'] || 0}</div>
+                            <div className="text-xs text-neutral-500 mt-1">
+                                {t('queriesCorrected')}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Monthly Breakdown */}
+                    <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
+                        <h3 className="text-base font-medium text-white mb-4 font-boldonse">{t('monthlyBreakdown')}</h3>
+                        <div className="space-y-3">
+                            {monthlyData.map(([month, data]) => {
+                                const costUSD = ((data.input / 1_000_000) * 0.10) + ((data.output / 1_000_000) * 0.40)
+                                const cost = currency === 'USD' ? costUSD : costUSD * EXCHANGE_RATE
+                                const monthName = new Date(month + '-01').toLocaleDateString(undefined, { year: 'numeric', month: 'long' })
+
+                                return (
+                                    <div key={month} className="border-b border-neutral-800 pb-3 last:border-0">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="text-neutral-300 text-sm font-courier">{monthName}</span>
+                                            <span className="text-white font-courier text-sm font-bold">
+                                                {currency === 'USD' ? '$' : 'PLN '}{cost.toFixed(4)}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between text-xs text-neutral-500">
+                                            <span>{data.total.toLocaleString()} tokens</span>
+                                            <span>{data.count} {t('operationsCount')}</span>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
                     </div>
 
                     {/* Cost & Usage Breakdown */}
@@ -173,7 +251,14 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
 
                                     const label = type === 'fast_add' ? t('operations.fastAdd') :
                                         type === 'smart_search' ? t('operations.smartSearch') :
-                                            t('operations.generateDesc')
+                                            type === 'generate_description' ? t('operations.generateDesc') :
+                                                type === 'create_item' ? t('operations.createItem') :
+                                                    type === 'scan_scenes' ? t('operations.scanScenes') :
+                                                        type === 'vision_group' ? t('operations.visionGroup') :
+                                                            type === 'vision_props' ? t('operations.visionProps') :
+                                                                type === 'mapping_ai' ? t('operations.mappingAI') :
+                                                                    type === 'query_correction' ? t('operations.queryCorrection') :
+                                                                        type
 
                                     return (
                                         <div key={type} className="flex justify-between items-center">
@@ -203,7 +288,14 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
 
                                     const label = type === 'fast_add' ? t('operations.fastAdd') :
                                         type === 'smart_search' ? t('operations.smartSearch') :
-                                            t('operations.generateDesc')
+                                            type === 'generate_description' ? t('operations.generateDesc') :
+                                                type === 'create_item' ? t('operations.createItem') :
+                                                    type === 'scan_scenes' ? t('operations.scanScenes') :
+                                                        type === 'vision_group' ? t('operations.visionGroup') :
+                                                            type === 'vision_props' ? t('operations.visionProps') :
+                                                                type === 'mapping_ai' ? t('operations.mappingAI') :
+                                                                    type === 'query_correction' ? t('operations.queryCorrection') :
+                                                                        type
 
                                     return (
                                         <div key={type} className="flex justify-between items-center">
@@ -250,7 +342,14 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
                                                     }`}>
                                                     {log.operation_type === 'fast_add' ? t('operations.fastAdd') :
                                                         log.operation_type === 'smart_search' ? t('operations.smartSearch') :
-                                                            t('operations.generateDesc')}
+                                                            log.operation_type === 'generate_description' ? t('operations.generateDesc') :
+                                                                log.operation_type === 'create_item' ? t('operations.createItem') :
+                                                                    log.operation_type === 'scan_scenes' ? t('operations.scanScenes') :
+                                                                        log.operation_type === 'vision_group' ? t('operations.visionGroup') :
+                                                                            log.operation_type === 'vision_props' ? t('operations.visionProps') :
+                                                                                log.operation_type === 'mapping_ai' ? t('operations.mappingAI') :
+                                                                                    log.operation_type === 'query_correction' ? t('operations.queryCorrection') :
+                                                                                        log.operation_type}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-neutral-400 text-xs">

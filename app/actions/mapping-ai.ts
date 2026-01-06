@@ -76,6 +76,19 @@ export async function analyzeFloorPlan(locationId: string, imageUrl: string) {
             }
         ])
 
+        const usage = result.response.usageMetadata
+
+        // Log token usage
+        if (usage) {
+            await supabase.from('ai_usage_logs').insert({
+                tokens_input: usage.promptTokenCount,
+                tokens_output: usage.candidatesTokenCount,
+                total_tokens: usage.totalTokenCount,
+                model_name: 'gemini-3-flash-preview',
+                operation_type: 'mapping_ai'
+            })
+        }
+
         let svgContent = result.response.text()
 
         // Clean up response if it contains markdown code blocks despite instructions

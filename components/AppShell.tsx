@@ -8,8 +8,8 @@ import { GlobalSearchProvider } from './search/GlobalSearchProvider'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
-    // Check for /login, /auth, /waiting, /rejected or localized versions
-    const isAuthPage = /^\/(?:[a-z]{2}\/)?(?:login|auth|waiting|rejected)/.test(pathname)
+    // Check for /login, /auth, /waiting, /rejected, /forgot-password, /update-password or localized versions
+    const isAuthPage = /^\/(?:[a-z]{2}\/)?(?:login|auth|waiting|rejected|forgot-password|update-password)/.test(pathname)
 
     if (isAuthPage) {
         return <>{children}</>

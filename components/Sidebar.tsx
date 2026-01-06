@@ -13,12 +13,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
 import { isFeatureEnabled } from '@/utils/features'
+import { useGlobalSearch } from '@/components/search/GlobalSearchProvider'
 
 export function Sidebar() {
     const pathname = usePathname()
     const router = useRouter()
     const supabase = createClient()
     const t = useTranslations('Navigation')
+    const { openSearch } = useGlobalSearch()
 
     const navigation = [
         { name: t('productions'), href: '/performances', icon: Layers },
@@ -54,8 +56,8 @@ export function Sidebar() {
                 </div>
                 <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
                     <div className="px-2 mb-2">
-                        <Link
-                            href="/search"
+                        <button
+                            onClick={() => openSearch()}
                             className="flex w-full items-center justify-between rounded-md bg-neutral-800 px-3 py-2 text-sm text-neutral-400 hover:bg-neutral-700 hover:text-white transition-colors"
                         >
                             <div className="flex items-center gap-3">
@@ -65,7 +67,7 @@ export function Sidebar() {
                             <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-neutral-600 bg-neutral-700 px-1.5 font-mono text-[10px] font-medium text-neutral-400">
                                 <span className="text-xs">⌘K</span>
                             </kbd>
-                        </Link>
+                        </button>
                     </div>
                     <nav className="mt-1 flex-1 space-y-1 px-2">
                         {navigation.map((item) => {

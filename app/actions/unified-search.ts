@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { generateEmbedding } from '@/utils/embeddings'
 import { TaskType } from '@google/generative-ai'
+import { correctQueryTypos } from '@/utils/query-correction'
 
 // Types for search results
 export type SearchResult = {
@@ -56,13 +57,17 @@ export async function unifiedSearch(
 
         // Execute hybrid search (FTS + Embeddings)
         try {
-            // Generate embedding for the query
-            const queryEmbedding = await generateEmbedding(query, TaskType.RETRIEVAL_QUERY)
+            // IMPORTANT: Correct typos before generating embedding
+            // This allows "szkoła roka" to match "School of Rock"
+            const correctedQuery = query.length > 3 ? await correctQueryTypos(query) : query
+
+            // Generate embedding for the corrected query
+            const queryEmbedding = await generateEmbedding(correctedQuery, TaskType.RETRIEVAL_QUERY)
 
             const { data, error } = await supabase.rpc('search_global_hybrid', {
-                query_text: query,
-                query_embedding: JSON.stringify(queryEmbedding),
-                match_threshold: 0.45,
+                query_text: query, // Use original for FTS
+                query_embedding: JSON.stringify(queryEmbedding), // Use corrected for semantic
+                match_threshold: 0.4,
                 match_count: matchCount,
                 fuzzy_threshold: 0.3
             })
@@ -79,10 +84,26 @@ export async function unifiedSearch(
                 results = (ftsData as SearchResult[]) || []
             } else {
                 results = (data as SearchResult[]) || []
+
+                // Log smart search usage (only when hybrid search succeeds)
+                // Note: embedding generation is logged separately in embeddings.ts
+                try {
+                    await supabase.from('ai_usage_logs').insert({
+                        tokens_input: 0, // Embedding tokens are tracked separately
+                        tokens_output: 0,
+                        total_tokens: 0,
+                        model_name: 'hybrid-search',
+                        operation_type: 'smart_search',
+                        details: { query, resultCount: results.length }
+                    })
+                } catch (logError) {
+                    console.error('Failed to log smart search:', logError)
+                }
             }
         } catch (ftsError) {
             console.error('FTS search error:', ftsError)
         }
+
 
         // Apply filters to results
         // Entity type filter

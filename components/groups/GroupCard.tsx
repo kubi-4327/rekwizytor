@@ -56,17 +56,7 @@ export function GroupCard({ group, subgroupCount = 0, onClick, onEdit }: GroupCa
                         locationName={group.locations?.name || undefined}
                     />
                 </div>
-                <button
-                    onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        onEdit?.(group)
-                    }}
-                    className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-700 rounded-md transition-colors"
-                    title="Edytuj grupę"
-                >
-                    <Edit2 className="w-4 h-4" />
-                </button>
+
             </div>
         </div>
     )

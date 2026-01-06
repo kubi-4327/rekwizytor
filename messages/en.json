@@ -190,6 +190,14 @@
         "queriesAnalyzed": "Queries analyzed",
         "generations": "Generations",
         "descriptionsGenerated": "Descriptions generated",
+        "visionAnalysis": "Vision Analysis",
+        "imagesAnalyzed": "Images analyzed",
+        "mappingAI": "Mapping AI",
+        "mapsGenerated": "Maps generated",
+        "queryCorrection": "Query Correction",
+        "queriesCorrected": "Queries corrected",
+        "monthlyBreakdown": "Monthly Breakdown",
+        "operationsCount": "operations",
         "recentOperations": "Recent Operations",
         "table": {
             "time": "Time",
@@ -202,7 +210,13 @@
         "operations": {
             "fastAdd": "Fast Add",
             "smartSearch": "Smart Search",
-            "generateDesc": "Generate Description"
+            "generateDesc": "Generate Description",
+            "createItem": "Create Item",
+            "scanScenes": "Scan Scenes",
+            "visionGroup": "Vision: Group",
+            "visionProps": "Vision: Props",
+            "mappingAI": "Mapping AI",
+            "queryCorrection": "Query Correction"
         },
         "noLogs": "No logs found yet. Perform AI operations to see data.",
         "costBreakdown": "Cost Breakdown",

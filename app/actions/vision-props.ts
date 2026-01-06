@@ -34,6 +34,20 @@ export async function analyzePropsImage(imageBase64: string) {
         ])
 
         const responseText = result.response.text()
+        const usage = result.response.usageMetadata
+
+        // Log token usage
+        if (usage) {
+            const { createClient } = await import('@/utils/supabase/server')
+            const supabase = await createClient()
+            await supabase.from('ai_usage_logs').insert({
+                tokens_input: usage.promptTokenCount,
+                tokens_output: usage.candidatesTokenCount,
+                total_tokens: usage.totalTokenCount,
+                model_name: 'gemini-2.0-flash',
+                operation_type: 'vision_props'
+            })
+        }
 
         // Extract JSON array
         const jsonMatch = responseText.match(/\[[\s\S]*\]/)
@@ -61,3 +75,4 @@ export async function analyzePropsImage(imageBase64: string) {
         return { error: 'Failed to analyze image' }
     }
 }
+

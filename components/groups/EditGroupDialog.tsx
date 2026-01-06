@@ -11,12 +11,13 @@ import { Database } from '@/types/supabase'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 
-type Group = Pick<Database['public']['Tables']['groups']['Row'], 'id' | 'name' | 'icon'>
+type Group = Pick<Database['public']['Tables']['groups']['Row'], 'id' | 'name' | 'icon' | 'location_id'>
 
 type Props = {
     group: Group | null
     isOpen: boolean
     onClose: () => void
+    parentId?: string | null
 }
 
 const getSuggestedIcons = (inputName: string): typeof ICONS => {
@@ -47,13 +48,26 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
     const supabase = createClient()
     const router = useRouter()
 
+    const [name, setName] = useState('')
     const [selectedIcon, setSelectedIcon] = useState<string | null>(null)
+    const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null)
     const [searchTerm, setSearchTerm] = useState('')
     const [isSaving, setIsSaving] = useState(false)
+    const [locations, setLocations] = useState<{ id: string, name: string }[]>([])
+
+    useEffect(() => {
+        const fetchLocations = async () => {
+            const { data } = await supabase.from('locations').select('id, name').order('name')
+            if (data) setLocations(data)
+        }
+        fetchLocations()
+    }, [])
 
     useEffect(() => {
         if (isOpen && group) {
+            setName(group.name)
             setSelectedIcon(group.icon || 'Folder')
+            setSelectedLocationId(group.location_id || null)
             setSearchTerm('')
         }
     }, [isOpen, group])
@@ -66,7 +80,11 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
             const iconToSave = selectedIcon || 'Folder'
             const { error } = await supabase
                 .from('groups')
-                .update({ icon: iconToSave })
+                .update({
+                    name,
+                    icon: iconToSave,
+                    location_id: selectedLocationId === 'null' ? null : selectedLocationId
+                })
                 .eq('id', group.id)
 
             if (error) throw error
@@ -93,9 +111,41 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title={`Ikona: ${group.name}`}
+            title={`Edytuj grupę: ${group.name}`}
         >
             <div className="space-y-6 mt-4">
+
+
+                <div>
+                    <label className="block text-sm font-medium text-neutral-400 mb-2">
+                        {t('name', { defaultMessage: 'Nazwa' })}
+                    </label>
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="block w-full rounded-md border-0 bg-neutral-900 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-neutral-800 placeholder:text-neutral-500 focus:ring-2 focus:ring-inset focus:ring-amber-500 sm:text-sm sm:leading-6"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-neutral-400 mb-2">
+                        Lokalizacja
+                    </label>
+                    <select
+                        value={selectedLocationId || 'null'}
+                        onChange={(e) => setSelectedLocationId(e.target.value)}
+                        className="block w-full rounded-md border-0 bg-neutral-900 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-neutral-800 focus:ring-2 focus:ring-inset focus:ring-amber-500 sm:text-sm sm:leading-6"
+                    >
+                        <option value="null">Brak przypisania</option>
+                        {locations.map(loc => (
+                            <option key={loc.id} value={loc.id}>
+                                {loc.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
                 <div>
                     <label className="block text-sm font-medium text-neutral-400 mb-2">
                         {labelIcon}
@@ -108,7 +158,6 @@ export function EditGroupDialog({ group, isOpen, onClose }: Props) {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="block w-full rounded-md border-0 bg-neutral-900 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-neutral-800 placeholder:text-neutral-500 focus:ring-2 focus:ring-inset focus:ring-white sm:text-sm sm:leading-6"
-                            autoFocus
                         />
                     </div>
 

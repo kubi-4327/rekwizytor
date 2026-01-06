@@ -85,7 +85,7 @@ export function ForgotPasswordForm() {
                     type="submit"
                     variant="primary"
                     isLoading={loading}
-                    className="w-full bg-white text-black hover:bg-neutral-200 shadow-lg shadow-white/5"
+                    className="w-full"
                 >
                     {t('sendResetLink')}
                 </Button>

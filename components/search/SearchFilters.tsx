@@ -37,13 +37,6 @@ export function SearchFilters({ entityType, filters, onChange, className }: Prop
                 { value: 'archived', label: tPerf('statuses.archived') }
             ]
         }
-        if (entityType === 'item') {
-            return [
-                { value: 'active', label: tItems('statuses.active') },
-                { value: 'draft', label: tItems('statuses.draft') },
-                { value: 'in_maintenance', label: tItems('statuses.in_maintenance') }
-            ]
-        }
         return []
     }
 
@@ -123,7 +116,7 @@ export function SearchFilters({ entityType, filters, onChange, className }: Prop
             )}
 
             {/* Location Filter (Performance, Item, Group, Location itself doesn't need location filter?) */}
-            {['performance', 'item', 'group'].includes(entityType || '') && (
+            {['performance', 'group'].includes(entityType || '') && (
                 <div className={clsx(
                     "flex items-center gap-2 px-3 py-2.5 rounded-lg border transition-all",
                     filters.location ? "bg-orange-500/10 border-orange-500/30 text-orange-300" : "bg-neutral-900/50 border-neutral-800 text-neutral-400"
@@ -145,7 +138,7 @@ export function SearchFilters({ entityType, filters, onChange, className }: Prop
             )}
 
             {/* Category / Group Filter (Item, Note) */}
-            {['item', 'note'].includes(entityType || '') && (
+            {['note'].includes(entityType || '') && (
                 <div className={clsx(
                     "flex items-center gap-2 px-3 py-2.5 rounded-lg border transition-all",
                     filters.category ? "bg-blue-500/10 border-blue-500/30 text-blue-300" : "bg-neutral-900/50 border-neutral-800 text-neutral-400"

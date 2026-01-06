@@ -17,7 +17,7 @@ import { createClient } from '@/utils/supabase/client'
 import { notify } from '@/utils/notify'
 
 type Group = Pick<Database['public']['Tables']['groups']['Row'],
-    'id' | 'name' | 'parent_id' | 'icon' | 'color' | 'created_at'> & {
+    'id' | 'name' | 'parent_id' | 'icon' | 'color' | 'created_at' | 'location_id'> & {
         locations: { name: string } | null
     }
 

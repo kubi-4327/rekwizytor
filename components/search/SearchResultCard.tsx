@@ -27,6 +27,7 @@ import type { SearchResult } from '@/app/actions/unified-search'
 import { notify } from '@/utils/notify'
 import { rasterizeIcon } from '@/utils/icon-rasterizer'
 import { useTranslations } from 'next-intl'
+import { ScheduleShowDialog } from '@/components/performances/ScheduleShowDialog'
 
 // --- Helper Functions (moved from page.tsx to be self-contained) ---
 
@@ -84,10 +85,10 @@ export const getEntityConfig = (item: SearchResult | { entity_type: string }) =>
             return {
                 icon: StickyNote,
                 label: 'Notes',
-                colorClass: 'text-emerald-400',
-                bgClass: 'bg-emerald-400/10',
-                borderClass: 'border-emerald-400/20',
-                hoverBorder: 'group-hover:border-emerald-400/50'
+                colorClass: 'text-amber-400',
+                bgClass: 'bg-amber-400/10',
+                borderClass: 'border-amber-400/20',
+                hoverBorder: 'group-hover:border-amber-400/50'
             }
         default:
             return {
@@ -101,126 +102,79 @@ export const getEntityConfig = (item: SearchResult | { entity_type: string }) =>
     }
 }
 
-const getEntityActions = (item: SearchResult, t: any): QuickAction[] => {
+const getEntityUrl = (item: SearchResult): string => {
+    switch (item.entity_type) {
+        case 'performance':
+            return `/performances/${item.id}`
+        case 'item':
+            return `/items?view=${item.id}`
+        case 'group':
+            return `/groups?viewGroup=${item.id}`
+        case 'location':
+            return `/groups/manage?location=${item.id}` // Navigate to groups management with location filter
+        case 'note':
+            return `/notes/${item.id}`
+        default:
+            return '#'
+    }
+}
+
+const getEntityActions = (item: SearchResult, t: any, onOpenSchedule?: (performanceId: string, color: string | null) => void): QuickAction[] => {
     switch (item.entity_type) {
         case 'performance':
             return [
                 {
-                    id: 'props',
-                    label: 'Manage Props',
-                    shortLabel: 'Manage',
-                    icon: ClipboardList,
-                    getUrl: (i) => `/performances/${i.id}/props`
+                    id: 'open-new-tab',
+                    label: 'Otwórz w nowej karcie',
+                    shortLabel: 'Nowa karta',
+                    icon: ExternalLink,
+                    handler: (i) => {
+                        window.open(`/performances/${i.id}`, '_blank')
+                    }
                 },
                 {
                     id: 'schedule',
-                    label: 'Schedule',
-                    shortLabel: 'Schedule',
+                    label: 'Planuj daty',
+                    shortLabel: 'Daty',
                     icon: Calendar,
-                    getUrl: (i) => `/performances/${i.id}/schedule`
+                    handler: (i) => {
+                        onOpenSchedule?.(i.id, i.metadata?.color || null)
+                    }
                 },
                 {
                     id: 'live',
-                    label: 'Live View',
+                    label: 'Widok Live',
                     shortLabel: 'Live',
                     icon: Play,
                     getUrl: (i) => `/performances/${i.id}/live`,
                     isLive: true
-                },
-                {
-                    id: 'export-pdf',
-                    label: 'Export PDF',
-                    shortLabel: 'PDF',
-                    icon: Download,
-                    handler: async (i) => {
-                        const toastId = notify.loading(t('loading.exporting'))
-                        try {
-                            const response = await fetch('/api/generate-performance-pdf', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ performanceId: i.id })
-                            })
-                            if (!response.ok) throw new Error('Export failed')
-                            const blob = await response.blob()
-                            const url = window.URL.createObjectURL(blob)
-                            const a = document.createElement('a')
-                            a.href = url
-                            a.download = `${i.name.replace(/[^a-z0-9]/gi, '_')}.pdf`
-                            a.click()
-                            notify.dismiss(toastId)
-                            notify.success(t('success.exported'))
-                        } catch (e) {
-                            console.error('PDF export failed:', e)
-                            notify.dismiss(toastId)
-                            notify.error(t('error.export'))
-                        }
-                    }
-                },
-                {
-                    id: 'labels',
-                    label: 'Print Labels',
-                    shortLabel: 'Labels',
-                    icon: QrCode,
-                    handler: async (i) => {
-                        const toastId = notify.loading(t('loading.generating'))
-                        try {
-                            const response = await fetch('/api/generate-performance-labels', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    performances: [{ id: i.id, title: i.name }]
-                                })
-                            })
-                            if (!response.ok) throw new Error('Label generation failed')
-                            const blob = await response.blob()
-                            const url = window.URL.createObjectURL(blob)
-                            const a = document.createElement('a')
-                            a.href = url
-                            a.download = `label_${i.name.replace(/[^a-z0-9]/gi, '_')}.pdf`
-                            a.click()
-                            notify.dismiss(toastId)
-                            notify.success(t('success.labelGenerated'))
-                        } catch (e) {
-                            console.error('Performance label generation failed:', e)
-                            notify.dismiss(toastId)
-                            notify.error(t('error.generic'))
-                        }
-                    }
-                }
-            ]
-        case 'item':
-            return [
-                {
-                    id: 'view',
-                    label: 'View Details',
-                    shortLabel: 'View',
-                    icon: ExternalLink,
-                    getUrl: (i) => `/items?view=${i.id}`
-                },
-                {
-                    id: 'group',
-                    label: 'See Category',
-                    shortLabel: 'Category',
-                    icon: Tag,
-                    getUrl: (i) => `/items?groupId=${i.metadata?.group_id || ''}`
                 }
             ]
         case 'group':
             return [
                 {
-                    id: 'view-details',
-                    label: 'View Details',
-                    shortLabel: 'Details',
-                    icon: List,
-                    getUrl: (i) => `/groups?viewGroup=${i.id}`
+                    id: 'open-new-tab',
+                    label: 'Otwórz w nowej karcie',
+                    shortLabel: 'Nowa karta',
+                    icon: ExternalLink,
+                    handler: (i) => {
+                        window.open(`/groups?viewGroup=${i.id}`, '_blank')
+                    }
+                },
+                {
+                    id: 'edit',
+                    label: 'Edytuj grupę',
+                    shortLabel: 'Edytuj',
+                    icon: Pencil,
+                    getUrl: (i) => `/groups?editGroup=${i.id}`
                 },
                 {
                     id: 'labels',
-                    label: 'Print Labels',
-                    shortLabel: 'Labels',
+                    label: 'Generuj etykietę',
+                    shortLabel: 'Etykieta',
                     icon: QrCode,
                     handler: async (i) => {
-                        const toastId = notify.loading(t('loading.generating'))
+                        const toastId = notify.loading('Generowanie etykiety...')
                         try {
                             const response = await fetch('/api/generate-labels', {
                                 method: 'POST',
@@ -239,66 +193,64 @@ const getEntityActions = (item: SearchResult, t: any): QuickAction[] => {
                             const url = window.URL.createObjectURL(blob)
                             const a = document.createElement('a')
                             a.href = url
-                            a.download = `labels_${i.name.replace(/[^a-z0-9]/gi, '_')}.pdf`
+                            a.download = `etykieta_${i.name.replace(/[^a-z0-9]/gi, '_')}.pdf`
                             a.click()
                             notify.dismiss(toastId)
-                            notify.success(t('success.labelGenerated'))
+                            notify.success('Etykieta wygenerowana')
                         } catch (e) {
                             console.error('Group label generation failed:', e)
                             notify.dismiss(toastId)
-                            notify.error(t('error.generic'))
+                            notify.error('Błąd generowania etykiety')
                         }
                     },
-                },
-                {
-                    id: 'edit',
-                    label: 'Edit Group',
-                    shortLabel: 'Edit',
-                    icon: Pencil,
-                    getUrl: (i) => `/groups?editGroup=${i.id}`
                 }
             ]
         case 'location':
             return [
                 {
-                    id: 'view-items',
-                    label: 'View Items Here',
-                    shortLabel: 'Items',
-                    icon: List,
-                    getUrl: (i) => `/items?locationId=${i.id}`
+                    id: 'open-new-tab',
+                    label: 'Otwórz w nowej karcie',
+                    shortLabel: 'Nowa karta',
+                    icon: ExternalLink,
+                    handler: (i) => {
+                        window.open(`/groups/manage?location=${i.id}`, '_blank')
+                    }
                 },
                 {
                     id: 'edit',
-                    label: 'Edit Location',
-                    shortLabel: 'Edit',
+                    label: 'Zarządzaj grupami',
+                    shortLabel: 'Zarządzaj',
                     icon: Pencil,
-                    getUrl: (i) => `/items/structure?edit=${i.id}`
+                    getUrl: (i) => `/groups/manage?location=${i.id}`
                 }
             ]
         case 'note':
             return [
                 {
-                    id: 'read',
-                    label: 'Read Note',
-                    shortLabel: 'Read',
+                    id: 'open-new-tab',
+                    label: 'Otwórz w nowej karcie',
+                    shortLabel: 'Nowa karta',
                     icon: ExternalLink,
-                    getUrl: (i) => `/notes/${i.id}`
+                    handler: (i) => {
+                        window.open(`/notes/${i.id}`, '_blank')
+                    }
                 },
                 {
                     id: 'edit',
-                    label: 'Edit Note',
-                    shortLabel: 'Edit',
+                    label: 'Edytuj notatkę',
+                    shortLabel: 'Edytuj',
                     icon: Pencil,
                     getUrl: (i) => `/notes/${i.id}?edit=true`
                 },
                 {
                     id: 'share',
-                    label: 'Share Link',
-                    shortLabel: 'Share',
+                    label: 'Udostępnij link',
+                    shortLabel: 'Udostępnij',
                     icon: Share2,
                     handler: (i) => {
                         const url = `${window.location.origin}/notes/${i.id}`
                         navigator.clipboard.writeText(url)
+                        notify.success('Link skopiowany do schowka')
                     }
                 }
             ]
@@ -334,11 +286,15 @@ const extractTextFromTipTap = (json: any): string => {
 interface SearchResultCardProps {
     item: SearchResult & { explanation?: string } // Add explanation type
     aiMode?: boolean
+    onClose?: () => void // Callback to close search modal
 }
 
-export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
+export function SearchResultCard({ item, aiMode, onClose }: SearchResultCardProps) {
     const router = useRouter()
     const [actionsVisible, setActionsVisible] = React.useState(false) // Toggle state for mobile
+    const [scheduleDialogOpen, setScheduleDialogOpen] = React.useState(false)
+    const [schedulePerformanceId, setSchedulePerformanceId] = React.useState<string | null>(null)
+    const [schedulePerformanceColor, setSchedulePerformanceColor] = React.useState<string | null>(null)
     const t = useTranslations('toast')
 
     const itemConfig = getEntityConfig(item)
@@ -370,17 +326,22 @@ export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
         ? item.metadata.color
         : undefined
 
-    const actions = getEntityActions(item, t)
+    const handleOpenSchedule = (performanceId: string, color: string | null) => {
+        setSchedulePerformanceId(performanceId)
+        setSchedulePerformanceColor(color)
+        setScheduleDialogOpen(true)
+    }
+
+    const actions = getEntityActions(item, t, handleOpenSchedule)
 
     const handleMainClick = (e: React.MouseEvent) => {
-        // Allow default behavior for text selection if needed, but here we act as a card
-        // Check for modifier keys to open in new tab
-        if (e.metaKey || e.ctrlKey) {
-            window.open(itemUrl, '_blank')
+        // Don't navigate if clicking on an action button
+        if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('a')) {
             return
         }
-        e.preventDefault()
-        router.push(itemUrl)
+        // Close modal before navigating
+        onClose?.()
+        router.push(getEntityUrl(item))
     }
 
     return (
@@ -393,7 +354,6 @@ export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
                 className={clsx(
                     "flex items-center w-full p-3 rounded-lg border transition-all duration-200 cursor-pointer",
                     "bg-[#1a1a1a] border-white/5 hover:border-white/10 hover:bg-neutral-800/50",
-                    // itemConfig.hoverBorder // Optional: keep or remove colored border
                 )}
                 role="link"
                 tabIndex={0}
@@ -404,9 +364,7 @@ export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
                 {/* Icon Box */}
                 <div className={clsx(
                     "flex-shrink-0 w-10 h-10 rounded-md flex items-center justify-center",
-                    "bg-neutral-800 text-neutral-400", // Default neutral style
-                    // Or use colored backgrounds if preferred:
-                    // itemConfig.bgClass, itemConfig.colorClass
+                    "bg-neutral-800 text-neutral-400",
                 )}>
                     <ItemIcon className={clsx("h-5 w-5", itemConfig.colorClass)} />
                 </div>
@@ -427,13 +385,6 @@ export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
                                         "bg-blue-500/10 text-blue-400 border-blue-500/20"
                             )}>
                                 {item.metadata.status}
-                            </span>
-                        )}
-
-                        {/* AI Badge */}
-                        {item.explanation && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                                AI
                             </span>
                         )}
                     </div>
@@ -463,38 +414,43 @@ export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
                     </div>
                 </div>
 
-                {/* Desktop Actions (Hover) */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
-                    {actions.slice(0, 2).map((action) => {
-                        const ActionIcon = action.icon
-                        return (
-                            action.getUrl ? (
-                                <Link
-                                    key={action.id}
-                                    href={action.getUrl(item)}
-                                    className="p-1.5 rounded-md hover:bg-neutral-700 text-neutral-500 hover:text-neutral-200 transition-colors"
-                                    onClick={(e) => e.stopPropagation()}
-                                    title={action.label}
-                                >
-                                    <ActionIcon className="h-4 w-4" />
-                                </Link>
-                            ) : (
-                                <button
-                                    key={action.id}
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        e.stopPropagation()
-                                        action.handler?.(item)
-                                    }}
-                                    className="p-1.5 rounded-md hover:bg-neutral-700 text-neutral-500 hover:text-neutral-200 transition-colors"
-                                    title={action.label}
-                                >
-                                    <ActionIcon className="h-4 w-4" />
-                                </button>
+                {/* Quick Actions - Desktop (inline on right) */}
+                {actions.length > 0 && (
+                    <div className="hidden md:flex items-center gap-1 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {actions.slice(0, 3).map((action) => {
+                            const ActionIcon = action.icon
+                            return (
+                                action.getUrl ? (
+                                    <Link
+                                        key={action.id}
+                                        href={action.getUrl(item)}
+                                        className="p-2 rounded-md hover:bg-neutral-700 text-neutral-500 hover:text-neutral-200 transition-colors cursor-pointer"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            onClose?.() // Close modal when navigating
+                                        }}
+                                        title={action.label}
+                                    >
+                                        <ActionIcon className="h-4 w-4" />
+                                    </Link>
+                                ) : (
+                                    <button
+                                        key={action.id}
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            action.handler?.(item)
+                                        }}
+                                        className="p-2 rounded-md hover:bg-neutral-700 text-neutral-500 hover:text-neutral-200 transition-colors cursor-pointer"
+                                        title={action.label}
+                                    >
+                                        <ActionIcon className="h-4 w-4" />
+                                    </button>
+                                )
                             )
-                        )
-                    })}
-                </div>
+                        })}
+                    </div>
+                )}
             </div>
 
             {/* Mobile Actions Toggle Button */}
@@ -514,18 +470,9 @@ export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
                 </button>
             )}
 
-            {/* Quick Actions Overlay */}
-            {actions.length > 0 && (
-                <div className={clsx(
-                    "absolute top-3 right-3 flex flex-col gap-1.5 transition-all duration-200 z-20",
-                    // Desktop: Hover behavior
-                    "md:opacity-0 md:group-hover:opacity-100 md:translate-x-2 md:group-hover:translate-x-0",
-                    // Mobile: Toggle behavior
-                    actionsVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2 pointer-events-none md:pointer-events-auto"
-                )}>
-                    {/* Spacer for the toggle button on mobile */}
-                    <div className="h-10 w-10 md:hidden" />
-
+            {/* Mobile Quick Actions Overlay */}
+            {actions.length > 0 && actionsVisible && (
+                <div className="absolute top-14 right-3 flex flex-col gap-1.5 z-20 md:hidden">
                     {actions.slice(0, 3).map((action) => {
                         const ActionIcon = action.icon
                         const commonClasses = "p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-neutral-300 hover:text-white hover:bg-black/80 hover:border-white/30 transition-all shadow-lg active:scale-95"
@@ -537,7 +484,10 @@ export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
                                     href={action.getUrl(item)}
                                     title={action.label}
                                     className={commonClasses}
-                                    onClick={(e) => e.stopPropagation()}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onClose?.() // Close modal when navigating
+                                    }}
                                 >
                                     <ActionIcon className="h-4 w-4" />
                                 </Link>
@@ -559,6 +509,20 @@ export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
                         )
                     })}
                 </div>
+            )}
+
+            {/* Schedule Dialog for Performance */}
+            {schedulePerformanceId && (
+                <ScheduleShowDialog
+                    isOpen={scheduleDialogOpen}
+                    onClose={() => {
+                        setScheduleDialogOpen(false)
+                        setSchedulePerformanceId(null)
+                        setSchedulePerformanceColor(null)
+                    }}
+                    performanceId={schedulePerformanceId}
+                    performanceColor={schedulePerformanceColor}
+                />
             )}
         </div>
     )
