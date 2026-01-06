@@ -13,7 +13,7 @@ export type FilterState = {
     location?: string
     category?: string
     groupId?: string
-    sortBy: 'relevance' | 'newest'
+    sortBy: 'relevance' | 'date' | 'name'
 }
 
 type Props = {

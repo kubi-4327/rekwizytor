@@ -4,7 +4,8 @@ import React, { useRef, useEffect } from 'react'
 import { Search, Loader2, X, Command as CommandIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
-import { useRouter } from 'next/navigation'
+// import { useRouter } from 'next/navigation' // removed
+import { useGlobalSearch } from './GlobalSearchProvider'
 import { useTranslations } from 'next-intl'
 
 type Props = {
@@ -32,7 +33,7 @@ export function MorphingSearchBar({
     autoFocus = false,
     rightContent
 }: Props) {
-    const router = useRouter()
+    const { openSearch } = useGlobalSearch()
     const t = useTranslations('Navigation')
     const inputRef = useRef<HTMLInputElement>(null)
 
@@ -44,32 +45,20 @@ export function MorphingSearchBar({
         note: t('notes')
     }[context] : ''
 
+    // Focus input when in input mode
     useEffect(() => {
-        const handleGlobalKeyDown = (e: KeyboardEvent) => {
-            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-                e.preventDefault()
-                if (mode === 'trigger') {
-                    // Navigate to search
-                    const params = new URLSearchParams()
-                    if (context) params.set('type', context)
-                    router.push(`/search?${params.toString()}`)
-                } else {
-                    // Focus input
-                    inputRef.current?.focus()
-                }
-            }
+        if (mode === 'input' && autoFocus) {
+            // Small timeout to ensure modal animation is started/ready
+            setTimeout(() => {
+                inputRef.current?.focus()
+            }, 50)
         }
-
-        window.addEventListener('keydown', handleGlobalKeyDown)
-        return () => window.removeEventListener('keydown', handleGlobalKeyDown)
-    }, [mode, context, router])
+    }, [mode, autoFocus])
 
     const handleTriggerClick = (e: React.MouseEvent) => {
         e.preventDefault()
         e.stopPropagation()
-        const params = new URLSearchParams()
-        if (context) params.set('type', context)
-        router.push(`/search?${params.toString()}`)
+        openSearch(context)
     }
 
     // Common container styles
@@ -117,9 +106,9 @@ export function MorphingSearchBar({
         <motion.div
             className={containerClasses}
         >
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-20">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-20">
                 <div>
-                    <Search className="h-6 w-6 transition-colors text-neutral-400 group-focus-within:text-white" />
+                    <Search className="h-4 w-4 transition-colors text-neutral-400 group-focus-within:text-white" />
                 </div>
             </div>
 
@@ -130,18 +119,18 @@ export function MorphingSearchBar({
                 onChange={(e) => onQueryChange?.(e.target.value)}
                 placeholder={placeholder || t('searchPlaceholder')}
                 className={clsx(
-                    "block w-full rounded-2xl border text-lg placeholder-neutral-500 transition-all font-medium shadow-2xl backdrop-blur-xl relative z-10",
-                    "pl-14 pr-14 py-4 focus:outline-none focus:ring-1", // focus:outline-none to remove browser default
+                    "block w-full rounded-xl border text-sm placeholder-neutral-500 transition-all font-medium shadow-lg backdrop-blur-xl relative z-10",
+                    "pl-10 pr-10 py-2.5 focus:outline-none focus:ring-1", // focus:outline-none to remove browser default
                     "bg-neutral-900/40 border-white/5 text-white focus:ring-white/10 focus:border-white/10 focus:bg-neutral-900/60"
                 )}
                 autoFocus={autoFocus}
             />
 
             {/* Right side actions */}
-            <div className="absolute inset-y-0 right-0 pr-4 flex items-center gap-2 z-20">
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-2 z-20">
                 {/* Loading State */}
                 {loading && (
-                    <Loader2 className="h-5 w-5 animate-spin text-neutral-500" />
+                    <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />
                 )}
 
                 {/* Clear Button */}

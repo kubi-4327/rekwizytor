@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { usePathname } from 'next/navigation'
 
-import { SearchShortcut } from './search/SearchShortcut'
+import { GlobalSearchProvider } from './search/GlobalSearchProvider'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
@@ -16,15 +16,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <div className="flex min-h-screen bg-background">
-            <SearchShortcut />
-            <Sidebar />
-            <div className="flex flex-1 flex-col md:pl-64 min-w-0">
-                <main className="flex-1 pb-24 md:pb-0">
-                    {children}
-                </main>
-                <BottomNav />
+        <GlobalSearchProvider>
+            <div className="flex min-h-screen bg-background">
+                <Sidebar />
+                <div className="flex flex-1 flex-col md:pl-64 min-w-0">
+                    <main className="flex-1 pb-24 md:pb-0">
+                        {children}
+                    </main>
+                    <BottomNav />
+                </div>
             </div>
-        </div>
+        </GlobalSearchProvider>
     )
 }

@@ -83,6 +83,8 @@ export default function SearchPage() {
         }
 
         setLoading(true)
+        const searchStartTime = Date.now()
+
         // Keep previous results visible (stale-while-revalidate)
         if (currentResults && currentResults.length > 0) {
             setStaleResults(currentResults)
@@ -127,7 +129,7 @@ export default function SearchPage() {
         setLoading(true)
         const timer = setTimeout(() => {
             search(query, results)
-        }, 150)
+        }, 400) // Increased from 150ms to reduce API calls while typing
         return () => clearTimeout(timer)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [query])
@@ -164,14 +166,51 @@ export default function SearchPage() {
 
     const displayResults = loading && staleResults.length > 0 ? staleResults : deferredResults
 
-    // Memoize grouped results to prevent recalculation
+    // Group results by entity_type with hierarchical deduplication
+    // Priority: FTS > Fuzzy > Vector
     const grouped = React.useMemo(() => {
-        return displayResults.reduce((acc, item) => {
-            const type = item.entity_type
-            if (!acc[type]) acc[type] = []
-            acc[type].push(item)
-            return acc
-        }, {} as Record<string, typeof displayResults>)
+        const byEntity: Record<string, {
+            fts: SearchResult[],
+            vector: SearchResult[],
+            fuzzy: SearchResult[]
+        }> = {}
+
+        // First pass: collect all results
+        const rawGroups: Record<string, {
+            fts: SearchResult[],
+            vector: SearchResult[],
+            fuzzy: SearchResult[]
+        }> = {}
+
+        displayResults.forEach(item => {
+            if (!rawGroups[item.entity_type]) {
+                rawGroups[item.entity_type] = { fts: [], vector: [], fuzzy: [] }
+            }
+
+            const matchType = item.match_type || 'fts'
+            if (matchType === 'fts') {
+                rawGroups[item.entity_type].fts.push(item)
+            } else if (matchType === 'vector') {
+                rawGroups[item.entity_type].vector.push(item)
+            } else if (matchType === 'fuzzy') {
+                rawGroups[item.entity_type].fuzzy.push(item)
+            }
+        })
+
+        // Second pass: deduplicate (FTS > Fuzzy > Vector)
+        Object.keys(rawGroups).forEach(entityType => {
+            const raw = rawGroups[entityType]
+            const ftsIds = new Set(raw.fts.map(r => r.id))
+            const fuzzyIds = new Set(raw.fuzzy.map(r => r.id))
+
+            byEntity[entityType] = {
+                fts: raw.fts,
+                fuzzy: raw.fuzzy.filter(r => !ftsIds.has(r.id)),
+                vector: raw.vector.filter(r => !ftsIds.has(r.id) && !fuzzyIds.has(r.id))
+            }
+        })
+
+        return byEntity
     }, [displayResults])
 
     const hasActiveQuery = query.length > 0
@@ -350,20 +389,28 @@ export default function SearchPage() {
                                 </div>
                             )}
 
-                            {/* Results Grid */}
-                            {(Object.entries(grouped) as [string, (SearchResult | any)[]][]).map(([type, items]) => {
-                                // Use the first item to determine config for the group header
-                                const firstItem = items[0] as SearchResult
+                            {/* Results Grid - Grouped by Entity Type, then by Match Type */}
+                            {Object.entries(grouped).map(([entityType, matchResults]) => {
+                                // Check if there are any results for this entity type
+                                const hasFts = matchResults.fts.length > 0
+                                const hasVector = matchResults.vector.length > 0
+                                const hasFuzzy = matchResults.fuzzy.length > 0
+
+                                if (!hasFts && !hasVector && !hasFuzzy) return null
+
+                                // Use the first available item to determine config
+                                const firstItem = matchResults.fts[0] || matchResults.fuzzy[0] || matchResults.vector[0]
                                 const config = getEntityConfig(firstItem)
                                 const Icon = config.icon
 
                                 return (
                                     <motion.div
-                                        key={type}
+                                        key={entityType}
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         className="space-y-4"
                                     >
+                                        {/* Entity Type Header */}
                                         <div className="flex items-center gap-3">
                                             <div className={`p-1.5 rounded-md bg-white/5 ${config.colorClass}`}>
                                                 <Icon className="h-4 w-4" />
@@ -374,9 +421,30 @@ export default function SearchPage() {
                                             <div className="h-px flex-1 bg-neutral-800"></div>
                                         </div>
 
+                                        {/* All Results Combined */}
                                         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-                                            {items.map((item: any) => (
-                                                <SearchResultCard key={item.id} item={item} />
+                                            {/* FTS Results */}
+                                            {matchResults.fts.map((item: SearchResult, index: number) => (
+                                                <SearchResultCard
+                                                    key={`fts-${item.id}-${index}`}
+                                                    item={item}
+                                                />
+                                            ))}
+
+                                            {/* Fuzzy Results */}
+                                            {matchResults.fuzzy.map((item: SearchResult, index: number) => (
+                                                <SearchResultCard
+                                                    key={`fuzzy-${item.id}-${index}`}
+                                                    item={item}
+                                                />
+                                            ))}
+
+                                            {/* Vector Results */}
+                                            {matchResults.vector.map((item: SearchResult, index: number) => (
+                                                <SearchResultCard
+                                                    key={`vector-${item.id}-${index}`}
+                                                    item={item}
+                                                />
                                             ))}
                                         </div>
                                     </motion.div>

@@ -5,6 +5,8 @@ import { getTranslations } from 'next-intl/server';
 import { UserApprovalList } from '@/components/settings/UserApprovalList'
 import { ThumbnailRegenerator } from '@/components/admin/ThumbnailRegenerator'
 
+import { EmbeddingMigrationButton } from '@/components/admin/EmbeddingMigrationButton'
+
 export default async function SettingsPage() {
     const supabase = await createClient()
     const t = await getTranslations('Settings');
@@ -37,9 +39,10 @@ export default async function SettingsPage() {
             <SettingsForm user={{ ...profile, email: user.email || undefined }} />
 
             {profile && ((profile.role as string) === 'admin' || (profile.role as string) === 'superadmin') && (
-                <div className="pt-8 border-t border-neutral-800">
+                <div className="pt-8 border-t border-neutral-800 space-y-4">
                     <h2 className="text-lg font-bold text-white mb-4">{t('adminZone')}</h2>
                     <ThumbnailRegenerator />
+                    <EmbeddingMigrationButton />
                 </div>
             )}
         </div>

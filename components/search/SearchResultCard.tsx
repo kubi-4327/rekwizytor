@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation' // Added
 import { clsx } from 'clsx'
 import {
     Box,
@@ -149,6 +150,7 @@ const getEntityActions = (item: SearchResult, t: any): QuickAction[] => {
                             notify.dismiss(toastId)
                             notify.success(t('success.exported'))
                         } catch (e) {
+                            console.error('PDF export failed:', e)
                             notify.dismiss(toastId)
                             notify.error(t('error.export'))
                         }
@@ -179,6 +181,7 @@ const getEntityActions = (item: SearchResult, t: any): QuickAction[] => {
                             notify.dismiss(toastId)
                             notify.success(t('success.labelGenerated'))
                         } catch (e) {
+                            console.error('Performance label generation failed:', e)
                             notify.dismiss(toastId)
                             notify.error(t('error.generic'))
                         }
@@ -241,6 +244,7 @@ const getEntityActions = (item: SearchResult, t: any): QuickAction[] => {
                             notify.dismiss(toastId)
                             notify.success(t('success.labelGenerated'))
                         } catch (e) {
+                            console.error('Group label generation failed:', e)
                             notify.dismiss(toastId)
                             notify.error(t('error.generic'))
                         }
@@ -333,6 +337,7 @@ interface SearchResultCardProps {
 }
 
 export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
+    const router = useRouter()
     const [actionsVisible, setActionsVisible] = React.useState(false) // Toggle state for mobile
     const t = useTranslations('toast')
 
@@ -353,96 +358,144 @@ export function SearchResultCard({ item, aiMode }: SearchResultCardProps) {
     } else if (item.entity_type === 'group') {
         itemUrl = `/groups?viewGroup=${item.id}`
     } else {
-        itemUrl = item.url || '#' // Fallback to avoid crash
+        itemUrl = item.url || '#'
     }
+
+    // Validate URL and log warning if invalid
+    if (!itemUrl || itemUrl === '#') {
+        console.warn('Missing or invalid URL for search result:', item)
+    }
+
     const itemColor = item.entity_type === 'performance' && item.metadata?.color
         ? item.metadata.color
         : undefined
 
     const actions = getEntityActions(item, t)
 
+    const handleMainClick = (e: React.MouseEvent) => {
+        // Allow default behavior for text selection if needed, but here we act as a card
+        // Check for modifier keys to open in new tab
+        if (e.metaKey || e.ctrlKey) {
+            window.open(itemUrl, '_blank')
+            return
+        }
+        e.preventDefault()
+        router.push(itemUrl)
+    }
+
     return (
         <div
-            className="relative group h-[180px]"
-            onMouseLeave={() => setActionsVisible(false)} // Reset on mouse leave for desktop consistency
+            className="relative group w-full"
+            onMouseLeave={() => setActionsVisible(false)}
         >
-            {/* Main Entity Card */}
-            <Link
-                href={itemUrl}
-                className={`block w-full h-full relative overflow-hidden rounded-xl border ${itemConfig.borderClass} ${itemConfig.bgClass} backdrop-blur-sm p-5 transition-all duration-300 group-hover:scale-[1.02] flex flex-col justify-between`}
-                style={{
-                    ...(item.image_url ? {
-                        backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.9)), url(${item.image_url})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                    } : {}),
-                    // Use inset box-shadow for color strip
-                    boxShadow: itemColor ? `inset 0 -4px 0 ${itemColor}` : 'none'
+            <div
+                onClick={handleMainClick}
+                className={clsx(
+                    "flex items-center w-full p-3 rounded-lg border transition-all duration-200 cursor-pointer",
+                    "bg-[#1a1a1a] border-white/5 hover:border-white/10 hover:bg-neutral-800/50",
+                    // itemConfig.hoverBorder // Optional: keep or remove colored border
+                )}
+                role="link"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleMainClick(e as any)
                 }}
             >
-                {/* Header: Icon & Status (Left Side) */}
-                <div className="flex items-start gap-2 mb-2 relative z-10 w-full pr-8">
-                    <div className={`rounded-lg p-2 bg-black/40 backdrop-blur-md ${itemConfig.colorClass} shrink-0`}>
-                        <ItemIcon className="h-5 w-5" />
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-1 mt-0.5">
-                        {/* Match type badge */}
-                        {item.match_type && item.match_type !== 'fts' && (
-                            <span className={clsx(
-                                "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border",
-                                item.match_type === 'vector'
-                                    ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
-                                    : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
-                            )}>
-                                {item.match_type === 'vector' ? 'Semantic' : 'Fuzzy'}
-                            </span>
-                        )}
-                        {item.explanation && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border bg-burgundy-main/20 text-burgundy-light border-burgundy-main/30">
-                                AI MATCH
-                            </span>
-                        )}
-                        {item.metadata?.status && (
-                            <span className="px-2 py-1 rounded-md bg-black/40 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider text-white border border-white/10">
-                                {item.metadata.status}
-                            </span>
-                        )}
-                    </div>
+                {/* Icon Box */}
+                <div className={clsx(
+                    "flex-shrink-0 w-10 h-10 rounded-md flex items-center justify-center",
+                    "bg-neutral-800 text-neutral-400", // Default neutral style
+                    // Or use colored backgrounds if preferred:
+                    // itemConfig.bgClass, itemConfig.colorClass
+                )}>
+                    <ItemIcon className={clsx("h-5 w-5", itemConfig.colorClass)} />
                 </div>
 
                 {/* Content */}
-                <div className="relative z-10 pr-8">
-                    <h3 className="text-lg font-bold text-white mb-2 group-hover:text-white/90 transition-colors truncate leading-tight">
-                        {item.name}
-                    </h3>
+                <div className="ml-4 flex-1 min-w-0 flex flex-col justify-center">
+                    <div className="flex items-center gap-2 mb-0.5">
+                        <h3 className="text-sm font-bold text-neutral-200 truncate leading-none">
+                            {item.name}
+                        </h3>
 
-                    {description && (
-                        <p className={clsx(
-                            "text-sm font-medium line-clamp-2 leading-relaxed",
-                            item.explanation ? "text-purple-200/90" : "text-neutral-300/80"
-                        )}>
-                            {description}
-                        </p>
-                    )}
+                        {/* Status Badge */}
+                        {item.metadata?.status && (
+                            <span className={clsx(
+                                "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border",
+                                item.metadata.status === 'active' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+                                    item.metadata.status === 'archived' ? "bg-neutral-800 text-neutral-500 border-neutral-700" :
+                                        "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                            )}>
+                                {item.metadata.status}
+                            </span>
+                        )}
 
-                    {/* Performance Specifics: Next Show */}
-                    {item.entity_type === 'performance' && item.metadata?.next_show && (
-                        <div className="mt-3 flex items-center gap-2 text-xs font-mono text-green-400 bg-green-900/20 px-2 py-1 rounded w-fit">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                            Next: {new Date(item.metadata.next_show).toLocaleDateString()}
-                        </div>
-                    )}
+                        {/* AI Badge */}
+                        {item.explanation && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                AI
+                            </span>
+                        )}
+                    </div>
 
-                    {/* Group Specifics: Location */}
-                    {item.entity_type === 'group' && (
-                        <div className="mt-3 flex items-center gap-2 text-xs font-mono text-orange-400 bg-orange-900/20 px-2 py-1 rounded w-fit">
-                            <MapPin className="w-3 h-3" />
-                            {item.metadata?.location_name || <span className="opacity-50 italic">No location</span>}
-                        </div>
-                    )}
+                    <div className="flex items-center gap-3 text-xs text-neutral-500 truncate h-4">
+                        {/* Location or Description */}
+                        {item.entity_type === 'group' && item.metadata?.location_name ? (
+                            <div className="flex items-center gap-1 text-orange-400/80">
+                                <MapPin className="w-3 h-3" />
+                                <span>{item.metadata.location_name}</span>
+                            </div>
+                        ) : description ? (
+                            <span className="truncate">{description}</span>
+                        ) : (
+                            <span className="opacity-50 italic">No description</span>
+                        )}
+
+                        {/* Performance Next Show */}
+                        {item.entity_type === 'performance' && item.metadata?.next_show && (
+                            <>
+                                <span className="w-0.5 h-0.5 rounded-full bg-neutral-600"></span>
+                                <span className="text-green-500/80 font-mono">
+                                    Next: {new Date(item.metadata.next_show).toLocaleDateString()}
+                                </span>
+                            </>
+                        )}
+                    </div>
                 </div>
-            </Link>
+
+                {/* Desktop Actions (Hover) */}
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
+                    {actions.slice(0, 2).map((action) => {
+                        const ActionIcon = action.icon
+                        return (
+                            action.getUrl ? (
+                                <Link
+                                    key={action.id}
+                                    href={action.getUrl(item)}
+                                    className="p-1.5 rounded-md hover:bg-neutral-700 text-neutral-500 hover:text-neutral-200 transition-colors"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title={action.label}
+                                >
+                                    <ActionIcon className="h-4 w-4" />
+                                </Link>
+                            ) : (
+                                <button
+                                    key={action.id}
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        action.handler?.(item)
+                                    }}
+                                    className="p-1.5 rounded-md hover:bg-neutral-700 text-neutral-500 hover:text-neutral-200 transition-colors"
+                                    title={action.label}
+                                >
+                                    <ActionIcon className="h-4 w-4" />
+                                </button>
+                            )
+                        )
+                    })}
+                </div>
+            </div>
 
             {/* Mobile Actions Toggle Button */}
             {actions.length > 0 && (

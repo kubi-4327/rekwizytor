@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/Modal'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { analyzeGroupImage } from '@/app/actions/vision-group'
+import { generateGroupEmbedding } from '@/app/actions/generate-group-embeddings'
 
 interface GroupScannerDialogProps {
     isOpen: boolean
@@ -72,13 +73,20 @@ export function GroupScannerDialog({ isOpen, onClose, parentId }: GroupScannerDi
     const handleSave = async () => {
         setIsSaving(true)
         try {
-            const { error } = await supabase.from('groups').insert({
+            const { data, error } = await supabase.from('groups').insert({
                 name: groupName,
                 parent_id: parentId || null,
                 icon: 'Box' // Default icon
-            })
+            }).select('id').single()
 
             if (error) throw error
+
+            // Generate embedding in background (don't wait for it)
+            if (data?.id) {
+                generateGroupEmbedding(data.id).catch(err =>
+                    console.error('Failed to generate embedding:', err)
+                )
+            }
 
             router.refresh()
             handleClose()
