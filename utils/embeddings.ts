@@ -41,6 +41,35 @@ export async function generateEmbedding(text: string, taskType: TaskType = TaskT
             console.log('💾 Cached embedding for query:', text)
         }
 
+        // Log AI usage asynchronously (don't block return)
+        (async () => {
+            try {
+                const { createClient } = await import('@/utils/supabase/server')
+                const supabase = await createClient()
+                const estimatedTokens = Math.ceil(text.length / 4)
+
+                // Determine operation type based on task type
+                const operationType = taskType === TaskType.RETRIEVAL_QUERY
+                    ? 'smart_search'  // User searching
+                    : 'embedding_indexing'  // Indexing data (groups, items, etc.)
+
+                await supabase.from('ai_usage_logs').insert({
+                    model_name: 'text-embedding-004',
+                    tokens_input: estimatedTokens,
+                    tokens_output: 0,
+                    total_tokens: estimatedTokens,
+                    operation_type: operationType,
+                    details: {
+                        taskType,
+                        textLength: text.length,
+                        cached: false
+                    }
+                })
+            } catch (err) {
+                console.error('Failed to log embedding usage:', err)
+            }
+        })()
+
         return embedding
     } catch (error) {
         console.error('Error generating embedding:', error)

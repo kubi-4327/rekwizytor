@@ -3,11 +3,12 @@
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { LogOut, User, Globe, Shield, LayoutGrid, BarChart, Settings as SettingsIcon, Clock, Info } from 'lucide-react'
+import { LogOut, User, Globe, Shield, LayoutGrid, BarChart, Settings as SettingsIcon, Clock, Info, Check } from 'lucide-react'
 import { useTimeFormat } from '@/hooks/useTimeFormat'
 import { useTranslations } from 'next-intl'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import Link from 'next/link'
+import { Button } from '@/components/ui/Button'
 
 type UserData = {
     email: string | undefined
@@ -48,14 +49,14 @@ export function SettingsForm({ user }: { user: UserData }) {
     }
 
     return (
-        <div className="space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14">
             {/* Profile Section */}
-            <section className="space-y-4">
-                <h2 className="text-lg font-medium text-white flex items-center">
-                    <User className="mr-2 h-5 w-5 text-burgundy-light" />
+            <div className="space-y-4">
+                <h2 className="text-base font-bold text-white flex items-center pl-1">
+                    <User className="mr-2 h-4 w-4 text-burgundy-light" />
                     {t('account')}
                 </h2>
-                <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6">
+                <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6 h-full transition-colors hover:border-neutral-700">
                     <div className="grid gap-6">
                         <div>
                             <label className="block text-sm font-medium text-neutral-400 mb-2">
@@ -66,23 +67,26 @@ export function SettingsForm({ user }: { user: UserData }) {
                                     type="text"
                                     value={fullName}
                                     onChange={(e) => setFullName(e.target.value)}
-                                    className="flex-1 rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
+                                    className="flex-1 rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm transition-all"
                                     placeholder="John Doe"
                                 />
-                                <button
+                                <Button
                                     onClick={handleUpdateProfile}
                                     disabled={updating || fullName === user.full_name}
-                                    className="rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50"
+                                    isLoading={updating}
+                                    variant="secondary"
+                                    size="icon"
+                                    className="shrink-0"
                                 >
-                                    {updating ? '...' : t('save')}
-                                </button>
+                                    <Check className="w-4 h-4" />
+                                </Button>
                             </div>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-neutral-400 mb-2">
                                 {t('emailAddress')}
                             </label>
-                            <div className="flex items-center rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-neutral-300 cursor-not-allowed opacity-75">
+                            <div className="flex items-center rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-neutral-300 cursor-not-allowed opacity-75 sm:text-sm">
                                 {user.email}
                             </div>
                             <p className="mt-2 text-xs text-neutral-500">
@@ -91,27 +95,27 @@ export function SettingsForm({ user }: { user: UserData }) {
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
             {/* Preferences Section */}
-            <section className="space-y-4">
-                <h2 className="text-lg font-medium text-white flex items-center">
-                    <Globe className="mr-2 h-5 w-5 text-blue-400" />
+            <div className="space-y-4">
+                <h2 className="text-base font-bold text-white flex items-center pl-1">
+                    <Globe className="mr-2 h-4 w-4 text-blue-400" />
                     {t('appearance')}
                 </h2>
-                <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 space-y-6">
+                <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6 h-full transition-colors hover:border-neutral-700 space-y-6">
                     {/* Language */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-800">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-800/50">
                                 <Globe className="h-5 w-5 text-neutral-400" />
                             </div>
                             <div>
-                                <p className="font-medium text-white">{tSettings('language')}</p>
-                                <p className="text-sm text-neutral-500">Select your preferred language</p>
+                                <p className="font-medium text-white text-sm">{tSettings('language')}</p>
+                                <p className="text-xs text-neutral-500">Select your preferred language</p>
                             </div>
                         </div>
-                        <div className="w-40">
+                        <div className="w-32 sm:w-40">
                             <LanguageSwitcher />
                         </div>
                     </div>
@@ -119,12 +123,12 @@ export function SettingsForm({ user }: { user: UserData }) {
                     {/* Time Format */}
                     <div className="flex items-center justify-between pt-6 border-t border-neutral-800">
                         <div className="flex items-center space-x-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-800">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-800/50">
                                 <Clock className="h-5 w-5 text-neutral-400" />
                             </div>
                             <div>
-                                <p className="font-medium text-white">{t('timeFormat')}</p>
-                                <p className="text-sm text-neutral-500">{t('timeFormatDescription')}</p>
+                                <p className="font-medium text-white text-sm">{t('timeFormat')}</p>
+                                <p className="text-xs text-neutral-500">{t('timeFormatDescription')}</p>
                             </div>
                         </div>
                         <button
@@ -138,100 +142,78 @@ export function SettingsForm({ user }: { user: UserData }) {
                         </button>
                     </div>
                 </div>
-            </section>
+            </div>
 
             {/* Workspace Management Section */}
-            <section className="space-y-4">
-                <h2 className="text-lg font-medium text-white flex items-center">
-                    <LayoutGrid className="mr-2 h-5 w-5 text-purple-400" />
+            <div className="space-y-4">
+                <h2 className="text-base font-bold text-white flex items-center pl-1">
+                    <LayoutGrid className="mr-2 h-4 w-4 text-purple-400" />
                     Management
                 </h2>
-                <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 space-y-4">
+                <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6 h-full transition-colors hover:border-neutral-700 space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="text-base font-medium text-white">{tSettings('statsTitle')}</h3>
-                            <p className="text-sm text-neutral-400 mt-1">{tSettings('statsDescription')}</p>
+                            <h3 className="text-sm font-medium text-white">{tSettings('statsTitle')}</h3>
+                            <p className="text-xs text-neutral-400 mt-1">{tSettings('statsDescription')}</p>
                         </div>
-                        <Link
-                            href="/ai-stats"
-                            className="flex items-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors font-medium text-sm border border-neutral-700"
-                        >
-                            <BarChart className="w-4 h-4" />
-                            {tSettings('viewStats')}
+                        <Link href="/ai-stats">
+                            <Button variant="outline" size="sm" leftIcon={<BarChart className="w-4 h-4" />}>
+                                {tSettings('viewStats')}
+                            </Button>
                         </Link>
                     </div>
 
                     <div className="border-t border-neutral-800 pt-4 flex items-center justify-between">
                         <div>
-                            <h3 className="text-base font-medium text-white">{tSettings('statsTitle')}</h3>
-                            <p className="text-sm text-neutral-400 mt-1">{tSettings('statsDescription')}</p>
+                            <h3 className="text-sm font-medium text-white">{t('aboutTitle')}</h3>
+                            <p className="text-xs text-neutral-400 mt-1">{t('aboutDescription')}</p>
                         </div>
-                        <Link
-                            href="/ai-stats"
-                            className="flex items-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors font-medium text-sm border border-neutral-700"
-                        >
-                            <BarChart className="w-4 h-4" />
-                            {tSettings('viewStats')}
-                        </Link>
-                    </div>
-
-                    <div className="border-t border-neutral-800 pt-4 flex items-center justify-between">
-                        <div>
-                            <h3 className="text-base font-medium text-white">{t('aboutTitle')}</h3>
-                            <p className="text-sm text-neutral-400 mt-1">{t('aboutDescription')}</p>
-                        </div>
-                        <Link
-                            href="/about"
-                            className="flex items-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors font-medium text-sm border border-neutral-700"
-                        >
-                            <Info className="w-4 h-4" />
-                            {t('viewAbout')}
+                        <Link href="/about">
+                            <Button variant="outline" size="sm" leftIcon={<Info className="w-4 h-4" />}>
+                                {t('viewAbout')}
+                            </Button>
                         </Link>
                     </div>
                 </div>
-            </section>
+            </div>
 
             {/* Security Section */}
-            <section className="space-y-4">
-                <h2 className="text-lg font-medium text-white flex items-center">
-                    <Shield className="mr-2 h-5 w-5 text-red-400" />
+            <div className="space-y-4">
+                <h2 className="text-base font-bold text-white flex items-center pl-1">
+                    <Shield className="mr-2 h-4 w-4 text-red-400" />
                     {t('security')}
                 </h2>
-                <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 space-y-4">
+                <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6 h-full transition-colors hover:border-neutral-700 space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="text-base font-medium text-white">{t('changePassword')}</h3>
-                            <p className="text-sm text-neutral-500">Update your password to keep your account secure</p>
+                            <h3 className="text-sm font-medium text-white">{t('changePassword')}</h3>
+                            <p className="text-xs text-neutral-500">Update your password to keep your account secure</p>
                         </div>
-                        <Link
-                            href="/settings/password"
-                            className="flex items-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors font-medium text-sm border border-neutral-700"
-                        >
-                            <Shield className="w-4 h-4" />
-                            {t('changePassword')}
+                        <Link href="/settings/password">
+                            <Button variant="outline" size="sm" leftIcon={<Shield className="w-4 h-4" />}>
+                                {t('changePassword')}
+                            </Button>
                         </Link>
                     </div>
 
                     <div className="border-t border-neutral-800 pt-4 flex items-center justify-between">
                         <div>
-                            <p className="font-medium text-white">{t('signOut')}</p>
-                            <p className="text-sm text-neutral-500">{t('signOutDescription')}</p>
+                            <p className="font-medium text-white text-sm">{t('signOut')}</p>
+                            <p className="text-xs text-neutral-500">{t('signOutDescription')}</p>
                         </div>
-                        <button
+                        <Button
                             onClick={handleSignOut}
                             disabled={loading}
-                            className="inline-flex items-center justify-center rounded-md bg-red-900/20 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-900/40 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:opacity-50"
+                            variant="destructive"
+                            size="sm"
+                            isLoading={loading}
+                            leftIcon={<LogOut className="h-4 w-4" />}
                         >
-                            {loading ? t('signingOut') : (
-                                <>
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    {t('signOut')}
-                                </>
-                            )}
-                        </button>
+                            {t('signOut')}
+                        </Button>
                     </div>
                 </div>
-            </section>
+            </div>
         </div>
     )
 }

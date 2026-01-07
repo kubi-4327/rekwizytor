@@ -4,6 +4,8 @@ import { SettingsForm } from '@/components/settings/SettingsForm'
 import { getTranslations } from 'next-intl/server';
 import { UserApprovalList } from '@/components/settings/UserApprovalList'
 import { ThumbnailRegenerator } from '@/components/admin/ThumbnailRegenerator'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { Settings } from 'lucide-react'
 
 import { EmbeddingMigrationButton } from '@/components/admin/EmbeddingMigrationButton'
 
@@ -26,23 +28,25 @@ export default async function SettingsPage() {
         .single()
 
     return (
-        <div className="p-6 md:p-10 max-w-3xl mx-auto space-y-8">
-            <div>
-                <h1 className="text-xl font-bold text-white">{t('title')}</h1>
-                <p className="text-neutral-400 text-sm mt-1">
-                    {t('description')}
-                </p>
-            </div>
+        <div className="p-4 md:p-10 space-y-6 max-w-7xl mx-auto text-white">
+            <PageHeader
+                title={t('title')}
+                subtitle={t('description')}
+                icon={<Settings className="w-6 h-6 text-white" />}
+                iconColor="text-purple-400"
+            />
 
             <UserApprovalList />
 
             <SettingsForm user={{ ...profile, email: user.email || undefined }} />
 
             {profile && ((profile.role as string) === 'admin' || (profile.role as string) === 'superadmin') && (
-                <div className="pt-8 border-t border-neutral-800 space-y-4">
+                <div className="pt-8 mt-8 border-t border-neutral-800 space-y-4">
                     <h2 className="text-lg font-bold text-white mb-4">{t('adminZone')}</h2>
-                    <ThumbnailRegenerator />
-                    <EmbeddingMigrationButton />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <ThumbnailRegenerator />
+                        <EmbeddingMigrationButton />
+                    </div>
                 </div>
             )}
         </div>

@@ -84,21 +84,6 @@ export async function unifiedSearch(
                 results = (ftsData as SearchResult[]) || []
             } else {
                 results = (data as SearchResult[]) || []
-
-                // Log smart search usage (only when hybrid search succeeds)
-                // Note: embedding generation is logged separately in embeddings.ts
-                try {
-                    await supabase.from('ai_usage_logs').insert({
-                        tokens_input: 0, // Embedding tokens are tracked separately
-                        tokens_output: 0,
-                        total_tokens: 0,
-                        model_name: 'hybrid-search',
-                        operation_type: 'smart_search',
-                        details: { query, resultCount: results.length }
-                    })
-                } catch (logError) {
-                    console.error('Failed to log smart search:', logError)
-                }
             }
         } catch (ftsError) {
             console.error('FTS search error:', ftsError)

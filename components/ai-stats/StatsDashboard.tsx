@@ -258,7 +258,8 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
                                                             type === 'vision_props' ? t('operations.visionProps') :
                                                                 type === 'mapping_ai' ? t('operations.mappingAI') :
                                                                     type === 'query_correction' ? t('operations.queryCorrection') :
-                                                                        type
+                                                                        type === 'embedding_indexing' ? t('operations.embeddingIndexing') :
+                                                                            type
 
                                     return (
                                         <div key={type} className="flex justify-between items-center">
@@ -295,7 +296,8 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
                                                             type === 'vision_props' ? t('operations.visionProps') :
                                                                 type === 'mapping_ai' ? t('operations.mappingAI') :
                                                                     type === 'query_correction' ? t('operations.queryCorrection') :
-                                                                        type
+                                                                        type === 'embedding_indexing' ? t('operations.embeddingIndexing') :
+                                                                            type
 
                                     return (
                                         <div key={type} className="flex justify-between items-center">
@@ -349,7 +351,8 @@ export function StatsDashboard({ logs, allStats, storageStats }: Props) {
                                                                             log.operation_type === 'vision_props' ? t('operations.visionProps') :
                                                                                 log.operation_type === 'mapping_ai' ? t('operations.mappingAI') :
                                                                                     log.operation_type === 'query_correction' ? t('operations.queryCorrection') :
-                                                                                        log.operation_type}
+                                                                                        log.operation_type === 'embedding_indexing' ? t('operations.embeddingIndexing') :
+                                                                                            log.operation_type}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-neutral-400 text-xs">

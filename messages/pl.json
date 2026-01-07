@@ -228,15 +228,16 @@
             "total": "Razem"
         },
         "operations": {
-            "fastAdd": "Szybkie Dodanie",
+            "fastAdd": "Szybkie Dodawanie",
             "smartSearch": "Inteligentne Wyszukiwanie",
             "generateDesc": "Generowanie Opisu",
             "createItem": "Tworzenie Przedmiotu",
-            "scanScenes": "Skanowanie Scen",
-            "visionGroup": "Wizja: Grupa",
-            "visionProps": "Wizja: Rekwizyty",
-            "mappingAI": "Mapowanie AI",
-            "queryCorrection": "Korekta Zapytania"
+            "scanScenes": "Skanowanie Scenariusza",
+            "visionGroup": "Analiza Zdjęcia (Grupy)",
+            "visionProps": "Analiza Zdjęcia (Rekwizyty)",
+            "mappingAI": "Mapowanie Przestrzeni",
+            "queryCorrection": "Korekta Zapytania",
+            "embeddingIndexing": "Indeksowanie (Wektory)"
         },
         "noLogs": "Nie znaleziono jeszcze żadnych logów. Wykonaj operacje AI, aby zobaczyć dane.",
         "costBreakdown": "Podział Kosztów",
