@@ -44,11 +44,11 @@ export default async function PerformancesPage() {
                 icon={<Layers className="h-6 w-6" />}
                 iconColor="text-purple-400 bg-purple-400/10 border-purple-400/20"
             >
-                <div className="flex flex-row gap-2 w-full sm:w-auto justify-end">
+                <div className="grid grid-cols-2 w-full md:flex md:w-auto gap-2 md:gap-2 justify-end">
                     <PerformancesListActions scheduledShows={allScheduledShows || []} performances={performances || []} />
                     <Link
                         href="/performances/new"
-                        className={buttonVariants({ variant: "primary", className: "sm:w-auto sm:min-w-[140px]" })}
+                        className={buttonVariants({ variant: "primary", className: "w-full justify-center md:w-auto md:min-w-[140px]" })}
                     >
                         <Plus className="sm:mr-2 h-4 w-4" />
                         <span className="hidden sm:inline">{t('addProduction')}</span>

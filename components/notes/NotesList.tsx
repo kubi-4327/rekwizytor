@@ -151,11 +151,11 @@ export default function NotesList({ performanceId, initialNotes = [] }: { perfor
                 icon={<FileText className="h-6 w-6" />}
                 iconColor="text-amber-400 bg-amber-400/10 border-amber-400/20"
             >
-                <div className="flex justify-end w-full sm:w-auto">
+                <div className="flex w-full md:w-auto justify-end">
                     <Button
                         onClick={() => createNote()}
                         variant="primary"
-                        className="sm:w-auto sm:min-w-[140px]"
+                        className="w-full justify-center md:w-auto md:min-w-[140px]"
                     >
                         <Plus className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('newNote')}</span>

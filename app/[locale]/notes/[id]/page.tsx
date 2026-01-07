@@ -241,7 +241,7 @@ export default function NoteDetailPage() {
                                             setNote({ ...note, performance_id: val })
                                             await supabase.from('notes').update({ performance_id: val }).eq('id', id)
                                         }}
-                                        className="appearance-none bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-full px-4 py-1.5 text-xs font-medium text-neutral-400 hover:text-white transition-colors cursor-pointer pr-8 focus:outline-none focus:ring-2 focus:ring-amber-900/50"
+                                        className="appearance-none bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-full px-4 py-1.5 text-xs font-medium text-neutral-400 hover:text-white transition-colors cursor-pointer pr-8 focus:outline-none focus:ring-2 focus:ring-amber-900/50 max-w-[120px] md:max-w-none truncate"
                                     >
                                         <option value="">{t('privateNote')}</option>
                                         {performances.map(p => (
@@ -289,12 +289,12 @@ export default function NoteDetailPage() {
                                     {isEditing ? (
                                         <>
                                             <Check size={14} strokeWidth={3} />
-                                            <span>{t('done')}</span>
+                                            <span className="hidden sm:inline">{t('done')}</span>
                                         </>
                                     ) : (
                                         <>
                                             <Pencil size={14} />
-                                            <span>{t('edit')}</span>
+                                            <span className="hidden sm:inline">{t('edit')}</span>
                                         </>
                                     )}
                                 </button>

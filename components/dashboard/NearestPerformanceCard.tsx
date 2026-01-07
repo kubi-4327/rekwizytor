@@ -111,7 +111,7 @@ export function NearestPerformanceCard({ performance }: NearestPerformanceCardPr
                         </div>
                     </div>
 
-                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight tracking-tight drop-shadow-lg max-w-2xl">
+                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight tracking-tight drop-shadow-lg max-w-full md:max-w-2xl break-words break-all md:break-normal">
                         {performance.title}
                     </h2>
 

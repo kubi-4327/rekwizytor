@@ -36,11 +36,65 @@ export async function bulkInsertProps(performanceId: string, propNames: string[]
         return { success: false, error: 'No valid prop names provided' }
     }
 
-    const propsToInsert = cleanedNames.map(name => ({
-        performance_id: performanceId,
-        item_name: name,
-        is_checked: false,
-    }))
+    // Get current counts to balance columns
+    const { count: count0 } = await supabase
+        .from('performance_props')
+        .select('*', { count: 'exact', head: true })
+        .eq('performance_id', performanceId)
+        .eq('column_index', 0)
+
+    const { count: count1 } = await supabase
+        .from('performance_props')
+        .select('*', { count: 'exact', head: true })
+        .eq('performance_id', performanceId)
+        .eq('column_index', 1)
+
+    // Get max sort orders to continue ordering correctly
+    const { data: max0 } = await supabase
+        .from('performance_props')
+        .select('sort_order')
+        .eq('performance_id', performanceId)
+        .eq('column_index', 0)
+        .order('sort_order', { ascending: false })
+        .limit(1)
+        .single()
+
+    const { data: max1 } = await supabase
+        .from('performance_props')
+        .select('sort_order')
+        .eq('performance_id', performanceId)
+        .eq('column_index', 1)
+        .order('sort_order', { ascending: false })
+        .limit(1)
+        .single()
+
+    let currentCount0 = count0 || 0
+    let currentCount1 = count1 || 0
+    let nextOrder0 = ((max0 as any)?.sort_order ?? -1) + 1
+    let nextOrder1 = ((max1 as any)?.sort_order ?? -1) + 1
+
+    const propsToInsert = cleanedNames.map(name => {
+        // Decide target column based on current counts
+        const targetCol = currentCount0 <= currentCount1 ? 0 : 1
+
+        // Assign order and increment counters
+        let order: number
+        if (targetCol === 0) {
+            order = nextOrder0++
+            currentCount0++
+        } else {
+            order = nextOrder1++
+            currentCount1++
+        }
+
+        return {
+            performance_id: performanceId,
+            item_name: name,
+            is_checked: false,
+            column_index: targetCol,
+            sort_order: order,
+        }
+    })
 
     const { data, error } = await supabase
         .from('performance_props')
@@ -144,12 +198,28 @@ export async function addProp(performanceId: string, name: string) {
         return { success: false, error: 'Prop name cannot be empty' }
     }
 
-    // Get max sort order in column 0
+    // Get current counts to decide target column
+    const { count: count0 } = await supabase
+        .from('performance_props')
+        .select('*', { count: 'exact', head: true })
+        .eq('performance_id', performanceId)
+        .eq('column_index', 0)
+
+    const { count: count1 } = await supabase
+        .from('performance_props')
+        .select('*', { count: 'exact', head: true })
+        .eq('performance_id', performanceId)
+        .eq('column_index', 1)
+
+    // Determine target column (balance counts)
+    const targetCol = (count0 || 0) <= (count1 || 0) ? 0 : 1
+
+    // Get max sort order in target column
     const { data: existing } = await supabase
         .from('performance_props')
         .select('sort_order')
         .eq('performance_id', performanceId)
-        .eq('column_index', 0)
+        .eq('column_index', targetCol)
         .order('sort_order', { ascending: false })
         .limit(1)
         .single()
@@ -162,7 +232,7 @@ export async function addProp(performanceId: string, name: string) {
             performance_id: performanceId,
             item_name: trimmedName,
             is_checked: false,
-            column_index: 0,
+            column_index: targetCol,
             sort_order: nextOrder
         } as any)
         .select()

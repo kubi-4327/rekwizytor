@@ -32,44 +32,53 @@ type Props = {
     assignedProps: PerformanceItem[] | null
     scenes: Scene[]
     sceneNote: any | null
+    performanceColor?: string | null
 }
 
 
-export function PerformanceContent({ performanceId, allProps, propsByAct, assignedProps, scenes, sceneNote }: Props) {
+export function PerformanceContent({ performanceId, allProps, propsByAct, assignedProps, scenes, sceneNote, performanceColor }: Props) {
     const [viewMode, setViewMode] = useState<'scenes' | 'checklist'>('scenes')
     const t = useTranslations('ProductionDetails')
 
     return (
-        <div className="space-y-6">
-            <h2 className="text-xl font-bold text-white">{t('propsList')}</h2>
+        <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl overflow-hidden flex flex-col h-[600px]">
+            {/* Header with View Toggle merged or separated? 
+                Let's keep the title in a standard header and tabs below for clarity 
+            */}
+            <div className="p-4 border-b border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-neutral-900/80 shrink-0">
+                <h3 className="font-bold text-neutral-200 font-sans text-base leading-none">
+                    {t('propsList')}
+                </h3>
 
-
-            {/* View Toggle */}
-            <div className="flex justify-start border-b border-neutral-800 overflow-x-auto">
-                <button
-                    onClick={() => setViewMode('scenes')}
-                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${viewMode === 'scenes'
-                        ? 'border-white text-white'
-                        : 'border-transparent text-neutral-400 hover:text-white hover:border-neutral-700'
-                        }`}
-                >
-                    <Layers className="w-4 h-4" />
-                    {t('sceneView')}
-                </button>
-                <button
-                    onClick={() => setViewMode('checklist')}
-                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${viewMode === 'checklist'
-                        ? 'border-white text-white'
-                        : 'border-transparent text-neutral-400 hover:text-white hover:border-neutral-700'
-                        }`}
-                >
-                    <Grid className="w-4 h-4" />
-                    {t('allItemsView')}
-                </button>
+                {/* View Toggle - compacted */}
+                <div className="flex bg-neutral-900 p-1 rounded-lg border border-neutral-800">
+                    <button
+                        onClick={() => setViewMode('scenes')}
+                        className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${viewMode === 'scenes'
+                            ? 'bg-neutral-800 text-white shadow-sm'
+                            : 'text-neutral-500 hover:text-neutral-300'
+                            }`}
+                        style={viewMode === 'scenes' && performanceColor ? { backgroundColor: `${performanceColor}33`, color: performanceColor } : undefined}
+                    >
+                        <Layers className="w-3.5 h-3.5" />
+                        {t('sceneView')}
+                    </button>
+                    <button
+                        onClick={() => setViewMode('checklist')}
+                        className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${viewMode === 'checklist'
+                            ? 'bg-neutral-800 text-white shadow-sm'
+                            : 'text-neutral-500 hover:text-neutral-300'
+                            }`}
+                        style={viewMode === 'checklist' && performanceColor ? { backgroundColor: `${performanceColor}33`, color: performanceColor } : undefined}
+                    >
+                        <Grid className="w-3.5 h-3.5" />
+                        {t('allItemsView')}
+                    </button>
+                </div>
             </div>
 
-            {
-                viewMode === 'checklist' ? (
+            <div className="flex-1 p-0 overflow-y-auto">
+                {viewMode === 'checklist' ? (
                     <PropsChecklist
                         performanceId={performanceId}
                         initialProps={allProps}
@@ -82,10 +91,9 @@ export function PerformanceContent({ performanceId, allProps, propsByAct, assign
                         assignedProps={assignedProps}
                         scenes={scenes}
                         sceneNote={sceneNote}
-
                     />
-                )
-            }
-        </div >
+                )}
+            </div>
+        </div>
     )
 }

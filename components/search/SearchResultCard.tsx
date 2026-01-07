@@ -453,7 +453,8 @@ export function SearchResultCard({ item, aiMode, onClose }: SearchResultCardProp
                 )}
             </div>
 
-            {/* Mobile Actions Toggle Button */}
+            {/* Mobile Actions Toggle Button - REMOVED for now as per request to simplify mobile UI */}
+            {/* 
             {actions.length > 0 && (
                 <button
                     onClick={(e) => {
@@ -468,9 +469,11 @@ export function SearchResultCard({ item, aiMode, onClose }: SearchResultCardProp
                 >
                     <MoreHorizontal className="h-4 w-4" />
                 </button>
-            )}
+            )} 
+            */}
 
-            {/* Mobile Quick Actions Overlay */}
+            {/* Mobile Quick Actions Overlay - REMOVED */}
+            {/*
             {actions.length > 0 && actionsVisible && (
                 <div className="absolute top-14 right-3 flex flex-col gap-1.5 z-20 md:hidden">
                     {actions.slice(0, 3).map((action) => {
@@ -510,6 +513,7 @@ export function SearchResultCard({ item, aiMode, onClose }: SearchResultCardProp
                     })}
                 </div>
             )}
+            */}
 
             {/* Schedule Dialog for Performance */}
             {schedulePerformanceId && (

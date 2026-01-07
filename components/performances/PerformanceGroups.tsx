@@ -18,9 +18,10 @@ interface Props {
     performanceId: string
     performanceTitle: string
     groups: Group[]
+    performanceColor?: string | null
 }
 
-export function PerformanceGroups({ performanceId, performanceTitle, groups }: Props) {
+export function PerformanceGroups({ performanceId, performanceTitle, groups, performanceColor }: Props) {
     const router = useRouter()
     const supabase = createClient()
     const [isLoading, setIsLoading] = useState(false)
@@ -30,7 +31,6 @@ export function PerformanceGroups({ performanceId, performanceTitle, groups }: P
     const handleAddGroup = async () => {
         setIsLoading(true)
         try {
-            // Calculate next number
             // Calculate next number
             const regex = new RegExp(`^${performanceTitle} #(\\d+)$`)
             let maxNum = 0
@@ -87,35 +87,41 @@ export function PerformanceGroups({ performanceId, performanceTitle, groups }: P
     }
 
     return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white">Grupy (Magazyn)</h2>
+        <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-neutral-800 flex items-center justify-between bg-neutral-900/80">
+                <h3 className="font-bold text-neutral-200 flex items-center gap-2 font-sans text-base">
+                    {/* <Box className="w-4 h-4 text-neutral-400" /> */}
+                    Grupy
+                </h3>
                 <Button
                     onClick={handleAddGroup}
                     isLoading={isLoading}
                     variant="secondary"
-                    className="h-8 text-xs"
+                    className="h-7 text-xs px-2.5 bg-neutral-800 border border-neutral-700 hover:bg-neutral-700 hover:text-white"
                     leftIcon={<Plus className="w-3 h-3" />}
                 >
                     Dodaj grupę
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {groups.map(group => (
-                    <GroupCard
-                        key={group.id}
-                        group={group}
-                        showLocationAsPrimary={true}
-                        onClick={() => openGroupDetails(group)}
-                    />
-                ))}
+            <div className="p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {groups.map(group => (
+                        <GroupCard
+                            key={group.id}
+                            group={group}
+                            showLocationAsPrimary={true}
+                            onClick={() => openGroupDetails(group)}
+                            colorOverride={performanceColor || undefined}
+                        />
+                    ))}
 
-                {groups.length === 0 && (
-                    <div className="col-span-full py-8 text-center border border-dashed border-neutral-800 rounded-lg text-neutral-500 text-sm">
-                        Brak grup przypisanych do tego spektaklu.
-                    </div>
-                )}
+                    {groups.length === 0 && (
+                        <div className="col-span-full py-8 text-center border border-dashed border-neutral-800 rounded-lg text-neutral-500 text-sm">
+                            Brak grup przypisanych do tego spektaklu.
+                        </div>
+                    )}
+                </div>
             </div>
 
             <GroupDetailsDialog

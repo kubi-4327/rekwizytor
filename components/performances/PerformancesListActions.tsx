@@ -118,8 +118,9 @@ END:VCALENDAR`
             variant="secondary"
             icon={<MoreVertical className="h-5 w-5" />}
             label={t('actions')}
-            className="hidden sm:inline-flex border-neutral-700 h-10 min-w-0 px-3"
+            className="border-neutral-700 h-10 px-3 w-full justify-center md:w-auto min-w-0"
             showChevron={false}
+            align="left"
             items={[
                 {
                     label: t('exportAllSchedule'),

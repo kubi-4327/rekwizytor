@@ -271,7 +271,7 @@
         "manageScenes": "Zarządzaj Scenami",
         "editDetails": "Edytuj Szczegóły",
         "actions": "Akcje",
-        "propsList": "Lista Rekwizytów",
+        "propsList": "Lista Scen",
         "viewScenes": "Widok Scen",
         "viewAll": "Wszystkie Przedmioty",
         "searchPlaceholder": "Szukaj rekwizytów...",
@@ -281,6 +281,7 @@
         "table": {
             "scene": "Scena",
             "item": "Rekwizyt",
+            "tasks": "Zadania",
             "instructions": "Instrukcje"
         },
         "act": "Akt {actNum}",

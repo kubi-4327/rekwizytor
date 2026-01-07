@@ -165,40 +165,43 @@ END:VCALENDAR`
     // ... (rest of the component logic)
 
     return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-                <h2 className="text-lg font-bold text-white leading-tight">{t('title')}</h2>
-                <div className="flex gap-2 ml-auto">
+        <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl overflow-hidden flex flex-col h-full">
+            <div className="p-4 border-b border-neutral-800 flex items-center justify-between bg-neutral-900/80">
+                <h3 className="font-bold text-neutral-200 flex items-center gap-2 font-sans text-base">
+                    <Clock className="w-4 h-4 text-neutral-400" />
+                    {t('title')}
+                </h3>
+                <div className="flex gap-2">
                     {sortedDates.length > 0 && (
                         <button
                             onClick={handleDownloadAll}
-                            className="inline-flex items-center justify-center rounded-md border border-neutral-700 bg-neutral-800 p-2 text-white hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50"
+                            className="inline-flex items-center justify-center rounded-md border border-neutral-700 bg-neutral-800 p-1.5 text-white hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50 transition-colors"
                             title={t('exportAll')}
                         >
-                            <Download className="h-4 w-4" />
+                            <Download className="h-3.5 w-3.5" />
                         </button>
                     )}
                     <button
                         onClick={() => setIsScheduleModalOpen(true)}
-                        className="inline-flex items-center justify-center p-2 bg-white text-black rounded-md hover:bg-neutral-200 transition-colors"
+                        className="inline-flex items-center justify-center p-1.5 bg-white text-black rounded-md hover:bg-neutral-200 transition-colors"
                         title={t('schedule')}
                     >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-3.5 h-3.5" />
                     </button>
                 </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="flex-1 p-4 space-y-4 overflow-y-auto max-h-[500px]">
                 {/* Past Shows Section */}
                 {pastDates.length > 0 && (
                     <div className="space-y-4">
                         <button
                             onClick={() => setShowPast(!showPast)}
-                            className="text-xs text-neutral-500 hover:text-neutral-300 flex items-center gap-2 w-full"
+                            className="text-xs text-neutral-500 hover:text-neutral-300 flex items-center gap-2 w-full group"
                         >
-                            <div className="h-px bg-neutral-800 flex-1" />
+                            <div className="h-px bg-neutral-800 flex-1 group-hover:bg-neutral-700 transition-colors" />
                             <span>{showPast ? t('hidePast') : t('showPast', { count: pastDates.length })}</span>
-                            <div className="h-px bg-neutral-800 flex-1" />
+                            <div className="h-px bg-neutral-800 flex-1 group-hover:bg-neutral-700 transition-colors" />
                         </button>
 
                         {showPast && pastDates.map(date => renderShowItem(date, true))}
@@ -209,8 +212,14 @@ END:VCALENDAR`
                 {upcomingDates.map(date => renderShowItem(date, false))}
 
                 {sortedDates.length === 0 && (
-                    <div className="text-center py-8 border border-dashed border-neutral-800 rounded-lg text-neutral-500 text-sm">
-                        {t('noShows')}
+                    <div className="text-center py-12 border border-dashed border-neutral-800 rounded-lg text-neutral-500 text-sm">
+                        <p className="mb-2">{t('noShows')}</p>
+                        <button
+                            onClick={() => setIsScheduleModalOpen(true)}
+                            className="text-ai-primary hover:text-ai-secondary text-xs font-medium transition-colors"
+                        >
+                            {t('schedule')}
+                        </button>
                     </div>
                 )}
             </div>

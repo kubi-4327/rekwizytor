@@ -238,7 +238,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
                 </div>
             </div>
 
-            <div className="grid gap-12 lg:grid-cols-3 items-start">
+            <div className="grid gap-6 lg:grid-cols-3 items-start">
                 {/* Left Column: Scheduled Shows & Notes */}
                 <div className="lg:col-span-1 space-y-8">
                     <ScheduledShowsList
@@ -253,6 +253,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
                         notes={notes || []}
                         performanceId={id}
                         title={production.title}
+                        performanceColor={production.color}
                     />
                 </div>
 
@@ -265,13 +266,15 @@ export default async function ProductionDetailsPage({ params }: Props) {
                         assignedProps={assignedProps}
                         scenes={scenes || []}
                         sceneNote={sceneNote}
+                        performanceColor={production.color}
                     />
 
-                    <div className="mt-12">
+                    <div className="mt-8">
                         <PerformanceGroups
                             performanceId={id}
                             performanceTitle={production.title}
                             groups={linkedGroups || []}
+                            performanceColor={production.color}
                         />
                     </div>
 

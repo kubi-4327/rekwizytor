@@ -13,18 +13,21 @@ interface Props {
     notes: Note[]
     performanceId: string
     title: string
+    performanceColor?: string | null
 }
 
-export function PerformanceNotesPreview({ notes, performanceId, title }: Props) {
+export function PerformanceNotesPreview({ notes, performanceId, title, performanceColor }: Props) {
     const t = useTranslations('ProductionDetails')
     // Only show top 5 recent notes
     const recentNotes = notes.slice(0, 5)
 
+    const masterColor = performanceColor || '#f59e0b' // amber-500 fallback
+
     return (
         <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl overflow-hidden flex flex-col h-full">
             <div className="p-4 border-b border-neutral-800 flex items-center justify-between bg-neutral-900/80">
-                <h3 className="font-bold text-neutral-200 flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-amber-500" />
+                <h3 className="font-bold text-neutral-200 flex items-center gap-2 font-sans text-base">
+                    <FileText className="w-4 h-4 text-neutral-400" />
                     {t('notesTitle')}
                 </h3>
                 <Link
@@ -44,10 +47,24 @@ export function PerformanceNotesPreview({ notes, performanceId, title }: Props) 
                             className="block p-3 rounded-lg hover:bg-neutral-800/50 border border-transparent hover:border-neutral-700 transition-all group"
                         >
                             <div className="flex items-start justify-between gap-2">
-                                <span className={`text-sm font-medium line-clamp-1 ${note.is_master ? 'text-amber-400' : 'text-neutral-300 group-hover:text-white'}`}>
+                                <span
+                                    className={`text-sm font-medium line-clamp-1 group-hover:text-white`}
+                                    style={{ color: note.is_master ? masterColor : '#d4d4d4' }}
+                                >
                                     {note.title}
                                 </span>
-                                {note.is_master && <span className="text-[10px] bg-amber-500/10 text-amber-500 px-1.5 py-0.5 rounded border border-amber-500/20">Master</span>}
+                                {note.is_master && (
+                                    <span
+                                        className="text-[10px] px-1.5 py-0.5 rounded border"
+                                        style={{
+                                            backgroundColor: `${masterColor}1A`, // 10% opacity
+                                            color: masterColor,
+                                            borderColor: `${masterColor}33` // 20% opacity
+                                        }}
+                                    >
+                                        Master
+                                    </span>
+                                )}
                             </div>
                             <div className="flex items-center justify-between mt-1.5">
                                 <span className="text-[10px] text-neutral-500">

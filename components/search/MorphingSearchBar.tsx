@@ -119,7 +119,7 @@ export function MorphingSearchBar({
                 onChange={(e) => onQueryChange?.(e.target.value)}
                 placeholder={placeholder || t('searchPlaceholder')}
                 className={clsx(
-                    "block w-full rounded-xl border text-sm placeholder-neutral-500 transition-all font-medium shadow-lg backdrop-blur-xl relative z-10",
+                    "block w-full rounded-xl border text-base md:text-sm placeholder-neutral-500 transition-all font-medium shadow-lg backdrop-blur-xl relative z-10",
                     "pl-10 pr-10 py-2.5 focus:outline-none focus:ring-1", // focus:outline-none to remove browser default
                     "bg-neutral-900/40 border-white/5 text-white focus:ring-white/10 focus:border-white/10 focus:bg-neutral-900/60"
                 )}

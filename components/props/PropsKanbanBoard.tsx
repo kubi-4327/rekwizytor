@@ -454,7 +454,9 @@ export function PropsKanbanBoard({ performanceId, initialProps, variant = 'check
         >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Column id={0} items={columns[0]} />
-                <Column id={1} items={columns[1]} />
+                <div className="hidden md:block">
+                    <Column id={1} items={columns[1]} />
+                </div>
             </div>
 
             <DragOverlay dropAnimation={dropAnimation}>

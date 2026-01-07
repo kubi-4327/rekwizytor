@@ -97,13 +97,14 @@ export function GroupsHeaderActions({ groups, currentParentId }: GroupsHeaderAct
     }
 
     return (
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-2 w-full md:flex md:w-auto gap-2 md:gap-2 items-center">
             <DropdownAction
                 label="Akcje"
                 icon={<MoreVertical className="w-4 h-4" />}
-                align="right"
+                align="left"
                 showChevron={false}
                 variant="secondary"
+                className="w-full justify-center"
             >
                 {({ close }) => (
                     <>
@@ -143,6 +144,7 @@ export function GroupsHeaderActions({ groups, currentParentId }: GroupsHeaderAct
                 icon={<Plus className="w-4 h-4" />}
                 variant="primary"
                 align="right"
+                className="w-full justify-center"
             >
                 {({ close }) => (
                     <>
