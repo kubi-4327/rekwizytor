@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Settings, FileText, MoreVertical, FolderPlus, Wand2 } from 'lucide-react'
+import { Plus, Settings, QrCode, MoreVertical, FolderPlus, Wand2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { DropdownAction } from '@/components/ui/DropdownAction'
 import { GroupScannerDialog } from '@/components/groups/GroupScannerDialog'
@@ -107,7 +107,15 @@ export function GroupsHeaderActions({ groups, currentParentId }: GroupsHeaderAct
             >
                 {({ close }) => (
                     <>
+                        <a
+                            href="/groups/manage"
+                            onClick={close}
+                            className="block px-4 py-2 text-sm text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors rounded-lg"
+                        >
+                            Zarządzaj grupami
+                        </a>
 
+                        <div className="bg-neutral-800 h-px my-1 mx-2" />
 
                         <button
                             onClick={(e) => {
@@ -120,21 +128,10 @@ export function GroupsHeaderActions({ groups, currentParentId }: GroupsHeaderAct
                             {isGenerating ? (
                                 <div className="mr-3 h-4 w-4 animate-spin rounded-full border-2 border-neutral-600 border-t-white" />
                             ) : (
-                                <FileText className="mr-3 h-4 w-4 text-neutral-400 group-hover:text-white" />
+                                <QrCode className="mr-3 h-4 w-4 text-neutral-400 group-hover:text-white" />
                             )}
                             <span className="font-medium leading-none">Generuj etykiety</span>
                         </button>
-
-                        <div className="bg-neutral-800 h-px my-1 mx-2" />
-
-                        <a
-                            href="/groups/manage"
-                            onClick={close}
-                            className="group flex w-full items-center px-3 py-2.5 text-sm rounded-lg transition-colors text-neutral-300 hover:text-white hover:bg-neutral-800"
-                        >
-                            <Settings className="mr-3 h-4 w-4 text-neutral-400 group-hover:text-white" />
-                            <span className="font-medium leading-none">Zarządzaj grupami</span>
-                        </a>
                     </>
                 )}
             </DropdownAction>

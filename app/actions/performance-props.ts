@@ -68,6 +68,8 @@ export async function getPerformanceProps(performanceId: string) {
         .from('performance_props')
         .select('*')
         .eq('performance_id', performanceId)
+        .order('column_index', { ascending: true })
+        .order('sort_order', { ascending: true })
         .order('created_at', { ascending: true })
 
     if (error) {
@@ -106,6 +108,32 @@ export async function updatePropStatus(propId: string, isChecked: boolean) {
 }
 
 /**
+ * Update prop position (Kanban)
+ */
+export async function updatePropPosition(
+    propId: string,
+    performanceId: string,
+    updates: { column_index: number; sort_order: number }
+) {
+    const supabase = await createClient()
+
+    const { error } = await supabase
+        .from('performance_props')
+        .update(updates as any)
+        .eq('id', propId)
+
+    if (error) {
+        console.error('Error updating prop position:', error)
+        return { success: false, error: error.message }
+    }
+
+    revalidatePath(`/performances/${performanceId}`)
+    revalidatePath(`/performances/${performanceId}/props`)
+
+    return { success: true }
+}
+
+/**
  * Add a single prop
  */
 export async function addProp(performanceId: string, name: string) {
@@ -116,13 +144,27 @@ export async function addProp(performanceId: string, name: string) {
         return { success: false, error: 'Prop name cannot be empty' }
     }
 
+    // Get max sort order in column 0
+    const { data: existing } = await supabase
+        .from('performance_props')
+        .select('sort_order')
+        .eq('performance_id', performanceId)
+        .eq('column_index', 0)
+        .order('sort_order', { ascending: false })
+        .limit(1)
+        .single()
+
+    const nextOrder = ((existing as any)?.sort_order ?? -1) + 1
+
     const { data, error } = await supabase
         .from('performance_props')
         .insert({
             performance_id: performanceId,
             item_name: trimmedName,
             is_checked: false,
-        })
+            column_index: 0,
+            sort_order: nextOrder
+        } as any)
         .select()
         .single()
 

@@ -268,12 +268,10 @@ export default function NoteDetailPage() {
                                     items={[
                                         {
                                             label: t('editNote'),
-                                            icon: <Pencil size={14} />,
                                             onClick: toggleEditMode
                                         },
                                         {
                                             label: t('manageScenes'),
-                                            icon: <Layers size={14} />,
                                             onClick: () => router.push(`/performances/${note.performance_id}/scenes`)
                                         }
                                     ]}

@@ -67,17 +67,32 @@ export function PropsScannerDialog({ isOpen, onClose, performanceId, onItemsAdde
         const reader = new FileReader()
         reader.onloadend = async () => {
             const base64 = reader.result as string
+            // Resize image before sending
+            const img = new Image()
+            img.src = base64
+            img.onload = async () => {
+                const canvas = document.createElement('canvas')
+                const MAX_WIDTH = 1500
+                const scaleSize = MAX_WIDTH / img.width
+                canvas.width = MAX_WIDTH
+                canvas.height = img.height * scaleSize
 
-            // Call AI
-            const result = await analyzePropsImage(base64)
+                const ctx = canvas.getContext('2d')
+                ctx?.drawImage(img, 0, 0, canvas.width, canvas.height)
 
-            if (result.error) {
-                console.error(result.error)
-                setItems([]) // Empty list on error
-            } else {
-                setItems(result.items || [])
+                const resizedBase64 = canvas.toDataURL('image/jpeg', 0.8)
+
+                // Call AI
+                const result = await analyzePropsImage(resizedBase64)
+
+                if (result.error) {
+                    console.error(result.error)
+                    setItems([]) // Empty list on error
+                } else {
+                    setItems(result.items || [])
+                }
+                setStep('confirm')
             }
-            setStep('confirm')
         }
         reader.readAsDataURL(file)
     }

@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { PerformanceNotesPreview } from '@/components/performances/PerformanceNotesPreview'
 import { PerformanceDetailActions } from '@/components/performances/PerformanceDetailActions'
+import { PerformanceGroups } from '@/components/performances/PerformanceGroups'
 
 type Props = {
     params: Promise<{ id: string }>
@@ -48,7 +49,8 @@ export default async function ProductionDetailsPage({ params }: Props) {
         assignedPropsResult,
         scenesResult,
         notesResult,
-        allPropsResult
+        allPropsResult,
+        linkedGroupsResult
     ] = await Promise.all([
         // Performance details - full row needed for PerformanceDetailActions
         supabase
@@ -99,7 +101,15 @@ export default async function ProductionDetailsPage({ params }: Props) {
             .select('id, item_name, is_checked, order, performance_id, created_at')
             .eq('performance_id', id)
             .order('order', { ascending: true })
+            .order('created_at', { ascending: true }),
+
+        // Groups linked to this performance
+        supabase
+            .from('groups')
+            .select('*, locations(name)')
+            .eq('performance_id', id)
             .order('created_at', { ascending: true })
+            .returns<any[]>() // Temporary loose typing to avoid deep type mismatch with GroupCard requirements
     ])
 
     const production = productionResult.data
@@ -108,6 +118,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
     const scenes = scenesResult.data
     const notes = notesResult.data
     const allProps = allPropsResult.data
+    const linkedGroups = linkedGroupsResult.data
 
     if (!production) {
         notFound()
@@ -254,8 +265,15 @@ export default async function ProductionDetailsPage({ params }: Props) {
                         assignedProps={assignedProps}
                         scenes={scenes || []}
                         sceneNote={sceneNote}
-
                     />
+
+                    <div className="mt-12">
+                        <PerformanceGroups
+                            performanceId={id}
+                            performanceTitle={production.title}
+                            groups={linkedGroups || []}
+                        />
+                    </div>
 
                 </div>
             </div>

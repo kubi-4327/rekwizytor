@@ -12,6 +12,7 @@ import DatePicker from 'react-datepicker'
 import "react-datepicker/dist/react-datepicker.css"
 import { pl } from 'date-fns/locale'
 import { useTranslations } from 'next-intl'
+import { Database } from '@/types/supabase'
 import { scrapePerformance } from '@/app/actions/scrape-performance'
 import { refreshSearchIndex } from '@/app/actions/unified-search'
 
@@ -208,7 +209,7 @@ export function CreatePerformanceForm() {
                     title,
                     premiere_date: premiereDate || null,
                     notes: notes || null,
-                    status: (premiereDate && new Date(premiereDate) > new Date()) ? 'upcoming' : 'active',
+                    status: ((premiereDate && new Date(premiereDate) > new Date()) ? 'upcoming' : 'active') as Database["public"]["Enums"]["performance_status_enum"],
                     image_url: imageUrl,
                     thumbnail_url: thumbnailUrl,
                     color: selectedColor
@@ -223,7 +224,8 @@ export function CreatePerformanceForm() {
                 .from('groups')
                 .insert({
                     name: title,
-                    color: selectedColor
+                    color: selectedColor,
+                    performance_id: performanceData.id
                 })
 
             if (groupError) {

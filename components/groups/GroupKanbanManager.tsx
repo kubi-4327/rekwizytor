@@ -12,7 +12,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { getIconComponent } from '@/utils/icon-map'
 import { getSuggestedIcon } from '@/utils/icon-matcher'
 import { Button } from '@/components/ui/Button'
-import { EditGroupDialog } from './EditGroupDialog'
+import { EditGroupIconDialog } from './EditGroupIconDialog'
 
 type Group = Pick<Database['public']['Tables']['groups']['Row'], 'id' | 'name' | 'icon' | 'location_id'>
 
@@ -526,7 +526,7 @@ export function GroupKanbanManager({ initialGroups, locations: initialLocations 
                 }
             />
 
-            <EditGroupDialog
+            <EditGroupIconDialog
                 isOpen={isEditDialogOpen}
                 onClose={() => setIsEditDialogOpen(false)}
                 group={editGroup}

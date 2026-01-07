@@ -13,16 +13,21 @@ export async function analyzeGroupImage(imageBase64: string) {
         const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '')
 
         const prompt = `
-        Analyze this image and suggest a Category Name (Group Name) for the items shown.
-        The name should be short, plural, and in Polish (e.g. "Kable", "Broń", "Naczynia", "Elektronika").
+        Analyze this image and identify ALL distinct categories of items visible.
+        For each category, provide a short plural name in Polish and a brief description.
         
-        Also provide a short 1-line description of what you see.
+        Be specific - if you see multiple types of items (e.g., electronics, tissues, office supplies), 
+        create separate groups for each distinct category.
         
-        Return ONLY a JSON object:
-        {
-            "suggestedName": "Nazwa Grupy",
-            "description": "Krótki opis tego co jest na zdjęciu"
-        }
+        Examples of good category names: "Elektronika", "Kable", "Chusteczki higieniczne", "Artykuły biurowe", "Naczynia", "Broń"
+        
+        Return ONLY a JSON array:
+        [
+            { "name": "Nazwa Grupy 1", "description": "Krótki opis kategorii" },
+            { "name": "Nazwa Grupy 2", "description": "Krótki opis kategorii" }
+        ]
+        
+        If you only see one type of items, return an array with one element.
         `
 
         const result = await geminiFlash.generateContent([
@@ -51,17 +56,28 @@ export async function analyzeGroupImage(imageBase64: string) {
             })
         }
 
-        // Extract JSON
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+        // Extract JSON array
+        const jsonMatch = responseText.match(/\[[\s\S]*\]/)
         if (!jsonMatch) {
             throw new Error('Invalid AI response format')
         }
 
-        const data = JSON.parse(jsonMatch[0])
+        const groups: Array<{ name: string, description: string }> = JSON.parse(jsonMatch[0])
+
+        // Sanitize each group and limit length
+        const sanitizedGroups = groups
+            .map(group => ({
+                name: sanitizeAIOutput(group.name),
+                description: sanitizeAIOutput(group.description)
+            }))
+            .filter(group => group.name.length > 0 && group.name.length <= 100)
+            // Remove duplicates (case-insensitive by name)
+            .filter((group, index, self) =>
+                index === self.findIndex(g => g.name.toLowerCase() === group.name.toLowerCase())
+            )
 
         return {
-            suggestedName: sanitizeAIOutput(data.suggestedName),
-            description: sanitizeAIOutput(data.description)
+            groups: sanitizedGroups
         }
 
     } catch (error) {

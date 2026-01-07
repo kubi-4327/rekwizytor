@@ -10,6 +10,7 @@ import { PropsScannerDialog } from './PropsScannerDialog'
 import { ManualAddDialog } from './ManualAddDialog'
 import { DropdownAction } from '@/components/ui/DropdownAction'
 import { useRouter } from 'next/navigation'
+import { PropsKanbanBoard } from './PropsKanbanBoard'
 
 type Prop = {
     id: string
@@ -152,100 +153,13 @@ export function PropsChecklist({ performanceId, initialProps, variant = 'checkli
                 )}
             </div>
 
-            {/* Props List - Two Columns */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {props.length === 0 ? (
-                    <div className="col-span-full text-center py-12 text-neutral-500">
-                        {t('noProps')}
-                    </div>
-                ) : (
-                    props.map((prop) => (
-                        <div
-                            key={prop.id}
-                            className="group flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900/40 p-3 hover:bg-neutral-900/60 transition-colors"
-                        >
-                            {/* Checkbox (Only in checklist mode) */}
-                            {variant === 'checklist' && (
-                                <button
-                                    onClick={() => handleToggleCheck(prop.id, prop.is_checked ?? false)}
-                                    className={`flex-shrink-0 h-5 w-5 rounded border-2 flex items-center justify-center transition-all ${prop.is_checked
-                                        ? 'border-transparent'
-                                        : 'border-neutral-600 hover:border-neutral-500'
-                                        }`}
-                                    style={{
-                                        backgroundColor: prop.is_checked ? '#A0232F' : 'transparent',
-                                    }}
-                                >
-                                    {prop.is_checked && (
-                                        <Check className="h-3 w-3 text-white" />
-                                    )}
-                                </button>
-                            )}
-
-                            {/* Name */}
-                            {editingId === prop.id ? (
-                                <input
-                                    type="text"
-                                    value={editingName}
-                                    onChange={(e) => setEditingName(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') handleSaveEdit(prop.id)
-                                        if (e.key === 'Escape') handleCancelEdit()
-                                    }}
-                                    className="flex-1 px-2 py-1 bg-neutral-800 border border-neutral-700 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                                    autoFocus
-                                />
-                            ) : (
-                                <span
-                                    className={`flex-1 ${prop.is_checked && variant === 'checklist'
-                                        ? 'text-neutral-500 line-through'
-                                        : 'text-white'
-                                        }`}
-                                >
-                                    {prop.item_name}
-                                </span>
-                            )}
-
-                            {/* Actions (Always visible or only in manage? Usually needed for manage. Checklist might just be checking off) */}
-                            {variant === 'manage' && (
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    {editingId === prop.id ? (
-                                        <>
-                                            <button
-                                                onClick={() => handleSaveEdit(prop.id)}
-                                                className="p-1.5 rounded hover:bg-neutral-800 text-green-400"
-                                            >
-                                                <Check className="h-4 w-4" />
-                                            </button>
-                                            <button
-                                                onClick={handleCancelEdit}
-                                                className="p-1.5 rounded hover:bg-neutral-800 text-neutral-400"
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button
-                                                onClick={() => handleStartEdit(prop)}
-                                                className="p-1.5 rounded hover:bg-neutral-800 text-neutral-400 hover:text-white"
-                                            >
-                                                <Edit2 className="h-4 w-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(prop.id)}
-                                                className="p-1.5 rounded hover:bg-neutral-800 text-neutral-400 hover:text-red-400"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    ))
-                )}
-            </div>
+            {/* Props Kanban Board */}
+            <PropsKanbanBoard
+                performanceId={performanceId}
+                initialProps={props}
+                variant={variant}
+                onDelete={handleDelete}
+            />
 
             {/* AI Scanner Dialog */}
             <PropsScannerDialog
