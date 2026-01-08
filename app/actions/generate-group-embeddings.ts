@@ -8,7 +8,7 @@ import { refreshSearchIndex } from '@/app/actions/unified-search'
 import { enrichGroupNameForEmbedding } from '@/utils/group-embedding-enrichment'
 
 /**
- * Generate embedding for a single group
+ * Generate embedding for a single group (Multi-Vector)
  */
 export async function generateGroupEmbedding(groupId: string): Promise<{ success: boolean; error?: string }> {
     const supabase = await createClient()
@@ -26,17 +26,28 @@ export async function generateGroupEmbedding(groupId: string): Promise<{ success
     }
 
     try {
-        // Enrich group name with AI-generated keywords for better semantic search
-        const enrichedText = await enrichGroupNameForEmbedding(group.name)
-        console.log(`Enriched "${group.name}" → "${enrichedText}"`)
+        // Step 1: Enrich (returns { identity, physical, context })
+        const enrichment = await enrichGroupNameForEmbedding(group.name)
+        console.log(`Enriched "${group.name}":
+        - ID: ${enrichment.identity}
+        - PHYS: ${enrichment.physical}
+        - CTX: ${enrichment.context}`)
 
-        // Generate embedding from enriched text
-        const embedding = await generateEmbedding(enrichedText, TaskType.RETRIEVAL_DOCUMENT)
+        // Step 2: Generate 3 embeddings in parallel
+        const [identityEmb, physicalEmb, contextEmb] = await Promise.all([
+            generateEmbedding(enrichment.identity || group.name, TaskType.RETRIEVAL_DOCUMENT),
+            generateEmbedding(enrichment.physical || '-', TaskType.RETRIEVAL_DOCUMENT), // Empty fallback
+            generateEmbedding(enrichment.context || '-', TaskType.RETRIEVAL_DOCUMENT)   // Empty fallback
+        ])
 
-        // Update group with embedding
+        // Step 3: Update group with all 3 vectors
         const { error: updateError } = await supabase
             .from('groups')
-            .update({ embedding: JSON.stringify(embedding) } as any)
+            .update({
+                embedding_identity: JSON.stringify(identityEmb),
+                embedding_physical: JSON.stringify(physicalEmb),
+                embedding_context: JSON.stringify(contextEmb)
+            } as any)
             .eq('id', groupId)
 
         if (updateError) {
@@ -62,60 +73,101 @@ export async function generateAllGroupEmbeddings(): Promise<{
 }> {
     const supabase = await createClient()
 
-    // Fetch groups
+    // Fetch groups (checking updated_at/created_at to re-process all would be best, but for now we process all active groups)
+    console.log('🔍 [GROUPS] Fetching all groups...')
     const { data: groups, error: fetchError } = await supabase
         .from('groups')
         .select('id, name')
         .is('deleted_at', null)
 
     if (fetchError) {
-        console.error('Failed to fetch groups:', fetchError)
+        console.error('❌ [GROUPS] Failed to fetch groups:', fetchError)
         return { success: false, processed: 0, failed: 0, errors: [fetchError.message] }
     }
 
     if (!groups || groups.length === 0) {
+        console.log('⚠️ [GROUPS] No groups found')
         return { success: true, processed: 0, failed: 0, errors: [] }
     }
+
+    console.log(`📦 [GROUPS] Found ${groups.length} groups to process`)
 
     let processed = 0
     let failed = 0
     const errors: string[] = []
 
     // Process each group
-    for (const group of groups) {
+    for (let i = 0; i < groups.length; i++) {
+        const group = groups[i]
+        console.log(`\n${'='.repeat(60)}`)
+        console.log(`📝 [${i + 1}/${groups.length}] Processing group: "${group.name}"`)
+        console.log(`${'='.repeat(60)}`)
+
         try {
-            // Enrich group name with AI-generated keywords for better semantic search
-            const enrichedText = await enrichGroupNameForEmbedding(group.name)
-            console.log(`Enriched "${group.name}" → "${enrichedText}"`)
+            // Step 1: Enrich
+            console.log(`   🔤 [STEP 1] Enriching group name (MV)...`)
+            const enrichment = await enrichGroupNameForEmbedding(group.name)
+            console.log(`   ✅ Enriched: ID="${enrichment.identity.substring(0, 20)}...", PHYS="${enrichment.physical.substring(0, 20)}..."`)
 
-            // Generate embedding from enriched text
-            const embedding = await generateEmbedding(enrichedText, TaskType.RETRIEVAL_DOCUMENT)
+            // Step 2: Generate embeddings
+            console.log(`   🔢 [STEP 2] Generating 3 vectors...`)
+            const [identityEmb, physicalEmb, contextEmb] = await Promise.all([
+                generateEmbedding(enrichment.identity || group.name, TaskType.RETRIEVAL_DOCUMENT),
+                generateEmbedding(enrichment.physical || 'brak', TaskType.RETRIEVAL_DOCUMENT),
+                generateEmbedding(enrichment.context || 'brak', TaskType.RETRIEVAL_DOCUMENT)
+            ])
+            console.log(`   ✅ [STEP 2] Embeddings generated`)
 
-            const { error: updateError } = await supabase
+            // Step 3: Save
+            console.log(`   💾 [STEP 3] Saving to Supabase...`)
+            const { data: updateData, error: updateError } = await supabase
                 .from('groups')
-                .update({ embedding: JSON.stringify(embedding) } as any)
+                .update({
+                    embedding_identity: JSON.stringify(identityEmb),
+                    embedding_physical: JSON.stringify(physicalEmb),
+                    embedding_context: JSON.stringify(contextEmb)
+                } as any)
                 .eq('id', group.id)
+                .select('id')
 
             if (updateError) {
+                console.error(`   ❌ [STEP 3] FAILED to save: ${updateError.message}`)
                 failed++
                 errors.push(`${group.name}: ${updateError.message}`)
             } else {
-                processed++
+                const rowsAffected = updateData?.length || 0
+                if (rowsAffected > 0) {
+                    console.log(`   ✅ [STEP 3] SAVED successfully`)
+                    processed++
+                } else {
+                    console.log(`   ⚠️ [STEP 3] Query executed but 0 rows affected (RLS issue?)`)
+                    failed++
+                    errors.push(`${group.name}: 0 rows affected`)
+                }
             }
         } catch (embeddingError: any) {
+            console.error(`   ❌ [ERROR] ${embeddingError.message}`)
             failed++
             errors.push(`${group.name}: ${embeddingError.message}`)
         }
 
-        // Delay to avoid rate limiting (10 requests/min = 6 seconds between requests)
-        await new Promise(resolve => setTimeout(resolve, 7000))
+        console.log(`   📊 Progress: ${processed} processed, ${failed} failed`)
+
+        // Delay to avoid rate limiting
+        if (i < groups.length - 1) {
+            // Increased delay as we do 3x more embedding calls
+            console.log(`   ⏳ Waiting 5s before next group...`)
+            await new Promise(resolve => setTimeout(resolve, 5000))
+        }
     }
 
-    // Refresh search index after all embeddings are generated
+    // Refresh search index
+    console.log(`\n🔄 Refreshing search index...`)
     try {
         await refreshSearchIndex()
+        console.log(`✅ Search index refreshed`)
     } catch (e) {
-        console.error('Failed to refresh search index:', e)
+        console.error('❌ Failed to refresh search index:', e)
     }
 
     return {

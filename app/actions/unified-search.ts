@@ -56,6 +56,7 @@ export async function unifiedSearch(
         let results: SearchResult[] = []
 
         // Execute hybrid search (FTS + Embeddings)
+        // Execute hybrid search (FTS + Embeddings) with Multi-Vector Logic
         try {
             // IMPORTANT: Correct typos before generating embedding
             // This allows "szkoła roka" to match "School of Rock"
@@ -64,9 +65,18 @@ export async function unifiedSearch(
             // Generate embedding for the corrected query
             const queryEmbedding = await generateEmbedding(correctedQuery, TaskType.RETRIEVAL_QUERY)
 
-            const { data, error } = await supabase.rpc('search_global_hybrid', {
+            // Determine Intent & Weights
+            const intent = classifyQueryIntent(correctedQuery)
+            const weights = getWeightsForIntent(intent)
+
+            console.log(`🔍 Search Intent: [${intent.toUpperCase()}] Weights: ID=${weights.identity}, PHYS=${weights.physical}, CTX=${weights.context}`)
+
+            const { data, error } = await supabase.rpc('search_global_hybrid_mv', {
                 query_text: query, // Use original for FTS
                 query_embedding: JSON.stringify(queryEmbedding), // Use corrected for semantic
+                weight_identity: weights.identity,
+                weight_physical: weights.physical,
+                weight_context: weights.context,
                 match_threshold: 0.4,
                 match_count: matchCount,
                 fuzzy_threshold: 0.3
@@ -173,48 +183,75 @@ export async function unifiedSearch(
  * - Simple queries (1-2 words, exact names) → FTS only (fast, no AI cost)
  * - Descriptive/semantic queries → Hybrid (FTS + Vector embeddings)
  */
-function classifyQuery(query: string): SearchStrategy {
-    const words = query.trim().split(/\s+/)
-    const wordCount = words.length
-
-    // Simple queries: 1-2 words, no descriptive terms
-    if (wordCount <= 2) {
-        // Check if it contains semantic/descriptive markers
-        const semanticMarkers = /jak|coś|podobn|styl|typu|w stylu|do |dla /i
-        if (!semanticMarkers.test(query)) {
-            return 'fts'
-        }
-    }
-
-    // Long descriptive queries always benefit from semantic search
-    if (wordCount >= 4 || query.length > 30) {
-        return 'hybrid'
-    }
-
-    // Questions always use hybrid
-    if (query.includes('?') || /^(jak|co|gdzie|kiedy|dlaczego|czy)/i.test(query)) {
-        return 'hybrid'
-    }
-
-    // Semantic descriptors trigger hybrid
-    const descriptivePatterns = [
-        /kolor|czerwon|niebieski|zielon|żółt|czarn|biał/i,  // colors
-        /stary|nowy|vintage|retro|nowoczesn|klasyczn/i,     // style/age
-        /duż|mał|wielk|drobny|masywn/i,                     // size
-        /elegancki|prosty|ozdobn|minimalist/i,              // aesthetics
-        /lata? \d{2}/i,                                     // decade reference
-        /podobn|jak|typu|w stylu/i,                         // similarity
-    ]
-
-    for (const pattern of descriptivePatterns) {
-        if (pattern.test(query)) {
-            return 'hybrid'
-        }
-    }
-
-    // Default to FTS for simple queries
-    return 'fts'
+// Weights for different search profiles
+interface SearchWeights {
+    identity: number
+    physical: number
+    context: number
 }
+
+// Intent Classification Logic
+type QueryIntent = 'physical' | 'context' | 'specific' | 'default'
+
+function classifyQueryIntent(query: string): QueryIntent {
+    const q = query.toLowerCase()
+
+    // 1. PHYSICAL Intent (Heavy weight on attributes)
+    // Keywords: materials, textures, structural properties
+    const physicalKeywords = [
+        'ostre', 'tępe', 'metalowe', 'drewniane', 'szklane', 'plastikowe', 'papierowe',
+        'czerwone', 'zielone', 'niebieskie', 'żółte', 'czarne', 'białe', 'kolorowe',
+        'duże', 'małe', 'wysokie', 'niskie', 'długie', 'ciężkie', 'lekkie',
+        'stare', 'nowe', 'zardzewiałe', 'zniszczone', 'antyk'
+    ]
+    if (physicalKeywords.some(k => q.includes(k))) return 'physical'
+
+    // 2. CONTEXT Intent (Heavy weight on situation/location)
+    // Keywords: usage, places, occasions
+    const contextKeywords = [
+        'kuchni', 'kuchenne', 'łazienki', 'salon', 'biuro', 'szkoła', 'klasa',
+        'wesele', 'ślub', 'pogrzeb', 'święta', 'boże narodzenie', 'wielkanoc',
+        'lata 20', 'lata 30', 'lata 40', 'lata 50', 'lata 60', 'lata 70', 'lata 80', 'lata 90',
+        'wojenne', 'średniowieczne', 'futurystyczne',
+        'jedzenie', 'picie', 'dekoracja'
+    ]
+    if (contextKeywords.some(k => q.includes(k))) return 'context'
+
+    // 3. SPECIFIC Intent (Heavy weight on identity)
+    // Short queries without intent keywords likely mean specific object search (e.g. "krzesło")
+    const wordCount = q.split(/\s+/).length
+    if (wordCount <= 2) return 'specific'
+
+    // 4. Default Mixed Intent
+    return 'default'
+}
+
+function getWeightsForIntent(intent: QueryIntent): SearchWeights {
+    switch (intent) {
+        case 'physical': // "ostre" -> Look for correct property, ignore context (kitchen)
+            return { identity: 0.1, physical: 0.8, context: 0.1 }
+        case 'context': // "wesele" -> Look for occasion, ignore if it's a specific knife type
+            return { identity: 0.2, physical: 0.1, context: 0.7 }
+        case 'specific': // "krzesło" -> I want a chair, not something used ON a chair
+            return { identity: 0.8, physical: 0.1, context: 0.1 }
+        default: // Balanced approach
+            return { identity: 0.5, physical: 0.3, context: 0.2 }
+    }
+}
+
+/**
+ * Classifies query to determine optimal search strategy
+ * (Existing function updated to use intent logic if needed, but we focus on unifiedSearch)
+ */
+function classifyQueryStrategy(query: string): SearchStrategy {
+    // ... existing logic ...
+    return 'hybrid' // Default to hybrid for now as we want to test MV
+}
+
+// ... inside unifiedSearch function ...
+
+// Execute hybrid search (FTS + Embeddings) with Multi-Vector Logic
+
 
 
 /**

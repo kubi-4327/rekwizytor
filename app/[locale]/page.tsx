@@ -83,25 +83,28 @@ export default async function Home() {
       .order('premiere_date', { ascending: true })
       .limit(5),
 
-    // Fetch Inventory Statistics - Total Items
-    supabase
-      .from('items')
-      .select('*', { count: 'exact', head: true })
-      .is('deleted_at', null),
+    // Legacy items table - removed
+    // supabase
+    //   .from('items')
+    //   .select('*', { count: 'exact', head: true })
+    //   .is('deleted_at', null),
+    Promise.resolve({ data: null, error: null, count: 0 }),
 
-    // Fetch Inventory Statistics - In Maintenance
-    supabase
-      .from('items')
-      .select('*', { count: 'exact', head: true })
-      .is('deleted_at', null)
-      .eq('performance_status', 'in_maintenance'),
+    // Legacy items table - removed
+    // supabase
+    //   .from('items')
+    //   .select('*', { count: 'exact', head: true })
+    //   .is('deleted_at', null)
+    //   .eq('performance_status', 'in_maintenance'),
+    Promise.resolve({ data: null, error: null, count: 0 }),
 
-    // Fetch Inventory Statistics - Unassigned
-    supabase
-      .from('items')
-      .select('*', { count: 'exact', head: true })
-      .is('deleted_at', null)
-      .eq('performance_status', 'unassigned'),
+    // Legacy items table - removed
+    // supabase
+    //   .from('items')
+    //   .select('*', { count: 'exact', head: true })
+    //   .is('deleted_at', null)
+    //   .eq('performance_status', 'unassigned'),
+    Promise.resolve({ data: null, error: null, count: 0 }),
 
     // Fetch Active Checklists
     supabase

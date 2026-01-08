@@ -495,6 +495,15 @@ export function StructureEditor({ initialLocations, initialGroups }: Props) {
 
             if (error) throw error
 
+            // Generate embedding in background
+            if (data) {
+                import('@/app/actions/generate-group-embeddings').then(({ generateGroupEmbedding }) => {
+                    generateGroupEmbedding(data.id).catch(err =>
+                        console.error('Failed to generate embedding:', err)
+                    )
+                })
+            }
+
             setGroups([...groups, data])
             router.refresh()
         } catch (error) {

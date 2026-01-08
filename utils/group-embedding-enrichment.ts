@@ -10,10 +10,28 @@ const apiKey = process.env.GEMINI_API_KEY
  * @param name - The group name (e.g., "brzytwy" or "School of Rock")
  * @returns Enriched text with keywords
  */
-export async function enrichGroupNameForEmbedding(name: string): Promise<string> {
+export interface GroupEnrichmentResult {
+    identity: string
+    physical: string
+    context: string
+}
+
+/**
+ * Enrich a group name with AI-generated keywords segments for Multi-Vector Search
+ * 
+ * @param name - The group name
+ * @returns Structured enrichment data (identity, physical, context)
+ */
+export async function enrichGroupNameForEmbedding(name: string): Promise<GroupEnrichmentResult> {
+    const fallbackResult: GroupEnrichmentResult = {
+        identity: name,
+        physical: '',
+        context: ''
+    }
+
     if (!apiKey) {
         console.warn('GEMINI_API_KEY not set - returning original name')
-        return name
+        return fallbackResult
     }
 
     const maxRetries = 3
@@ -25,67 +43,82 @@ export async function enrichGroupNameForEmbedding(name: string): Promise<string>
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
             const genAI = new GoogleGenerativeAI(apiKey)
-            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp', generationConfig: { responseMimeType: "application/json" } })
 
             let prompt: string
 
             if (performanceContext) {
-                // Use performance context for enrichment
-                prompt = `Jesteś ekspertem od kategoryzacji przedmiotów teatralnych i rekwizytów.
+                // Performance-aware enrichment
+                prompt = `Jesteś ekspertem od kategoryzacji rekwizytów teatralnych.
+                
+Grupa: "${name}"
+Spektakl: "${performanceContext.title}" (${performanceContext.notes || ''})
 
-Grupa przedmiotów "${name}" jest powiązana ze spektaklem:
-Tytuł: "${performanceContext.title}"
-Opis: "${performanceContext.notes || 'Brak opisu'}"
+ZADANIE: Wygeneruj słowa kluczowe w 3 kategoriach (JSON).
 
-Wygeneruj 5-10 słów kluczowych które opisują przedmioty z tej grupy, biorąc pod uwagę kontekst spektaklu:
-- Typ przedmiotów
-- Tematyka spektaklu
-- Charakterystyka
-- Zastosowanie sceniczne
+1. IDENTITY (Tożsamość): Co to jest? Synonimy, nazwy.
+2. PHYSICAL (Fizyczne): Materiał, cechy (ostre, drewniane), kolor, stan.
+3. CONTEXT (Kontekst): Użycie w tym spektaklu, epoka, miejsce, skojarzenia.
 
-Odpowiedź w formacie: ${name}: słowo1, słowo2, słowo3, ...
-
-Przykład:
-- "School of Rock" (spektakl o rockowym musicallu szkolnym) → "School of Rock: przedmioty ze spektaklu, gitary, mikrofony, instrumenty muzyczne, kostiumy rockowe, sprzęt sceniczny"
-
-Odpowiedź (tylko słowa kluczowe, bez dodatkowych wyjaśnień):`
+Odpowiedz TYLKO JSON:
+{
+  "identity": "string",
+  "physical": "string",
+  "context": "string"
+}`
             } else {
-                // Standard enrichment without performance context
-                prompt = `Jesteś ekspertem od kategoryzacji przedmiotów teatralnych i rekwizytów.
+                // Standard enrichment
+                prompt = `Jesteś starym rekwizytorem teatralnym. Twoim zadaniem jest opisanie przedmiotu "${name}" dla systemu wyszukiwania.
 
-Dla podanej nazwy grupy przedmiotów, wygeneruj 5-10 słów kluczowych które opisują:
-- Typ przedmiotu
-- Materiał
-- Zastosowanie
-- Charakterystykę fizyczną
-- Kontekst użycia
+Musisz rozdzielić opis na 3 precyzyjne kategorie, aby uniknąć błędów wyszukiwania (np. żeby "ostre" nie szukało owoców w kuchni).
 
-Nazwa grupy: "${name}"
+KATEGORIE:
+1. IDENTITY (Tożsamość): Co to dokładnie jest? Synonimy, nazwy, kategoria główna.
+   (np. "Brzytwa: brzytwa, nóż fryzjerski, golarka, ostrze")
 
-Odpowiedź w formacie: nazwa: słowo1, słowo2, słowo3, ...
+2. PHYSICAL (Styl/Fizyczne): Cechy widoczne i namacalne. Materiał, stan, cechy fizyczne.
+   (np. "Fizyczne: metalowe, ostre, stalowe, srebrne, składane, zardzewiałe")
+   WAŻNE: Tu wpisuj przymiotniki (drewniany, szklany, ostry).
 
-Przykłady:
-- "brzytwy" → "brzytwy: ostre narzędzie, golenie, metalowe, składane, fryzjerskie, niebezpieczne"
-- "owoce" → "owoce: jedzenie, dekoracja, kolorowe, świeże, naturalne, organiczne"
-- "butelki po winie" → "butelki po winie: szklane, puste, alkohol, dekoracja, pojemniki"
+3. CONTEXT (Kontekst/Użycie): Gdzie to występuje? Do czego służy? KONIECZNIE dodaj frazy z "do" i "używane do".
+   (np. "Kontekst: fryzjer, salon, golenie, DO GOLENIA, UŻYWANE DO GOLENIA, UŻYWANE PRZEZ FRYZJERA, łazienka, męskie, retro")
+   WAŻNE: Dodaj frazy akcji/celu: "do X", "używane do X", "służy do X", "potrzebne do X".
 
-Odpowiedź (tylko słowa kluczowe, bez dodatkowych wyjaśnień):`
+ZADANIE: Wygeneruj JSON dla grupy: "${name}"
+
+Format odpowiedzi JSON:
+{
+  "identity": "...",
+  "physical": "...",
+  "context": "..."
+}`
             }
 
             const result = await model.generateContent(prompt)
-            const response = result.response.text().trim()
+            const responseText = result.response.text().trim()
 
-            // Validate response format
-            if (response && response.includes(':')) {
-                if (performanceContext) {
-                    console.log(`✨ Enriched "${name}" with performance context from "${performanceContext.title}"`)
+            try {
+                // Parse JSON response
+                const parsed = JSON.parse(responseText)
+
+                // Validate structure
+                if (parsed.identity || parsed.physical || parsed.context) {
+                    const enriched: GroupEnrichmentResult = {
+                        identity: parsed.identity || name,
+                        physical: parsed.physical || '',
+                        context: parsed.context || ''
+                    }
+                    if (performanceContext) {
+                        console.log(`✨ Enriched "${name}" (MV) with performance context`)
+                    }
+                    return enriched
                 }
-                return response
+            } catch (e) {
+                console.warn(`Failed to parse JSON for "${name}": ${responseText}`)
             }
 
-            // Fallback if format is wrong
-            console.warn(`Unexpected AI response format for "${name}": ${response}`)
-            return name
+            // Fallback for this attempt
+            console.warn(`Invalid AI response format for "${name}"`)
 
         } catch (error: any) {
             lastError = error
@@ -98,15 +131,13 @@ Odpowiedź (tylko słowa kluczowe, bez dodatkowych wyjaśnień):`
                 continue
             }
 
-            // For other errors, log and return original name
             console.error('Error enriching group name:', error)
-            return name
         }
     }
 
-    // If all retries failed, return original name
+    // If all retries failed, return fallback
     console.error(`Failed to enrich "${name}" after ${maxRetries} attempts:`, lastError)
-    return name
+    return fallbackResult
 }
 
 /**

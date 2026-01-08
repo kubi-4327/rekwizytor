@@ -220,16 +220,25 @@ export function CreatePerformanceForm() {
             if (insertError) throw insertError
 
             // Create Group for the performance
-            const { error: groupError } = await supabase
+            const { data: groupData, error: groupError } = await supabase
                 .from('groups')
                 .insert({
                     name: title,
                     color: selectedColor,
                     performance_id: performanceData.id
                 })
+                .select('id')
+                .single()
 
             if (groupError) {
                 console.error('Error creating group:', groupError)
+            } else if (groupData) {
+                // Generate embedding in background
+                import('@/app/actions/generate-group-embeddings').then(({ generateGroupEmbedding }) => {
+                    generateGroupEmbedding(groupData.id).catch(err =>
+                        console.error('Failed to generate embedding:', err)
+                    )
+                })
             }
 
             // Create Master Note

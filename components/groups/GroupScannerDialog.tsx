@@ -124,17 +124,9 @@ export function GroupScannerDialog({ isOpen, onClose, parentId }: GroupScannerDi
         setIsSaving(true)
         try {
             // Fetch existing group names to check for duplicates
-            let query = supabase
+            const { data: existingGroups } = await supabase
                 .from('groups')
                 .select('name')
-
-            if (parentId) {
-                query = query.eq('parent_id', parentId)
-            } else {
-                query = query.is('parent_id', null)
-            }
-
-            const { data: existingGroups } = await query
 
             const existingNames = existingGroups?.map(g => g.name.toLowerCase()) || []
 
@@ -162,7 +154,6 @@ export function GroupScannerDialog({ isOpen, onClose, parentId }: GroupScannerDi
 
                 return {
                     name: uniqueName,
-                    parent_id: parentId || null,
                     icon: 'Box' // Default icon
                 }
             })

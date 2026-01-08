@@ -20,25 +20,10 @@ export default async function GroupsPage({ searchParams }: Props) {
     // Fetch all groups to build hierarchy and list - optimized query
     const { data: groups } = await supabase
         .from('groups')
-        .select('id, name, parent_id, icon, color, created_at, location_id, locations(id, name)')
+        .select('id, name, icon, color, created_at, location_id, locations(id, name)')
         .order('name')
 
-    if (!groups) return null
 
-    // Build breadcrumbs
-    const breadcrumbs = []
-    if (groupId) {
-        let currentId = groupId
-        while (currentId) {
-            const group = groups.find(g => g.id === currentId)
-            if (group) {
-                breadcrumbs.unshift(group)
-                currentId = group.parent_id || ''
-            } else {
-                break
-            }
-        }
-    }
 
     return (
         <div className="p-4 md:p-10 space-y-6 max-w-7xl mx-auto">
@@ -49,7 +34,7 @@ export default async function GroupsPage({ searchParams }: Props) {
                 iconColor="text-blue-400"
             >
                 <GroupsHeaderActions
-                    groups={groups}
+                    groups={groups || []}
                     currentParentId={groupId}
                 />
             </PageHeader>
@@ -57,7 +42,7 @@ export default async function GroupsPage({ searchParams }: Props) {
 
 
             <GroupsList
-                groups={groups}
+                groups={groups || []}
                 currentParentId={groupId}
             />
         </div>

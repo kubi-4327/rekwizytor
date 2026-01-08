@@ -10,7 +10,7 @@ export default async function GroupsManagePage() {
 
     const { data: groups } = await supabase
         .from('groups')
-        .select('id, name, parent_id, icon, location_id, locations(id, name)')
+        .select('id, name, icon, location_id, locations(id, name)')
         .order('name')
 
     const { data: locations } = await supabase
@@ -19,7 +19,7 @@ export default async function GroupsManagePage() {
         .neq('name', 'Nowe Pomieszczenie')
         .order('name')
 
-    if (!groups) return null
+
 
     return (
         <div className="p-4 md:p-10 space-y-6 max-w-7xl mx-auto">

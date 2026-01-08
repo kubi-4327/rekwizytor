@@ -11,7 +11,7 @@ import { rasterizeIcon } from '@/utils/icon-rasterizer'
 import { Database } from '@/types/supabase'
 
 type Group = Pick<Database['public']['Tables']['groups']['Row'],
-    'id' | 'name' | 'parent_id' | 'icon' | 'color'> & {
+    'id' | 'name' | 'icon' | 'color'> & {
         locations: { id: string, name: string } | null
     }
 

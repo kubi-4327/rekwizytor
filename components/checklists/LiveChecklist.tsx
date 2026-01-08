@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { CheckCircle2, Circle, ArrowRight } from 'lucide-react'
 import NextImage from 'next/image'
-import { ItemIcon } from '@/components/ui/ItemIcon'
+import { Box } from 'lucide-react' // ItemIcon removed
 import { clsx } from 'clsx'
 import { useTranslations } from 'next-intl'
 
@@ -102,7 +102,7 @@ export function LiveChecklist({ initialItems }: Props) {
                                     sizes="48px"
                                 />
                             ) : (
-                                <ItemIcon name={item.items?.name || ''} className="h-6 w-6 text-neutral-600" />
+                                <Box className="h-6 w-6 text-neutral-600" />
                             )}
                         </div>
 

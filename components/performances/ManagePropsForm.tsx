@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Loader2, Package, GripVertical, CheckSquare, Square, User, MoreHorizontal, ChevronDown, Camera, List } from 'lucide-react'
 import { ItemSelectionDialog } from './ItemSelectionDialog'
 import NextImage from 'next/image'
-import { ItemIcon } from '@/components/ui/ItemIcon'
+import { Box } from 'lucide-react' // ItemIcon removed
 import { DropdownAction } from '@/components/ui/DropdownAction'
 import { useTranslations } from 'next-intl'
 import { Database } from '@/types/supabase'
@@ -136,7 +136,7 @@ function SortableItem({
                     {assignment.items?.image_url ? (
                         <NextImage src={assignment.items.image_url} alt="" fill className="object-cover" unoptimized />
                     ) : (
-                        <ItemIcon name={assignment.items?.name || ''} className="h-5 w-5 text-neutral-600" />
+                        <Box className="h-5 w-5 text-neutral-600" />
                     )}
                 </div>
                 <div className="min-w-0 flex-1">

@@ -214,14 +214,25 @@ export function GroupImportDialog({ isOpen, onClose, parentId, locations = [] }:
         try {
             const inserts = items.map(item => ({
                 name: item.name,
-                parent_id: parentId || null,
                 location_id: item.columnId === COL_INPUT ? null : item.columnId,
                 icon: item.icon || 'Folder',
                 color: '#000000'
             }))
 
-            const { error } = await supabase.from('groups').insert(inserts)
+            const { data, error } = await supabase.from('groups').insert(inserts).select('id')
             if (error) throw error
+
+            // Generate embeddings in background (don't wait for them)
+            if (data && data.length > 0) {
+                // Dynamic import to avoid issues with client component
+                import('@/app/actions/generate-group-embeddings').then(({ generateGroupEmbedding }) => {
+                    data.forEach(group => {
+                        generateGroupEmbedding(group.id).catch(err =>
+                            console.error('Failed to generate embedding:', err)
+                        )
+                    })
+                })
+            }
 
             notify.success(`Utworzono ${items.length} grup`)
             router.refresh()

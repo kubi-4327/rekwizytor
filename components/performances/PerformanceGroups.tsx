@@ -61,15 +61,26 @@ export function PerformanceGroups({ performanceId, performanceTitle, groups, per
                 newName = `${performanceTitle} #${nextNum}`
             }
 
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('groups')
                 .insert({
                     name: newName,
                     performance_id: performanceId,
                     icon: 'Box'
                 })
+                .select('id')
+                .single()
 
             if (error) throw error
+
+            // Generate embedding in background
+            if (data) {
+                import('@/app/actions/generate-group-embeddings').then(({ generateGroupEmbedding }) => {
+                    generateGroupEmbedding(data.id).catch(err =>
+                        console.error('Failed to generate embedding:', err)
+                    )
+                })
+            }
 
             notify.success(`Utworzono grupę: ${newName}`)
             router.refresh()

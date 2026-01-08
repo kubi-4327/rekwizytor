@@ -6,12 +6,12 @@ export default async function TrashPage() {
     const supabase = await createClient()
     const t = await getTranslations('Trash')
 
-    // Fetch deleted items
-    const { data: deletedItems } = await supabase
-        .from('items')
-        .select('*')
-        .not('deleted_at', 'is', null)
-        .order('deleted_at', { ascending: false })
+    // Legacy items table - removed
+    // const { data: deletedItems } = await supabase
+    //     .from('items')
+    //     .select('*')
+    //     .not('deleted_at', 'is', null)
+    //     .order('deleted_at', { ascending: false })
 
     // Fetch deleted performances
     const { data: deletedPerformances } = await supabase
@@ -30,7 +30,7 @@ export default async function TrashPage() {
             </div>
 
             <TrashList
-                initialItems={deletedItems || []}
+                initialItems={[]}
                 initialPerformances={deletedPerformances || []}
             />
         </div>

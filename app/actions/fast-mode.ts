@@ -164,6 +164,13 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
                         .single()
                     if (newGroup) {
                         matchedGroupId = newGroup.id
+
+                        // Generate embedding for the new group in background
+                        import('./generate-group-embeddings').then(({ generateGroupEmbedding }) => {
+                            generateGroupEmbedding(newGroup.id).catch(err =>
+                                console.error('Failed to generate group embedding:', err)
+                            )
+                        })
                     }
                 }
             }

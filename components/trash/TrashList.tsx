@@ -9,12 +9,13 @@ import { format } from 'date-fns'
 import { pl, enUS } from 'date-fns/locale'
 import { useLocale } from 'next-intl'
 import NextImage from 'next/image'
-import { ItemIcon } from '@/components/ui/ItemIcon'
+import { Box } from 'lucide-react' // ItemIcon removed
 
 import { Database } from '@/types/supabase'
 
 interface TrashListProps {
-    initialItems: Database['public']['Tables']['items']['Row'][]
+    // items table removed - only performances supported now
+    initialItems: never[]
     initialPerformances: Database['public']['Tables']['performances']['Row'][]
 }
 
@@ -110,7 +111,7 @@ export function TrashList({ initialItems, initialPerformances }: TrashListProps)
                                                 sizes="48px"
                                             />
                                         ) : (
-                                            <ItemIcon name={item.name} className="h-6 w-6 text-neutral-600" />
+                                            <Box className="h-6 w-6 text-neutral-600" />
                                         )}
                                     </div>
                                     <div>

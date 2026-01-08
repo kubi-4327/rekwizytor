@@ -53,11 +53,13 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           embedding: string | null
+          embedding_context: string | null
+          embedding_identity: string | null
+          embedding_physical: string | null
           icon: string | null
           id: string
           location_id: string | null
           name: string
-          parent_id: string | null
           performance_id: string | null
           short_id: string | null
         }
@@ -66,11 +68,13 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           embedding?: string | null
+          embedding_context?: string | null
+          embedding_identity?: string | null
+          embedding_physical?: string | null
           icon?: string | null
           id?: string
           location_id?: string | null
           name: string
-          parent_id?: string | null
           performance_id?: string | null
           short_id?: string | null
         }
@@ -79,11 +83,13 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           embedding?: string | null
+          embedding_context?: string | null
+          embedding_identity?: string | null
+          embedding_physical?: string | null
           icon?: string | null
           id?: string
           location_id?: string | null
           name?: string
-          parent_id?: string | null
           performance_id?: string | null
           short_id?: string | null
         }
@@ -96,99 +102,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "groups_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "groups_performance_id_fkey"
             columns: ["performance_id"]
             isOneToOne: false
             referencedRelation: "performances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "groups_performance_id_fkey"
-            columns: ["performance_id"]
-            isOneToOne: false
-            referencedRelation: "vw_active_performances"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      items: {
-        Row: {
-          ai_description: string | null
-          attributes: Json | null
-          created_at: string | null
-          created_by: string | null
-          deleted_at: string | null
-          embedding: string | null
-          group_id: string | null
-          id: string
-          image_url: string | null
-          last_modified_by: string | null
-          location_id: string | null
-          name: string
-          notes: string | null
-          performance_status: Database["public"]["Enums"]["item_performance_status_enum"]
-          status: Database["public"]["Enums"]["item_status_enum"]
-          thumbnail_url: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          ai_description?: string | null
-          attributes?: Json | null
-          created_at?: string | null
-          created_by?: string | null
-          deleted_at?: string | null
-          embedding?: string | null
-          group_id?: string | null
-          id?: string
-          image_url?: string | null
-          last_modified_by?: string | null
-          location_id?: string | null
-          name: string
-          notes?: string | null
-          performance_status?: Database["public"]["Enums"]["item_performance_status_enum"]
-          status?: Database["public"]["Enums"]["item_status_enum"]
-          thumbnail_url?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          ai_description?: string | null
-          attributes?: Json | null
-          created_at?: string | null
-          created_by?: string | null
-          deleted_at?: string | null
-          embedding?: string | null
-          group_id?: string | null
-          id?: string
-          image_url?: string | null
-          last_modified_by?: string | null
-          location_id?: string | null
-          name?: string
-          notes?: string | null
-          performance_status?: Database["public"]["Enums"]["item_performance_status_enum"]
-          status?: Database["public"]["Enums"]["item_status_enum"]
-          thumbnail_url?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "items_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "items_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
@@ -320,120 +237,6 @@ export type Database = {
             referencedRelation: "performances"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "notes_performance_id_fkey"
-            columns: ["performance_id"]
-            isOneToOne: false
-            referencedRelation: "vw_active_performances"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      performance_items: {
-        Row: {
-          assigned_to: string | null
-          created_at: string | null
-          id: string
-          image_url_snapshot: string | null
-          item_id: string
-          item_name_snapshot: string | null
-          location_snapshot: string | null
-          notes_snapshot: string | null
-          performance_id: string
-          scene_id: string | null
-          scene_name: string | null
-          scene_number: string | null
-          setup_instructions: string | null
-          sort_order: number | null
-          updated_at: string | null
-          usage_notes: string | null
-        }
-        Insert: {
-          assigned_to?: string | null
-          created_at?: string | null
-          id?: string
-          image_url_snapshot?: string | null
-          item_id: string
-          item_name_snapshot?: string | null
-          location_snapshot?: string | null
-          notes_snapshot?: string | null
-          performance_id: string
-          scene_id?: string | null
-          scene_name?: string | null
-          scene_number?: string | null
-          setup_instructions?: string | null
-          sort_order?: number | null
-          updated_at?: string | null
-          usage_notes?: string | null
-        }
-        Update: {
-          assigned_to?: string | null
-          created_at?: string | null
-          id?: string
-          image_url_snapshot?: string | null
-          item_id?: string
-          item_name_snapshot?: string | null
-          location_snapshot?: string | null
-          notes_snapshot?: string | null
-          performance_id?: string
-          scene_id?: string | null
-          scene_name?: string | null
-          scene_number?: string | null
-          setup_instructions?: string | null
-          sort_order?: number | null
-          updated_at?: string | null
-          usage_notes?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "performance_items_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "performance_items_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "performance_items_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "vw_active_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "performance_items_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "vw_items_by_location"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "performance_items_performance_id_fkey"
-            columns: ["performance_id"]
-            isOneToOne: false
-            referencedRelation: "performances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "performance_items_performance_id_fkey"
-            columns: ["performance_id"]
-            isOneToOne: false
-            referencedRelation: "vw_active_performances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "performance_items_scene_id_fkey"
-            columns: ["scene_id"]
-            isOneToOne: false
-            referencedRelation: "scenes"
-            referencedColumns: ["id"]
-          },
         ]
       }
       performance_props: {
@@ -467,13 +270,6 @@ export type Database = {
             columns: ["performance_id"]
             isOneToOne: false
             referencedRelation: "performances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "performance_props_performance_id_fkey"
-            columns: ["performance_id"]
-            isOneToOne: false
-            referencedRelation: "vw_active_performances"
             referencedColumns: ["id"]
           },
         ]
@@ -607,27 +403,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "scene_checklist_items_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "scene_checklist_items_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "vw_active_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "scene_checklist_items_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "vw_items_by_location"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "scene_checklist_items_scene_checklist_id_fkey"
             columns: ["scene_checklist_id"]
             isOneToOne: false
@@ -684,13 +459,6 @@ export type Database = {
             referencedRelation: "performances"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "scene_checklists_performance_id_fkey"
-            columns: ["performance_id"]
-            isOneToOne: false
-            referencedRelation: "vw_active_performances"
-            referencedColumns: ["id"]
-          },
         ]
       }
       scenes: {
@@ -726,123 +494,11 @@ export type Database = {
             referencedRelation: "performances"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "scenes_performance_id_fkey"
-            columns: ["performance_id"]
-            isOneToOne: false
-            referencedRelation: "vw_active_performances"
-            referencedColumns: ["id"]
-          },
         ]
       }
     }
     Views: {
-      vw_active_items: {
-        Row: {
-          created_at: string | null
-          deleted_at: string | null
-          group_id: string | null
-          id: string | null
-          image_url: string | null
-          last_modified_by: string | null
-          location_id: string | null
-          name: string | null
-          notes: string | null
-          performance_status:
-            | Database["public"]["Enums"]["item_performance_status_enum"]
-            | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          deleted_at?: string | null
-          group_id?: string | null
-          id?: string | null
-          image_url?: string | null
-          last_modified_by?: string | null
-          location_id?: string | null
-          name?: string | null
-          notes?: string | null
-          performance_status?:
-            | Database["public"]["Enums"]["item_performance_status_enum"]
-            | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          deleted_at?: string | null
-          group_id?: string | null
-          id?: string | null
-          image_url?: string | null
-          last_modified_by?: string | null
-          location_id?: string | null
-          name?: string | null
-          notes?: string | null
-          performance_status?:
-            | Database["public"]["Enums"]["item_performance_status_enum"]
-            | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "items_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "items_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      vw_active_performances: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          items_count: number | null
-          last_show_date: string | null
-          notes: string | null
-          premiere_date: string | null
-          status: Database["public"]["Enums"]["performance_status_enum"] | null
-          title: string | null
-          updated_at: string | null
-        }
-        Relationships: []
-      }
-      vw_items_by_location: {
-        Row: {
-          group_name: string | null
-          id: string | null
-          item_name: string | null
-          location_name: string | null
-          location_type:
-            | Database["public"]["Enums"]["location_type_enum"]
-            | null
-          performance_status:
-            | Database["public"]["Enums"]["item_performance_status_enum"]
-            | null
-        }
-        Relationships: []
-      }
-      vw_searchable_entities: {
-        Row: {
-          description: string | null
-          embedding: string | null
-          entity_type: string | null
-          id: string | null
-          image_url: string | null
-          metadata: Json | null
-          name: string | null
-          updated_at: string | null
-          url: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_storage_stats: {
@@ -897,6 +553,29 @@ export type Database = {
           match_threshold?: number
           query_embedding: string
           query_text: string
+        }
+        Returns: {
+          description: string
+          entity_type: string
+          id: string
+          image_url: string
+          match_type: string
+          metadata: Json
+          name: string
+          score: number
+          url: string
+        }[]
+      }
+      search_global_hybrid_mv: {
+        Args: {
+          fuzzy_threshold?: number
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+          query_text: string
+          weight_context?: number
+          weight_identity?: number
+          weight_physical?: number
         }
         Returns: {
           description: string

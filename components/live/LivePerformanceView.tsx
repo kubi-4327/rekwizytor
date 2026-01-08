@@ -5,9 +5,9 @@ import { createClient } from '@/utils/supabase/client'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
-import { CheckCircle2, Circle, ArrowRight, Menu, X, Clock, Calendar, PauseCircle, User, AlertTriangle } from 'lucide-react'
+import { CheckCircle2, Circle, ArrowRight, Menu, X, Clock, Calendar, PauseCircle, User, AlertTriangle, Box } from 'lucide-react'
 import NextImage from 'next/image'
-import { ItemIcon } from '@/components/ui/ItemIcon'
+// ItemIcon removed - using Box from lucide-react instead
 import { format } from 'date-fns'
 import { pl, enUS } from 'date-fns/locale'
 import { useLocale } from 'next-intl'
@@ -1035,7 +1035,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                                                 sizes="48px"
                                             />
                                         ) : (
-                                            <ItemIcon name={item.items?.name || ''} className="h-6 w-6 text-neutral-600" />
+                                            <Box className="h-6 w-6 text-neutral-600" />
                                         )}
                                     </div>
 
