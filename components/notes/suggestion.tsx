@@ -8,17 +8,16 @@ import React from 'react'
 export const getItemSuggestions = async (query: string) => {
     const supabase = createClient()
     const { data } = await supabase
-        .from('items')
-        .select('id, name, image_url, notes')
-        .is('deleted_at', null)
-        .ilike('name', `%${query}%`)
+        .from('performance_props')
+        .select('id, item_name, image_url')
+        .ilike('item_name', `%${query}%`)
         .limit(5)
     return data?.map(d => ({
         id: d.id,
-        label: d.name,
+        label: d.item_name,
         type: 'item',
         image_url: d.image_url,
-        notes: d.notes,
+        notes: null,
         icon: <Box size={14} />
     })) || []
 }

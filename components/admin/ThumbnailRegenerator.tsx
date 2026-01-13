@@ -113,26 +113,33 @@ export function ThumbnailRegenerator() {
     const errorCount = Object.values(statuses).filter(s => s.status === 'error').length
 
     return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-neutral-900/50 rounded-xl border border-neutral-800">
+        <div className="bg-neutral-900 rounded-lg p-6 border border-neutral-800 h-full flex flex-col">
+            <div className="flex items-start gap-4 mb-4">
+                <div className="p-3 bg-blue-500/10 rounded-lg shrink-0">
+                    <RefreshCw className={`h-6 w-6 text-blue-400 ${isProcessing ? 'animate-spin' : ''}`} />
+                </div>
                 <div>
-                    <h3 className="text-white font-medium">Regenerate Thumbnails</h3>
-                    <p className="text-neutral-400 text-sm mt-1">
+                    <h3 className="text-lg font-semibold text-white mb-1">
+                        Regenerate Thumbnails
+                    </h3>
+                    <p className="text-sm text-neutral-400 leading-relaxed">
                         Re-process all performance posters to use the new "full poster" aspect ratio (no cropping).
                     </p>
                 </div>
+            </div>
+
+            <div className="mt-auto pt-2">
                 <Button
                     onClick={regenerateThumbnails}
                     isLoading={isProcessing}
-                    leftIcon={<RefreshCw className="w-4 h-4" />}
-                    variant="secondary"
+                    className="w-full justify-center bg-blue-600 hover:bg-blue-700 text-white"
                 >
                     Start Regeneration
                 </Button>
             </div>
 
             {showLog && (
-                <div className="bg-neutral-900/50 rounded-xl border border-neutral-800 overflow-hidden animate-in fade-in slide-in-from-top-4">
+                <div className="mt-4 bg-neutral-950/50 rounded-lg border border-neutral-800 overflow-hidden text-sm">
                     <div className="p-3 bg-neutral-900 border-b border-neutral-800 flex justify-between items-center text-sm">
                         <span className="text-neutral-300 font-mono">
                             Progress: {progress}/{total}

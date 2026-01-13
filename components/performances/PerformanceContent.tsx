@@ -7,36 +7,21 @@ import { Layers, Grid } from 'lucide-react'
 import { PropsChecklist } from '@/components/props/PropsChecklist'
 import { PerformanceSceneView } from './PerformanceSceneView'
 
-type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] & {
-    items: {
-        name: string
-        image_url: string | null
-    } | null
-}
+type Prop = Database['public']['Tables']['performance_props']['Row']
 
 type Scene = Database['public']['Tables']['scenes']['Row']
-
-type Prop = {
-    id: string
-    item_name: string
-    is_checked: boolean | null
-    created_at: string | null
-    performance_id: string
-    order: number | null
-}
 
 type Props = {
     performanceId: string
     allProps: Prop[]
-    propsByAct: Record<number, PerformanceItem[]>
-    assignedProps: PerformanceItem[] | null
+    propsByAct: Record<number, Prop[]>
     scenes: Scene[]
     sceneNote: any | null
     performanceColor?: string | null
 }
 
 
-export function PerformanceContent({ performanceId, allProps, propsByAct, assignedProps, scenes, sceneNote, performanceColor }: Props) {
+export function PerformanceContent({ performanceId, allProps, propsByAct, scenes, sceneNote, performanceColor }: Props) {
     const [viewMode, setViewMode] = useState<'scenes' | 'checklist'>('scenes')
     const t = useTranslations('ProductionDetails')
 
@@ -88,7 +73,6 @@ export function PerformanceContent({ performanceId, allProps, propsByAct, assign
                     <PerformanceSceneView
                         performanceId={performanceId}
                         propsByAct={propsByAct}
-                        assignedProps={assignedProps}
                         scenes={scenes}
                         sceneNote={sceneNote}
                     />

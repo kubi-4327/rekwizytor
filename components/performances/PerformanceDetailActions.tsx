@@ -11,19 +11,14 @@ import { DropdownAction } from '@/components/ui/DropdownAction'
 type Performance = Database['public']['Tables']['performances']['Row']
 type Scene = Database['public']['Tables']['scenes']['Row']
 type Note = Database['public']['Tables']['notes']['Row']
-type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] & {
-    items: {
-        name: string
-        image_url: string | null
-    } | null
-}
+type PropItem = Database['public']['Tables']['performance_props']['Row']
 
 type Props = {
     performanceId: string
     title: string
     premiereDate: string | null
     production: Performance
-    assignedProps: PerformanceItem[]
+    assignedProps: PropItem[]
     scenes: Scene[]
     notes: Note[]
     user: {

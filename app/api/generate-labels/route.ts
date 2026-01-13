@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/utils/supabase/server'
 import { renderToBuffer } from '@react-pdf/renderer'
 import QRCode from 'qrcode'
 import { Document, Page, Text, View, Image, StyleSheet, Font } from '@react-pdf/renderer'
@@ -152,7 +153,7 @@ const styles = StyleSheet.create({
 })
 
 // Create PDF document using React.createElement
-function createPDFDocument(groups: GroupData[], qrCodes: string[]) {
+function createPDFDocument(groups: GroupData[], qrData: { code: string, dataUrl: string }[]) {
     const labelsPerPage = 10
     const pages: GroupData[][] = []
 
@@ -209,7 +210,7 @@ function createPDFDocument(groups: GroupData[], qrCodes: string[]) {
 
             // QR code at bottom right
             children.push(
-                React.createElement(Image, { key: 'qr', src: qrCodes[globalIdx], style: styles.qrCode })
+                React.createElement(Image, { key: 'qr', src: qrData[globalIdx].dataUrl, style: styles.qrCode })
             )
 
             // "Rekwizytor" text at bottom left (instead of logo)
@@ -217,9 +218,9 @@ function createPDFDocument(groups: GroupData[], qrCodes: string[]) {
                 React.createElement(Text, { key: 'rekwizytor', style: styles.rekwizytor }, 'Rekwizytor')
             )
 
-            // ID at bottom center
+            // ID at bottom center (Use the Universal Short Code)
             children.push(
-                React.createElement(Text, { key: 'id', style: styles.labelId }, group.id.slice(0, 8))
+                React.createElement(Text, { key: 'id', style: styles.labelId }, qrData[globalIdx].code)
             )
 
             return React.createElement(
@@ -257,19 +258,55 @@ export async function POST(request: NextRequest) {
         await registerBoldonseFont()
 
         // Generate QR codes
+        // Generate QR codes with Universal Logic
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        // Setup code generator
+        const { customAlphabet } = await import('nanoid')
+        const generateCode = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 6)
+
         const qrCodes = await Promise.all(
             body.groups.map(async (group) => {
-                // Use short URL if short_id is available, otherwise fallback to full URL
                 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-                const url = group.short_id
-                    ? `${baseUrl}/g/${group.short_id}`
-                    : `${baseUrl}/pl/groups?highlight=${group.id}`
+                const targetUrl = `/groups?viewGroup=${group.id}`
+                let code = ''
 
-                return await QRCode.toDataURL(url, {
-                    errorCorrectionLevel: 'L', // Lower error correction for less dense QR code
+                // 1. Try to find existing QR code for this target
+                // We assume there's one canonical code for this exact URL created by the system
+                const { data: existing } = await supabase
+                    .from('qr_codes')
+                    .select('code')
+                    .eq('target_url', targetUrl)
+                    .eq('active', true) // Prefer active ones
+                    .limit(1)
+                    .single()
+
+                if (existing) {
+                    code = existing.code
+                } else {
+                    // 2. Create new code if doesn't exist
+                    code = generateCode()
+                    await supabase.from('qr_codes').insert({
+                        code,
+                        target_url: targetUrl,
+                        description: `Etykieta: ${group.name}`, // Auto-generated label
+                        created_by: user?.id, // Link to user printing it
+                        access_level: 'authenticated', // Safe default
+                        active: true
+                    })
+                }
+
+                // 3. Generate QR Image pointing to the Universal Redirector
+                const universalUrl = `${baseUrl}/qr/${code}`
+
+                const dataUrl = await QRCode.toDataURL(universalUrl, {
+                    errorCorrectionLevel: 'L',
                     margin: 0,
                     width: 200,
                 })
+
+                return { code, dataUrl }
             })
         )
 

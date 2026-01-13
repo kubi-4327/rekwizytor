@@ -13,7 +13,7 @@ import { parseNoteToLiveScenes } from '@/utils/note-parser'
 import { JSONContent } from '@tiptap/react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { toast } from 'react-hot-toast'
+import { notify } from '@/utils/notify'
 
 type ScheduledShow = Database['public']['Tables']['scene_checklists']['Row']
 
@@ -78,12 +78,12 @@ export function ScheduledShowDetailsModal({ isOpen, onClose, showDate, shows, pr
 
             if (error) throw error
 
-            toast.success(t('deleteSuccess'))
+            notify.success(t('deleteSuccess'))
             onClose()
             router.refresh()
         } catch (error) {
             console.error('Failed to delete show:', error)
-            toast.error(t('deleteError'))
+            notify.error(t('deleteError'))
         } finally {
             setIsDeleting(false)
         }

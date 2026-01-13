@@ -1,15 +1,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getPerformanceContextForGroup } from './performance-group-linking'
 
-const apiKey = process.env.GEMINI_API_KEY
+const geminiKey = process.env.GEMINI_API_KEY
+const openaiKey = process.env.OPENAI_API_KEY
+const mistralKey = process.env.MISTRAL_API_KEY
 
-/**
- * Enrich a group name with AI-generated keywords for better semantic search
- * If the group is linked to a performance, uses performance context
- * 
- * @param name - The group name (e.g., "brzytwy" or "School of Rock")
- * @returns Enriched text with keywords
- */
 export interface GroupEnrichmentResult {
     identity: string
     physical: string
@@ -20,18 +15,17 @@ export interface GroupEnrichmentResult {
  * Enrich a group name with AI-generated keywords segments for Multi-Vector Search
  * 
  * @param name - The group name
+ * @param enrichmentModel - The AI model to use for enrichment (default: gemini-2.0-flash-exp)
  * @returns Structured enrichment data (identity, physical, context)
  */
-export async function enrichGroupNameForEmbedding(name: string): Promise<GroupEnrichmentResult> {
+export async function enrichGroupNameForEmbedding(
+    name: string,
+    enrichmentModel: string = 'gemini-2.0-flash-exp'
+): Promise<GroupEnrichmentResult> {
     const fallbackResult: GroupEnrichmentResult = {
         identity: name,
         physical: '',
         context: ''
-    }
-
-    if (!apiKey) {
-        console.warn('GEMINI_API_KEY not set - returning original name')
-        return fallbackResult
     }
 
     const maxRetries = 3
@@ -40,16 +34,175 @@ export async function enrichGroupNameForEmbedding(name: string): Promise<GroupEn
     // Check if group is linked to a performance
     const performanceContext = await getPerformanceContextForGroup(name)
 
+    // Determine provider from model name
+    const provider = enrichmentModel.includes('gpt') ? 'openai' :
+        enrichmentModel.includes('mistral') ? 'mistral' : 'gemini'
+
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-            const genAI = new GoogleGenerativeAI(apiKey)
-            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp', generationConfig: { responseMimeType: "application/json" } })
+            let enriched: GroupEnrichmentResult
 
-            let prompt: string
+            // Route to appropriate provider
+            switch (provider) {
+                case 'openai':
+                    enriched = await enrichWithOpenAI(name, enrichmentModel, performanceContext)
+                    break
+                case 'mistral':
+                    enriched = await enrichWithMistral(name, enrichmentModel, performanceContext)
+                    break
+                case 'gemini':
+                default:
+                    enriched = await enrichWithGemini(name, enrichmentModel, performanceContext)
+                    break
+            }
 
+            console.log(`✅ [ENRICH] Success for "${name}" using ${provider}`)
             if (performanceContext) {
-                // Performance-aware enrichment
-                prompt = `Jesteś ekspertem od kategoryzacji rekwizytów teatralnych.
+                console.log(`✨ Enriched "${name}" with performance context`)
+            }
+            return enriched
+
+        } catch (e) {
+            lastError = e
+            console.error(`❌ [ENRICH] Attempt ${attempt + 1}/${maxRetries} failed:`, e)
+
+            if (attempt < maxRetries - 1) {
+                const delay = 1000 * (attempt + 1)
+                await new Promise(resolve => setTimeout(resolve, delay))
+            }
+        }
+    }
+
+    console.error(`❌ [ENRICH] All attempts failed for "${name}". Using fallback.`)
+    return fallbackResult
+}
+
+// Helper: Enrich with Gemini
+async function enrichWithGemini(
+    name: string,
+    model: string,
+    performanceContext: any
+): Promise<GroupEnrichmentResult> {
+    if (!geminiKey) throw new Error('GEMINI_API_KEY not set')
+
+    const genAI = new GoogleGenerativeAI(geminiKey)
+    const geminiModel = genAI.getGenerativeModel({
+        model: model,
+        generationConfig: {
+            // responseMimeType: "application/json", // Disable strict JSON to avoid early stops/loops
+            maxOutputTokens: 8192
+        }
+    })
+
+    const prompt = buildPrompt(name, performanceContext)
+    const result = await geminiModel.generateContent(prompt)
+    const response = result.response
+    const responseText = response.text().trim()
+
+    // Debug finish reason
+    if (response.candidates && response.candidates.length > 0) {
+        const candidate = response.candidates[0]
+        console.log(`🏁 [Gemini] Finish Reason: ${candidate.finishReason}`)
+        if (candidate.finishReason !== "STOP") {
+            console.warn(`⚠️ [Gemini] Abnormal finish! Reason: ${candidate.finishReason}`)
+            console.warn(`⚠️ [Gemini] Safety Ratings:`, candidate.safetyRatings)
+        }
+    }
+
+    console.log(`📄 [Gemini] Response preview: ${responseText.substring(0, 100)}...`)
+
+    return parseEnrichmentResponse(responseText, name)
+}
+
+// Helper: Enrich with OpenAI
+async function enrichWithOpenAI(
+    name: string,
+    model: string,
+    performanceContext: any
+): Promise<GroupEnrichmentResult> {
+    if (!openaiKey) throw new Error('OPENAI_API_KEY not set')
+
+    const prompt = buildPrompt(name, performanceContext)
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${openaiKey}`
+        },
+        body: JSON.stringify({
+            model: model,
+            messages: [
+                { role: 'system', content: 'You are a theater props expert. Always respond with valid JSON.' },
+                { role: 'user', content: prompt }
+            ],
+            response_format: { type: 'json_object' },
+            max_completion_tokens: 4096,
+            reasoning_effort: "low",
+            temperature: 1
+        })
+    })
+
+    if (!response.ok) {
+        const error = await response.json()
+        throw new Error(`OpenAI API error: ${JSON.stringify(error)}`)
+    }
+
+    const result = await response.json()
+    console.log(`📦 [OpenAI] Full api response:`, JSON.stringify(result, null, 2))
+
+    const responseText = result.choices?.[0]?.message?.content?.trim() || ''
+
+    console.log(`📄 [OpenAI] Response preview: ${responseText.substring(0, 100)}...`)
+
+    return parseEnrichmentResponse(responseText, name)
+}
+
+// Helper: Enrich with Mistral
+async function enrichWithMistral(
+    name: string,
+    model: string,
+    performanceContext: any
+): Promise<GroupEnrichmentResult> {
+    if (!mistralKey) throw new Error('MISTRAL_API_KEY not set')
+
+    const prompt = buildPrompt(name, performanceContext)
+
+    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${mistralKey}`
+        },
+        body: JSON.stringify({
+            model: model,
+            messages: [
+                { role: 'system', content: 'You are a theater props expert. Always respond with valid JSON.' },
+                { role: 'user', content: prompt }
+            ],
+            response_format: { type: 'json_object' },
+            max_tokens: 1024,
+            temperature: 0.7
+        })
+    })
+
+    if (!response.ok) {
+        const error = await response.json()
+        throw new Error(`Mistral API error: ${JSON.stringify(error)}`)
+    }
+
+    const result = await response.json()
+    const responseText = result.choices[0].message.content.trim()
+
+    console.log(`📄 [Mistral] Response preview: ${responseText.substring(0, 100)}...`)
+
+    return parseEnrichmentResponse(responseText, name)
+}
+
+// Helper: Build prompt (shared across providers)
+function buildPrompt(name: string, performanceContext: any): string {
+    if (performanceContext) {
+        return `Jesteś ekspertem od kategoryzacji rekwizytów teatralnych.
                 
 Grupa: "${name}"
 Spektakl: "${performanceContext.title}" (${performanceContext.notes || ''})
@@ -66,86 +219,94 @@ Odpowiedz TYLKO JSON:
   "physical": "string",
   "context": "string"
 }`
-            } else {
-                // Standard enrichment
-                prompt = `Jesteś starym rekwizytorem teatralnym. Twoim zadaniem jest opisanie przedmiotu "${name}" dla systemu wyszukiwania.
+    } else {
+        return `Jesteś starym rekwizytorem teatralnym. Twoim zadaniem jest opisanie przedmiotu "${name}" dla systemu wyszukiwania.
 
-Musisz rozdzielić opis na 3 precyzyjne kategorie, aby uniknąć błędów wyszukiwania (np. żeby "ostre" nie szukało owoców w kuchni).
+Rozdziel opis na 3 kategorie:
 
-KATEGORIE:
-1. IDENTITY (Tożsamość): Co to dokładnie jest? Synonimy, nazwy, kategoria główna.
-   (np. "Brzytwa: brzytwa, nóż fryzjerski, golarka, ostrze")
+1. IDENTITY: Co to jest? Synonimy, kategorie, alternatywne nazwy.
+   Przykład dla "brzytwa": "brzytwa, golarka, nóż fryzjerski, ostrze do golenia"
 
-2. PHYSICAL (Styl/Fizyczne): Cechy widoczne i namacalne. Materiał, stan, cechy fizyczne.
-   (np. "Fizyczne: metalowe, ostre, stalowe, srebrne, składane, zardzewiałe")
-   WAŻNE: Tu wpisuj przymiotniki (drewniany, szklany, ostry).
+2. PHYSICAL: Cechy fizyczne - materiał, kolor, rozmiar, stan.
+   Przykład: "metalowa, stalowa, ostra, składana, srebrna"
+   WAŻNE: Tylko przymiotniki!
 
-3. CONTEXT (Kontekst/Użycie): Gdzie to występuje? Do czego służy? KONIECZNIE dodaj frazy z "do" i "używane do".
-   (np. "Kontekst: fryzjer, salon, golenie, DO GOLENIA, UŻYWANE DO GOLENIA, UŻYWANE PRZEZ FRYZJERA, łazienka, męskie, retro")
-   WAŻNE: Dodaj frazy akcji/celu: "do X", "używane do X", "służy do X", "potrzebne do X".
+3. CONTEXT: Gdzie/kiedy/przez kogo używane? Skojarzenia, miejsca, zawody, epoki.
+   Przykład: "fryzjer, salon, łazienka, golenie, retro, męskie, vintage"
+   WAŻNE: Różnorodne słowa kluczowe, BEZ powtórzeń typu "do X" i "używane do X" - wybierz jedną formę!
 
-ZADANIE: Wygeneruj JSON dla grupy: "${name}"
+Wygeneruj JSON dla: "${name}"
 
-Format odpowiedzi JSON:
 {
   "identity": "...",
   "physical": "...",
   "context": "..."
 }`
-            }
-
-            const result = await model.generateContent(prompt)
-            const responseText = result.response.text().trim()
-
-            try {
-                // Parse JSON response
-                const parsed = JSON.parse(responseText)
-
-                // Validate structure
-                if (parsed.identity || parsed.physical || parsed.context) {
-                    const enriched: GroupEnrichmentResult = {
-                        identity: parsed.identity || name,
-                        physical: parsed.physical || '',
-                        context: parsed.context || ''
-                    }
-                    if (performanceContext) {
-                        console.log(`✨ Enriched "${name}" (MV) with performance context`)
-                    }
-                    return enriched
-                }
-            } catch (e) {
-                console.warn(`Failed to parse JSON for "${name}": ${responseText}`)
-            }
-
-            // Fallback for this attempt
-            console.warn(`Invalid AI response format for "${name}"`)
-
-        } catch (error: any) {
-            lastError = error
-
-            // Check if it's a rate limit error
-            if (error?.status === 429) {
-                const retryDelay = Math.pow(2, attempt) * 1000 // Exponential backoff: 1s, 2s, 4s
-                console.warn(`Rate limit hit for "${name}", retrying in ${retryDelay}ms (attempt ${attempt + 1}/${maxRetries})`)
-                await new Promise(resolve => setTimeout(resolve, retryDelay))
-                continue
-            }
-
-            console.error('Error enriching group name:', error)
-        }
     }
-
-    // If all retries failed, return fallback
-    console.error(`Failed to enrich "${name}" after ${maxRetries} attempts:`, lastError)
-    return fallbackResult
 }
 
-/**
- * Generate enriched text for a group name (synchronous wrapper for backwards compatibility)
- * Use this when you need to enrich text without async/await
- */
-export function getGroupEmbeddingText(name: string): string {
-    // For synchronous contexts, just return the name
-    // The async enrichment will happen in the embedding generation function
-    return name
+// Helper: Parse and validate enrichment response
+function parseEnrichmentResponse(responseText: string, name: string): GroupEnrichmentResult {
+    // Extract JSON from markdown code blocks if present
+    let cleanText = responseText.trim()
+
+    console.log(`🔍 [ENRICH] Raw response length: ${cleanText.length}`)
+
+    // Try to extract from markdown code block first
+    const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/i
+    const codeBlockMatch = cleanText.match(codeBlockRegex)
+    if (codeBlockMatch) {
+        cleanText = codeBlockMatch[1].trim()
+        console.log(`📝 [ENRICH] Extracted from markdown block`)
+    }
+
+    // Remove any text before the first { or [
+    const jsonStart = cleanText.search(/[\{\[]/)
+
+    if (jsonStart === -1) {
+        console.error(`❌ [ENRICH] No JSON start ({ or [) found. Response: ${cleanText.substring(0, 100)}`)
+        throw new Error('No JSON object found in response')
+    }
+
+    if (jsonStart > 0) {
+        cleanText = cleanText.substring(jsonStart)
+        console.log(`✂️ [ENRICH] Trimmed ${jsonStart} chars before JSON`)
+    }
+
+    // Remove any text after the last } or ]
+    const jsonEnd = cleanText.lastIndexOf('}')
+    const jsonEndArray = cleanText.lastIndexOf(']')
+    const actualEnd = Math.max(jsonEnd, jsonEndArray)
+
+    if (actualEnd > -1 && actualEnd < cleanText.length - 1) {
+        cleanText = cleanText.substring(0, actualEnd + 1)
+        console.log(`✂️ [ENRICH] Trimmed ${cleanText.length - actualEnd - 1} chars after JSON`)
+    }
+
+    // console.log(`📦 [ENRICH] Clean JSON preview: ${cleanText.substring(0, 100)}...`)
+
+    let parsed
+    try {
+        parsed = JSON.parse(cleanText)
+    } catch (e) {
+        console.error(`❌ [ENRICH] JSON Parse Error. Text preview: ${cleanText.substring(0, 100)}...`)
+        throw e
+    }
+
+    // Handle case when AI returns array instead of object
+    if (Array.isArray(parsed) && parsed.length > 0) {
+        parsed = parsed[0]
+        console.log(`📦 [ENRICH] Unwrapped array response`)
+    }
+
+    // Validate structure
+    if (parsed.identity || parsed.physical || parsed.context) {
+        return {
+            identity: parsed.identity || name,
+            physical: parsed.physical || '',
+            context: parsed.context || ''
+        }
+    } else {
+        throw new Error('Missing required fields in response')
+    }
 }

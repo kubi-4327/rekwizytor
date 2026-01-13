@@ -30,7 +30,6 @@ export default async function TrashPage() {
             </div>
 
             <TrashList
-                initialItems={[]}
                 initialPerformances={deletedPerformances || []}
             />
         </div>

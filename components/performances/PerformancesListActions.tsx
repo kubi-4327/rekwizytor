@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { MoreVertical, Download, QrCode } from 'lucide-react'
 import { DropdownAction } from '@/components/ui/DropdownAction'
 import { rasterizeIcon } from '@/utils/icon-rasterizer'
+import { notify } from '@/utils/notify'
 import { useTranslations } from 'next-intl'
 import { Database } from '@/types/supabase'
 
@@ -31,53 +32,60 @@ export function PerformancesListActions({ scheduledShows, performances }: Props)
 
     // Export Schedule Handler
     const handleDownloadAllSchedule = () => {
-        let icsContent = `BEGIN:VCALENDAR
+        const downloadPromise = (async () => {
+            let icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Rekwizytor//NONSGML v1.0//EN`
 
-        // Group by date and performance to avoid duplicate events for the same show
-        const uniqueEvents = new Map<string, ScheduledShow>();
+            // Group by date and performance to avoid duplicate events for the same show
+            const uniqueEvents = new Map<string, ScheduledShow>();
 
-        scheduledShows.forEach(show => {
-            // Create a unique key based on date and performance title
-            const key = `${show.show_date}-${show.performance?.title}`;
-            if (!uniqueEvents.has(key)) {
-                uniqueEvents.set(key, show);
-            }
-        });
+            scheduledShows.forEach(show => {
+                // Create a unique key based on date and performance title
+                const key = `${show.show_date}-${show.performance?.title}`;
+                if (!uniqueEvents.has(key)) {
+                    uniqueEvents.set(key, show);
+                }
+            });
 
-        uniqueEvents.forEach(show => {
-            const eventDate = new Date(show.show_date)
-            const endDate = new Date(eventDate.getTime() + 2 * 60 * 60 * 1000) // 2 hours default duration
+            uniqueEvents.forEach(show => {
+                const eventDate = new Date(show.show_date)
+                const endDate = new Date(eventDate.getTime() + 2 * 60 * 60 * 1000) // 2 hours default duration
 
-            icsContent += `
+                icsContent += `
 BEGIN:VEVENT
 DTSTART:${eventDate.toISOString().replace(/-|:|\.\d\d\d/g, "")}
 DTEND:${endDate.toISOString().replace(/-|:|\.\d\d\d/g, "")}
 SUMMARY:${show.performance?.title || 'Performance'} - ${show.type === 'rehearsal' ? 'Rehearsal' : 'Show'}
 DESCRIPTION:Cast: ${show.cast || 'N/A'}
 END:VEVENT`
-        })
+            })
 
-        icsContent += `
+            icsContent += `
 END:VCALENDAR`
 
-        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' })
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.setAttribute('download', `All_Performances_Schedule.ics`)
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' })
+            const url = window.URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', `All_Performances_Schedule.ics`)
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+        })()
+
+        notify.promise(downloadPromise, {
+            loading: 'Przygotowywanie kalendarza...',
+            success: 'Kalendarz pobrany!',
+            error: 'Błąd eksportu kalendarza'
+        }, 'download')
     }
 
     // Generate All Labels Handler
     const handleGenerateAllLabels = async () => {
         if (performances.length === 0) return
 
-        setIsGeneratingLabels(true)
-        try {
+        const generatePromise = (async () => {
             const response = await fetch('/api/generate-performance-labels', {
                 method: 'POST',
                 headers: {
@@ -104,13 +112,14 @@ END:VCALENDAR`
             a.click()
             document.body.removeChild(a)
             window.URL.revokeObjectURL(url)
+        })()
 
-        } catch (error) {
-            console.error("Labels generation failed", error)
-            alert("Failed to generate labels")
-        } finally {
-            setIsGeneratingLabels(false)
-        }
+        setIsGeneratingLabels(true)
+        notify.promise(generatePromise, {
+            loading: 'Generowanie etykiet...',
+            success: 'Etykiety wygenerowane!',
+            error: 'Błąd generowania etykiet'
+        }, 'pdf').finally(() => setIsGeneratingLabels(false))
     }
 
     return (

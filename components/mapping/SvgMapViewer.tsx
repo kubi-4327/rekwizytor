@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { toast } from 'react-hot-toast'
+import { notify } from '@/utils/notify'
+import { useTranslations } from 'next-intl'
 import { SelectGroupDialog } from './SelectGroupDialog'
 import { MapPin, Trash2 } from 'lucide-react'
 
@@ -28,6 +29,7 @@ export function SvgMapViewer({ locationId, svgContent, initialPins }: SvgMapView
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [pendingPin, setPendingPin] = useState<{ x: number, y: number } | null>(null)
     const supabase = createClient()
+    const t = useTranslations('Notifications')
 
     const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
         // Prevent adding pins if clicking on an existing pin (event bubbling handled by pin onClick)
@@ -64,11 +66,11 @@ export function SvgMapViewer({ locationId, svgContent, initialPins }: SvgMapView
             .eq('id', locationId)
 
         if (error) {
-            toast.error('Błąd zapisu pina')
+            notify.error(t('pinSaveError'))
             // Revert optimistic update
             setPins(pins)
         } else {
-            toast.success('Przypięto grupę')
+            notify.success(t('pinGroupSuccess'))
         }
     }
 
@@ -82,7 +84,7 @@ export function SvgMapViewer({ locationId, svgContent, initialPins }: SvgMapView
             .eq('id', locationId)
 
         if (error) {
-            toast.error('Błąd usuwania pina')
+            notify.error(t('pinDeleteError'))
             setPins(pins)
         }
     }

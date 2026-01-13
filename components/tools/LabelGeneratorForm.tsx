@@ -36,10 +36,8 @@ export function LabelGeneratorForm() {
 
     const handleGenerate = async (e: React.FormEvent) => {
         e.preventDefault()
-        setLoading(true)
-        const toastId = notify.loading('Generating labels...')
 
-        try {
+        const generatePromise = (async () => {
             const response = await fetch('/api/generate-standalone-labels', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -62,16 +60,14 @@ export function LabelGeneratorForm() {
             a.click()
             a.remove()
             window.URL.revokeObjectURL(url)
+        })()
 
-            notify.dismiss(toastId)
-            notify.success('Labels generated successfully')
-        } catch (error) {
-            console.error(error)
-            notify.dismiss(toastId)
-            notify.error('Failed to generate labels')
-        } finally {
-            setLoading(false)
-        }
+        setLoading(true)
+        notify.promise(generatePromise, {
+            loading: 'Generowanie etykiet...',
+            success: 'Etykiety wygenerowane!',
+            error: 'Błąd generowania etykiet'
+        }, 'pdf').finally(() => setLoading(false))
     }
 
     return (
@@ -132,8 +128,8 @@ export function LabelGeneratorForm() {
                                     type="button"
                                     onClick={() => setLabelSize(opt.id as any)}
                                     className={`relative p-3 rounded-xl border text-left transition-all ${labelSize === opt.id
-                                            ? 'bg-accent-main/10 border-accent-main text-white'
-                                            : 'bg-black/20 border-neutral-800 text-neutral-400 hover:border-neutral-600'
+                                        ? 'bg-accent-main/10 border-accent-main text-white'
+                                        : 'bg-black/20 border-neutral-800 text-neutral-400 hover:border-neutral-600'
                                         }`}
                                 >
                                     <div className="font-bold text-lg">{opt.label}</div>
@@ -173,8 +169,8 @@ export function LabelGeneratorForm() {
                                     type="button"
                                     onClick={() => setFillPage(!fillPage)}
                                     className={`w-full p-3 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${fillPage
-                                            ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400'
-                                            : 'bg-black/20 border-neutral-800 text-neutral-400 hover:border-neutral-600'
+                                        ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400'
+                                        : 'bg-black/20 border-neutral-800 text-neutral-400 hover:border-neutral-600'
                                         }`}
                                 >
                                     <Copy className="w-5 h-5" />

@@ -7,7 +7,7 @@ export async function deletePerformanceItem(itemId: string, performanceId: strin
     const supabase = await createClient()
 
     const { error } = await supabase
-        .from('performance_items')
+        .from('performance_props')
         .delete()
         .eq('id', itemId)
 

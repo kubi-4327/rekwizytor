@@ -1,84 +1,190 @@
 import { embeddingModel } from './gemini'
 import { TaskType } from '@google/generative-ai'
 
-// In-memory cache for query embeddings (RETRIEVAL_QUERY only)
-// This dramatically speeds up repeated searches
+// In-memory cache for query embeddings
 const queryEmbeddingCache = new Map<string, number[]>()
-const MAX_CACHE_SIZE = 100 // Limit cache size to prevent memory issues
+const MAX_CACHE_SIZE = 100
 
-export async function generateEmbedding(text: string, taskType: TaskType = TaskType.RETRIEVAL_DOCUMENT): Promise<number[]> {
-    if (!embeddingModel) {
-        throw new Error('Gemini embedding model not available - GEMINI_API_KEY may be missing')
-    }
+type EmbeddingProvider = 'google' | 'openai' | 'voyage' | 'mistral'
 
-    // Only cache RETRIEVAL_QUERY (user searches), not RETRIEVAL_DOCUMENT (data embeddings)
-    const cacheKey = taskType === TaskType.RETRIEVAL_QUERY ? text.toLowerCase().trim() : null
+interface ModelConfig {
+    provider: EmbeddingProvider
+    model: string
+}
 
-    // Check cache for query embeddings
+const MODEL_MAPPING: Record<string, ModelConfig> = {
+    'gemini-text-embedding-004': { provider: 'google', model: 'text-embedding-004' },
+    'text-embedding-004': { provider: 'google', model: 'text-embedding-004' },
+    // Google v2? Not standard, but user asked. Sticking to 004 as standard.
+    'text-embedding-3-small': { provider: 'openai', model: 'text-embedding-3-small' },
+    'text-embedding-3-large': { provider: 'openai', model: 'text-embedding-3-large' },
+    'voyage-3': { provider: 'voyage', model: 'voyage-3' },
+    'voyage-3-lite': { provider: 'voyage', model: 'voyage-3-lite' },
+    'voyage-3.5': { provider: 'voyage', model: 'voyage-3.5' },
+    'voyage-3.5-lite': { provider: 'voyage', model: 'voyage-3.5-lite' },
+    'mistral-embed': { provider: 'mistral', model: 'mistral-embed' },
+}
+
+export async function generateEmbedding(
+    text: string,
+    taskType: TaskType = TaskType.RETRIEVAL_DOCUMENT,
+    modelName: string = 'text-embedding-004'
+): Promise<number[]> {
+    const config = MODEL_MAPPING[modelName] || MODEL_MAPPING['gemini-text-embedding-004']
+
+    // Cache key includes model name to prevent collisions between different dimension embeddings
+    const cacheKey = taskType === TaskType.RETRIEVAL_QUERY ? `${modelName}:${text.toLowerCase().trim()}` : null
+
     if (cacheKey && queryEmbeddingCache.has(cacheKey)) {
-        console.log('⚡ Cache hit for query:', text)
         return queryEmbeddingCache.get(cacheKey)!
     }
 
+    // Validate input - reject empty strings
+    if (!text || text.trim().length === 0) {
+        throw new Error('Cannot generate embedding for empty string')
+    }
+
+    let embedding: number[]
+
     try {
-        const result = await embeddingModel.embedContent({
-            content: { role: 'user', parts: [{ text }] },
-            taskType
-        })
-
-        const embedding = result.embedding.values
-
-        // Cache query embeddings
-        if (cacheKey) {
-            // Implement simple LRU: if cache is full, remove oldest entry
-            if (queryEmbeddingCache.size >= MAX_CACHE_SIZE) {
-                const firstKey = queryEmbeddingCache.keys().next().value
-                if (firstKey) {
-                    queryEmbeddingCache.delete(firstKey)
-                }
-            }
-            queryEmbeddingCache.set(cacheKey, embedding)
-            console.log('💾 Cached embedding for query:', text)
+        switch (config.provider) {
+            case 'openai':
+                embedding = await generateOpenAIEmbedding(text, config.model)
+                break
+            case 'voyage':
+                embedding = await generateVoyageEmbedding(text, config.model, taskType)
+                break
+            case 'mistral':
+                embedding = await generateMistralEmbedding(text, config.model)
+                break
+            case 'google':
+            default:
+                embedding = await generateGeminiEmbedding(text, taskType, config.model)
+                break
         }
 
-        // Log AI usage asynchronously (don't block return)
-        (async () => {
-            try {
-                const { createClient } = await import('@/utils/supabase/server')
-                const supabase = await createClient()
-                const estimatedTokens = Math.ceil(text.length / 4)
-
-                // Determine operation type based on task type
-                const operationType = taskType === TaskType.RETRIEVAL_QUERY
-                    ? 'smart_search'  // User searching
-                    : 'embedding_indexing'  // Indexing data (groups, items, etc.)
-
-                await supabase.from('ai_usage_logs').insert({
-                    model_name: 'text-embedding-004',
-                    tokens_input: estimatedTokens,
-                    tokens_output: 0,
-                    total_tokens: estimatedTokens,
-                    operation_type: operationType,
-                    details: {
-                        taskType,
-                        textLength: text.length,
-                        cached: false
-                    }
-                })
-            } catch (err) {
-                console.error('Failed to log embedding usage:', err)
+        if (cacheKey) {
+            if (queryEmbeddingCache.size >= MAX_CACHE_SIZE) {
+                const firstKey = queryEmbeddingCache.keys().next().value
+                if (firstKey) queryEmbeddingCache.delete(firstKey)
             }
-        })()
+            queryEmbeddingCache.set(cacheKey, embedding)
+        }
+
+        // Log usage (async)
+        logAIUsage(text, modelName, taskType)
 
         return embedding
     } catch (error) {
-        console.error('Error generating embedding:', error)
-        throw new Error('Failed to generate embedding')
+        console.error(`Error generating embedding with ${modelName}:`, error)
+        throw new Error(`Failed to generate embedding with ${modelName}`)
     }
 }
 
-// Export function to clear cache if needed
+async function generateGeminiEmbedding(text: string, taskType: TaskType, model: string): Promise<number[]> {
+    if (!embeddingModel) throw new Error('Gemini embedding model not available')
+    const result = await embeddingModel.embedContent({
+        content: { role: 'user', parts: [{ text }] },
+        taskType
+    })
+    return result.embedding.values
+}
+
+async function generateOpenAIEmbedding(text: string, model: string): Promise<number[]> {
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) throw new Error('OPENAI_API_KEY not set')
+
+    const body: any = { input: text, model }
+
+    // Optional: add dimensions for v3 models if we ever need to fetch smaller vectors
+    // if (model.includes('text-embedding-3')) {
+    //     body.dimensions = 768; 
+    // }
+
+    const response = await fetch('https://api.openai.com/v1/embeddings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(body)
+    })
+
+    if (!response.ok) {
+        const error = await response.json()
+        throw new Error(`OpenAI API error: ${JSON.stringify(error)}`)
+    }
+
+    const result = await response.json()
+    return result.data[0].embedding
+}
+
+async function generateVoyageEmbedding(text: string, model: string, taskType: TaskType): Promise<number[]> {
+    const apiKey = process.env.VOYAGE_API_KEY
+    if (!apiKey) throw new Error('VOYAGE_API_KEY not set')
+
+    const inputType = taskType === TaskType.RETRIEVAL_QUERY ? 'query' : 'document'
+
+    const response = await fetch('https://api.voyageai.com/v1/embeddings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({ input: text, model, input_type: inputType })
+    })
+
+    if (!response.ok) {
+        const error = await response.json()
+        throw new Error(`Voyage AI API error: ${JSON.stringify(error)}`)
+    }
+
+    const result = await response.json()
+    return result.data[0].embedding
+}
+
+async function generateMistralEmbedding(text: string, model: string): Promise<number[]> {
+    const apiKey = process.env.MISTRAL_API_KEY
+    if (!apiKey) throw new Error('MISTRAL_API_KEY not set')
+
+    const response = await fetch('https://api.mistral.ai/v1/embeddings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({ input: [text], model })
+    })
+
+    if (!response.ok) {
+        const error = await response.json()
+        throw new Error(`Mistral API error: ${JSON.stringify(error)}`)
+    }
+
+    const result = await response.json()
+    return result.data[0].embedding
+}
+
+async function logAIUsage(text: string, modelName: string, taskType: TaskType) {
+    try {
+        const { createClient } = await import('@/utils/supabase/server')
+        const supabase = await createClient()
+        const estimatedTokens = Math.ceil(text.length / 4)
+        const operationType = taskType === TaskType.RETRIEVAL_QUERY ? 'smart_search' : 'embedding_indexing'
+
+        await supabase.from('ai_usage_logs').insert({
+            model_name: modelName,
+            tokens_input: estimatedTokens,
+            tokens_output: 0,
+            total_tokens: estimatedTokens,
+            operation_type: operationType,
+            details: { taskType, textLength: text.length }
+        })
+    } catch (err) {
+        console.error('Failed to log embedding usage:', err)
+    }
+}
+
 export function clearEmbeddingCache() {
     queryEmbeddingCache.clear()
-    console.log('🗑️ Embedding cache cleared')
 }

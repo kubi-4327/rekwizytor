@@ -7,12 +7,7 @@ import { Database, Json } from '@/types/supabase'
 
 type Performance = Database['public']['Tables']['performances']['Row']
 type Scene = Database['public']['Tables']['scenes']['Row']
-type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] & {
-    items: {
-        name: string
-        image_url: string | null
-    } | null
-}
+type PerformanceProp = Database['public']['Tables']['performance_props']['Row']
 type Note = Database['public']['Tables']['notes']['Row']
 
 interface User {
@@ -22,7 +17,7 @@ interface User {
 
 interface RequestBody {
     production: Performance
-    items: PerformanceItem[]
+    items: PerformanceProp[]
     scenes?: Scene[]
     notes?: Note[]
     user: User | null
@@ -119,8 +114,8 @@ const PerformancePdfDocument = ({ production, items, scenes, notes, user, qrCode
     // 1. Process Master Item List (Deduplicate Items)
     const uniqueItemsMap = new Map<string, string>();
     items.forEach(pi => {
-        if (pi.items?.name) {
-            uniqueItemsMap.set(pi.items.name, pi.items.name)
+        if (pi.item_name) {
+            uniqueItemsMap.set(pi.item_name, pi.item_name)
         }
     });
     const masterItems = Array.from(uniqueItemsMap.values()).sort();

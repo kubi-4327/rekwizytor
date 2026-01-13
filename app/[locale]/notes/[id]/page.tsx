@@ -11,6 +11,7 @@ import { extractMentions } from '@/components/notes/utils'
 import { useTranslations } from 'next-intl'
 import { AnimatePresence, motion } from 'framer-motion'
 import { DropdownAction } from '@/components/ui/DropdownAction'
+import { notify } from '@/utils/notify'
 
 export default function NoteDetailPage() {
     const t = useTranslations('NoteDetail')
@@ -146,6 +147,10 @@ export default function NoteDetailPage() {
         element.download = `${title.replace(/\s+/g, '_')}.json`;
         document.body.appendChild(element);
         element.click();
+        document.body.removeChild(element);
+        URL.revokeObjectURL(element.href);
+        setShowExportMenu(false)
+        notify.successDownload('JSON wyeksportowany')
     }
 
     const getNoteText = () => {
@@ -174,7 +179,10 @@ export default function NoteDetailPage() {
         element.download = `${title.replace(/\s+/g, '_')}.txt`;
         document.body.appendChild(element);
         element.click();
+        document.body.removeChild(element);
+        URL.revokeObjectURL(element.href);
         setShowExportMenu(false)
+        notify.successDownload('Plik tekstowy pobrany')
     }
 
     const exportNoteMd = () => {
@@ -185,14 +193,17 @@ export default function NoteDetailPage() {
         element.download = `${title.replace(/\s+/g, '_')}.md`;
         document.body.appendChild(element);
         element.click();
+        document.body.removeChild(element);
+        URL.revokeObjectURL(element.href);
         setShowExportMenu(false)
+        notify.successDownload('Markdown wyeksportowany')
     }
 
     const copyToClipboard = () => {
         const text = getNoteText()
         navigator.clipboard.writeText(text)
         setShowExportMenu(false)
-        alert(t('copied'))
+        notify.success('Link skopiowany do schowka')
     }
 
     const toggleEditMode = async () => {

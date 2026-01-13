@@ -57,10 +57,7 @@ export function GroupDetailsDialog({
         : '-'
 
     const handlePrintLabel = async () => {
-        setIsGeneratingLabel(true)
-        const toastId = notify.loading(t('labels.generating'))
-
-        try {
+        const generatePromise = (async () => {
             // Use the rasterizeIcon utility
             const iconPng = await rasterizeIcon(group.icon || 'Folder', group.color || '#000000')
 
@@ -88,16 +85,14 @@ export function GroupDetailsDialog({
             a.click()
             document.body.removeChild(a)
             window.URL.revokeObjectURL(url)
+        })()
 
-            notify.dismiss(toastId)
-            notify.success(t('labels.success'))
-        } catch (error) {
-            console.error('Label generation error:', error)
-            notify.dismiss(toastId)
-            notify.error(t('labels.error'))
-        } finally {
-            setIsGeneratingLabel(false)
-        }
+        setIsGeneratingLabel(true)
+        notify.promise(generatePromise, {
+            loading: t('labels.generating'),
+            success: t('labels.success'),
+            error: t('labels.error')
+        }, 'pdf').finally(() => setIsGeneratingLabel(false))
     }
 
     return (

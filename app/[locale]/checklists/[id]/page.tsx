@@ -31,18 +31,12 @@ export default async function ChecklistPage({ params }: Props) {
         notFound()
     }
 
-    // Fetch checklist items
+    // Fetch checklist items (using snapshots now)
     const { data: items } = await supabase
         .from('scene_checklist_items')
-        .select(`
-      *,
-      items (
-        name,
-        image_url
-      )
-    `)
+        .select('*')
         .eq('scene_checklist_id', id)
-        .order('created_at', { ascending: true }) // Ideally sort by some order, but created_at works for now
+        .order('created_at', { ascending: true })
 
     const showDate = new Date(checklist.show_date)
 

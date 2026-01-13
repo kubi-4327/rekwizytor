@@ -28,7 +28,8 @@ import { GripVertical, Trash2, Check, X, Edit2 } from 'lucide-react'
 import { updatePropPosition, updatePropName, updatePropStatus, deleteProp } from '@/app/actions/performance-props'
 import { notify } from '@/utils/notify'
 import { createClient } from '@/utils/supabase/client'
-import { toast } from 'react-hot-toast'
+import { useTranslations } from 'next-intl'
+
 
 type Prop = {
     id: string
@@ -185,6 +186,7 @@ export function PropsKanbanBoard({ performanceId, initialProps, variant = 'check
     const [activeId, setActiveId] = useState<string | null>(null)
     const pendingUpdates = useRef<Record<string, { column_index: number; sort_order: number }>>({})
     const saveTimeout = useRef<NodeJS.Timeout | null>(null)
+    const t = useTranslations('Notifications')
 
     // Ensure we have correct initial state distribution
     // Fallback: if no column_index, distribute evenly or put in 0?
@@ -243,7 +245,7 @@ export function PropsKanbanBoard({ performanceId, initialProps, variant = 'check
             await Promise.all(ids.map(id => updatePropPosition(id, performanceId, updates[id])))
         } catch (e) {
             console.error('Failed to save prop positions', e)
-            toast.error('Błąd zapisu pozycji')
+            notify.error(t('positionSaveError'))
         }
     }
 
@@ -393,9 +395,9 @@ export function PropsKanbanBoard({ performanceId, initialProps, variant = 'check
 
         try {
             await updatePropName(id, name, performanceId)
-            toast.success('Zaktualizowano nazwę')
+            notify.success(t('nameUpdated'))
         } catch (e) {
-            toast.error('Błąd aktualizacji')
+            notify.error(t('updateError'))
         }
     }
 
@@ -405,7 +407,7 @@ export function PropsKanbanBoard({ performanceId, initialProps, variant = 'check
         try {
             await updatePropStatus(id, !current)
         } catch (e) {
-            toast.error('Błąd aktualizacji checkboxa')
+            notify.error(t('checkboxUpdateError'))
             // Revert
             setProps(prev => prev.map(p => p.id === id ? { ...p, is_checked: current } : p))
         }

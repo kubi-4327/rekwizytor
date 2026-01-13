@@ -43,3 +43,8 @@ next-env.d.ts
 
 # learning & notes
 LEARNING.md
+
+# admin tools (local only)
+/components/admin/
+/app/[locale]/admin/migrate-embeddings/
+/app/[locale]/admin/test-alerts/

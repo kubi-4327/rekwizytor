@@ -22,12 +22,7 @@ type Props = {
 }
 
 type Scene = Database['public']['Tables']['scenes']['Row']
-type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] & {
-    items: {
-        name: string
-        image_url: string | null
-    } | null
-}
+type PropItem = Database['public']['Tables']['performance_props']['Row']
 
 export default async function ProductionDetailsPage({ params }: Props) {
     const { id } = await params
@@ -46,7 +41,6 @@ export default async function ProductionDetailsPage({ params }: Props) {
     const [
         productionResult,
         scheduledShowsResult,
-        assignedPropsResult,
         scenesResult,
         notesResult,
         allPropsResult,
@@ -66,20 +60,6 @@ export default async function ProductionDetailsPage({ params }: Props) {
             .eq('performance_id', id)
             .order('show_date', { ascending: true }),
 
-        // Assigned props (performance_items) - Legacy system for Scene View
-        supabase
-            .from('performance_items')
-            .select(`
-                *,
-                items (
-                    name,
-                    image_url
-                )
-            `)
-            .eq('performance_id', id)
-            .order('scene_number', { ascending: true })
-            .returns<PerformanceItem[]>(),
-
         // Scenes for Act info - all fields needed for export
         supabase
             .from('scenes')
@@ -95,10 +75,10 @@ export default async function ProductionDetailsPage({ params }: Props) {
             .order('is_master', { ascending: false })
             .order('updated_at', { ascending: false }),
 
-        // All props for checklist - select only existing columns
+        // All props for checklist and scene view
         supabase
             .from('performance_props')
-            .select('id, item_name, is_checked, order, performance_id, created_at')
+            .select('*')
             .eq('performance_id', id)
             .order('order', { ascending: true })
             .order('created_at', { ascending: true }),
@@ -114,7 +94,6 @@ export default async function ProductionDetailsPage({ params }: Props) {
 
     const production = productionResult.data
     const scheduledShows = scheduledShowsResult.data
-    const assignedProps = assignedPropsResult.data
     const scenes = scenesResult.data
     const notes = notesResult.data
     const allProps = allPropsResult.data
@@ -131,11 +110,11 @@ export default async function ProductionDetailsPage({ params }: Props) {
         return scene?.act_number || 1
     }
 
-    // Group props by Act
-    const propsByAct: Record<number, PerformanceItem[]> = {}
+    // Group props by Act (using performance_props now)
+    const propsByAct: Record<number, PropItem[]> = {}
 
-    assignedProps?.forEach((prop: PerformanceItem) => {
-        const actNum = getActNumber(prop.scene_number)
+    allProps?.forEach((prop: PropItem) => {
+        const actNum = getActNumber(prop.scene_number?.toString() || '1')
         if (!propsByAct[actNum]) propsByAct[actNum] = []
         propsByAct[actNum].push(prop)
     })
@@ -226,7 +205,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
                                         title={production.title}
                                         premiereDate={production.premiere_date}
                                         production={production}
-                                        assignedProps={assignedProps || []}
+                                        assignedProps={allProps || []}
                                         scenes={scenes || []}
                                         notes={notes || []}
                                         user={user}
@@ -263,7 +242,6 @@ export default async function ProductionDetailsPage({ params }: Props) {
                         performanceId={id}
                         allProps={allProps || []}
                         propsByAct={propsByAct}
-                        assignedProps={assignedProps}
                         scenes={scenes || []}
                         sceneNote={sceneNote}
                         performanceColor={production.color}

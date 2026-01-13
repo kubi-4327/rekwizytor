@@ -896,5 +896,64 @@
             "processing": "Przetwarzanie...",
             "deleting": "Usuwanie..."
         }
+    },
+    "QrManager": {
+        "title": "Kody QR",
+        "subtitle": "Zarządzaj uniwersalnymi kodami przekierowań",
+        "filterAll": "Wszystkie",
+        "filterGroups": "Grupy",
+        "filterPerformances": "Spektakle",
+        "filterOthers": "Inne",
+        "selected": "Wybrano: {count}",
+        "actions": {
+            "delete": "Usuń",
+            "deactivate": "Dezaktywuj",
+            "activate": "Aktywuj"
+        },
+        "columns": {
+            "label": "Etykieta",
+            "target": "Cel",
+            "created": "Utworzono",
+            "clicks": "Kliknięcia"
+        },
+        "edit": {
+            "targetType": "Typ celu",
+            "selectItem": "Wybierz element",
+            "customUrl": "Własny URL",
+            "save": "Zapisz",
+            "cancel": "Anuluj"
+        },
+        "types": {
+            "group": "Grupa",
+            "performance": "Spektakl",
+            "custom": "Własny",
+            "note": "Notatka"
+        }
+    },
+    "Notifications": {
+        "mapUploaded": "Mapa wgrana pomyślnie",
+        "mapUploadError": "Błąd podczas wgrywania mapy",
+        "planGenerated": "Plan wygenerowany!",
+        "analysisError": "Błąd analizy",
+        "genericError": "Wystąpił błąd",
+        "mapDeleted": "Mapa usunięta",
+        "deleteError": "Błąd usuwania",
+        "roomAdded": "Pomieszczenie dodane",
+        "pointAdded": "Dodano punkt ({x}, {y})",
+        "svgParsed": "SVG pomyślnie przetworzono",
+        "svgParseError": "Błąd parsowania XML SVG",
+        "svgLoadError": "Błąd odczytu mapy do edycji",
+        "noSvgRoot": "Nie znaleziono elementu głównego SVG",
+        "noInitialContent": "Brak początkowej zawartości SVG",
+        "mapUpdated": "Mapa zaktualizowana",
+        "saveError": "Błąd zapisu",
+        "positionSaveError": "Błąd zapisu pozycji",
+        "nameUpdated": "Zaktualizowano nazwę",
+        "updateError": "Błąd aktualizacji",
+        "checkboxUpdateError": "Błąd aktualizacji checkboxa",
+        "pinSaveError": "Błąd zapisu przypięcia",
+        "pinGroupSuccess": "Przypięto grupę",
+        "pinDeleteError": "Błąd usuwania przypięcia",
+        "loadedElements": "Załadowano {count} elementów"
     }
 }

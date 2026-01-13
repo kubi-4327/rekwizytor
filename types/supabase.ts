@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       ai_usage_logs: {
         Row: {
+          context: string | null
           created_at: string | null
           details: Json | null
           id: string
@@ -26,6 +27,7 @@ export type Database = {
           total_tokens: number | null
         }
         Insert: {
+          context?: string | null
           created_at?: string | null
           details?: Json | null
           id?: string
@@ -36,6 +38,7 @@ export type Database = {
           total_tokens?: number | null
         }
         Update: {
+          context?: string | null
           created_at?: string | null
           details?: Json | null
           id?: string
@@ -44,6 +47,280 @@ export type Database = {
           tokens_input?: number | null
           tokens_output?: number | null
           total_tokens?: number | null
+        }
+        Relationships: []
+      }
+      embedding_queue_state: {
+        Row: {
+          current_queue_item_id: string | null
+          id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          current_queue_item_id?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          current_queue_item_id?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embedding_queue_state_current_queue_item_id_fkey"
+            columns: ["current_queue_item_id"]
+            isOneToOne: false
+            referencedRelation: "embedding_test_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      embedding_regeneration_jobs: {
+        Row: {
+          created_at: string | null
+          current_enrichment: Json | null
+          current_group_id: string | null
+          current_group_name: string | null
+          embedding_model: string
+          enrichment_model: string
+          error_message: string | null
+          failed_groups: Json | null
+          id: string
+          processed_groups: number | null
+          status: string
+          total_groups: number
+          total_tokens: number | null
+          updated_at: string | null
+          use_sample_groups: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_enrichment?: Json | null
+          current_group_id?: string | null
+          current_group_name?: string | null
+          embedding_model: string
+          enrichment_model: string
+          error_message?: string | null
+          failed_groups?: Json | null
+          id?: string
+          processed_groups?: number | null
+          status?: string
+          total_groups: number
+          total_tokens?: number | null
+          updated_at?: string | null
+          use_sample_groups?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          current_enrichment?: Json | null
+          current_group_id?: string | null
+          current_group_name?: string | null
+          embedding_model?: string
+          enrichment_model?: string
+          error_message?: string | null
+          failed_groups?: Json | null
+          id?: string
+          processed_groups?: number | null
+          status?: string
+          total_groups?: number
+          total_tokens?: number | null
+          updated_at?: string | null
+          use_sample_groups?: boolean | null
+        }
+        Relationships: []
+      }
+      embedding_test_queue: {
+        Row: {
+          completed_at: string | null
+          config: Json
+          created_at: string | null
+          error_message: string | null
+          id: string
+          position: number
+          run_id: string | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          config: Json
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          position: number
+          run_id?: string | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          config?: Json
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          position?: number
+          run_id?: string | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embedding_test_queue_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "embedding_test_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      embedding_test_results: {
+        Row: {
+          applied_weights: Json | null
+          correct_rank: number | null
+          created_at: string | null
+          error_message: string | null
+          generated_query: string
+          id: string
+          query_intent: string | null
+          run_id: string
+          search_tokens: number | null
+          similarity_margin: number | null
+          source_group_id: string
+          source_group_name: string
+          tester_tokens: number | null
+          top_results: Json
+          top1_group_id: string | null
+          top1_group_name: string | null
+        }
+        Insert: {
+          applied_weights?: Json | null
+          correct_rank?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          generated_query: string
+          id?: string
+          query_intent?: string | null
+          run_id: string
+          search_tokens?: number | null
+          similarity_margin?: number | null
+          source_group_id: string
+          source_group_name: string
+          tester_tokens?: number | null
+          top_results: Json
+          top1_group_id?: string | null
+          top1_group_name?: string | null
+        }
+        Update: {
+          applied_weights?: Json | null
+          correct_rank?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          generated_query?: string
+          id?: string
+          query_intent?: string | null
+          run_id?: string
+          search_tokens?: number | null
+          similarity_margin?: number | null
+          source_group_id?: string
+          source_group_name?: string
+          tester_tokens?: number | null
+          top_results?: Json
+          top1_group_id?: string | null
+          top1_group_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embedding_test_results_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "embedding_test_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embedding_test_results_source_group_id_fkey"
+            columns: ["source_group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      embedding_test_runs: {
+        Row: {
+          completed_query_count: number | null
+          created_at: string | null
+          delay_between_queries_ms: number | null
+          difficulty_mode: string | null
+          embedding_model: string
+          error_message: string | null
+          id: string
+          match_threshold: number | null
+          mvs_weight_context: number | null
+          mvs_weight_identity: number | null
+          mvs_weight_physical: number | null
+          name: string
+          requires_reembedding: boolean | null
+          status: string
+          target_query_count: number
+          tester_model: string
+          tester_temperature: number | null
+          total_search_tokens: number | null
+          total_tester_tokens: number | null
+          updated_at: string | null
+          use_dynamic_weights: boolean | null
+          use_sample_groups: boolean | null
+        }
+        Insert: {
+          completed_query_count?: number | null
+          created_at?: string | null
+          delay_between_queries_ms?: number | null
+          difficulty_mode?: string | null
+          embedding_model: string
+          error_message?: string | null
+          id?: string
+          match_threshold?: number | null
+          mvs_weight_context?: number | null
+          mvs_weight_identity?: number | null
+          mvs_weight_physical?: number | null
+          name: string
+          requires_reembedding?: boolean | null
+          status?: string
+          target_query_count: number
+          tester_model: string
+          tester_temperature?: number | null
+          total_search_tokens?: number | null
+          total_tester_tokens?: number | null
+          updated_at?: string | null
+          use_dynamic_weights?: boolean | null
+          use_sample_groups?: boolean | null
+        }
+        Update: {
+          completed_query_count?: number | null
+          created_at?: string | null
+          delay_between_queries_ms?: number | null
+          difficulty_mode?: string | null
+          embedding_model?: string
+          error_message?: string | null
+          id?: string
+          match_threshold?: number | null
+          mvs_weight_context?: number | null
+          mvs_weight_identity?: number | null
+          mvs_weight_physical?: number | null
+          name?: string
+          requires_reembedding?: boolean | null
+          status?: string
+          target_query_count?: number
+          tester_model?: string
+          tester_temperature?: number | null
+          total_search_tokens?: number | null
+          total_tester_tokens?: number | null
+          updated_at?: string | null
+          use_dynamic_weights?: boolean | null
+          use_sample_groups?: boolean | null
         }
         Relationships: []
       }
@@ -56,6 +333,7 @@ export type Database = {
           embedding_context: string | null
           embedding_identity: string | null
           embedding_physical: string | null
+          embeddings: Json | null
           icon: string | null
           id: string
           location_id: string | null
@@ -71,6 +349,7 @@ export type Database = {
           embedding_context?: string | null
           embedding_identity?: string | null
           embedding_physical?: string | null
+          embeddings?: Json | null
           icon?: string | null
           id?: string
           location_id?: string | null
@@ -86,6 +365,7 @@ export type Database = {
           embedding_context?: string | null
           embedding_identity?: string | null
           embedding_physical?: string | null
+          embeddings?: Json | null
           icon?: string | null
           id?: string
           location_id?: string | null
@@ -243,26 +523,35 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          image_url: string | null
           is_checked: boolean | null
           item_name: string
           order: number | null
           performance_id: string
+          scene_name: string | null
+          scene_number: number | null
         }
         Insert: {
           created_at?: string | null
           id?: string
+          image_url?: string | null
           is_checked?: boolean | null
           item_name: string
           order?: number | null
           performance_id: string
+          scene_name?: string | null
+          scene_number?: number | null
         }
         Update: {
           created_at?: string | null
           id?: string
+          image_url?: string | null
           is_checked?: boolean | null
           item_name?: string
           order?: number | null
           performance_id?: string
+          scene_name?: string | null
+          scene_number?: number | null
         }
         Relationships: [
           {
@@ -364,6 +653,45 @@ export type Database = {
         }
         Relationships: []
       }
+      qr_codes: {
+        Row: {
+          access_level: string | null
+          active: boolean | null
+          batch_group: string | null
+          clicks: number | null
+          code: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          target_url: string
+          updated_at: string | null
+        }
+        Insert: {
+          access_level?: string | null
+          active?: boolean | null
+          batch_group?: string | null
+          clicks?: number | null
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          target_url: string
+          updated_at?: string | null
+        }
+        Update: {
+          access_level?: string | null
+          active?: boolean | null
+          batch_group?: string | null
+          clicks?: number | null
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          target_url?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       scene_checklist_items: {
         Row: {
           assigned_to: string | null
@@ -373,8 +701,11 @@ export type Database = {
           id: string
           is_on_stage: boolean | null
           is_prepared: boolean | null
-          item_id: string
+          item_id: string | null
+          item_image_url_snapshot: string | null
+          item_name_snapshot: string | null
           live_notes: string | null
+          performance_prop_id: string | null
           scene_checklist_id: string
         }
         Insert: {
@@ -385,8 +716,11 @@ export type Database = {
           id?: string
           is_on_stage?: boolean | null
           is_prepared?: boolean | null
-          item_id: string
+          item_id?: string | null
+          item_image_url_snapshot?: string | null
+          item_name_snapshot?: string | null
           live_notes?: string | null
+          performance_prop_id?: string | null
           scene_checklist_id: string
         }
         Update: {
@@ -397,11 +731,21 @@ export type Database = {
           id?: string
           is_on_stage?: boolean | null
           is_prepared?: boolean | null
-          item_id?: string
+          item_id?: string | null
+          item_image_url_snapshot?: string | null
+          item_name_snapshot?: string | null
           live_notes?: string | null
+          performance_prop_id?: string | null
           scene_checklist_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "scene_checklist_items_performance_prop_id_fkey"
+            columns: ["performance_prop_id"]
+            isOneToOne: false
+            referencedRelation: "performance_props"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "scene_checklist_items_scene_checklist_id_fkey"
             columns: ["scene_checklist_id"]
@@ -501,6 +845,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_test_metrics: {
+        Args: { test_run_id: string }
+        Returns: {
+          accuracy_at_1: number
+          accuracy_at_10: number
+          accuracy_at_5: number
+          average_rank: number
+          mean_reciprocal_rank: number
+          successful_queries: number
+          total_queries: number
+        }[]
+      }
       get_storage_stats: {
         Args: never
         Returns: {

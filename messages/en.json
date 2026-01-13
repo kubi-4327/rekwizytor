@@ -856,10 +856,46 @@
         "loading": {
             "saving": "Saving...",
             "exporting": "Exporting...",
-            "generating": "Generating...",
-            "loading": "Loading...",
-            "processing": "Processing...",
-            "deleting": "Deleting..."
+            "clicks": "Clicks"
+        },
+        "edit": {
+            "targetType": "Target Type",
+            "selectItem": "Select Item",
+            "customUrl": "Custom URL",
+            "save": "Save",
+            "cancel": "Cancel"
+        },
+        "types": {
+            "group": "Group",
+            "performance": "Performance",
+            "custom": "Custom",
+            "note": "Note"
         }
+    },
+    "Notifications": {
+        "mapUploaded": "Map uploaded successfully",
+        "mapUploadError": "Error uploading map",
+        "planGenerated": "Plan generated!",
+        "analysisError": "Analysis error",
+        "genericError": "An error occurred",
+        "mapDeleted": "Map deleted",
+        "deleteError": "Deletion error",
+        "roomAdded": "Room added",
+        "pointAdded": "Point added ({x}, {y})",
+        "svgParsed": "SVG Parsed Successfully",
+        "svgParseError": "SVG XML parsing error",
+        "svgLoadError": "Error loading map for editing",
+        "noSvgRoot": "No SVG Root found",
+        "noInitialContent": "No initial SVG content",
+        "mapUpdated": "Map updated",
+        "saveError": "Save error",
+        "positionSaveError": "Error saving positions",
+        "nameUpdated": "Name updated",
+        "updateError": "Update error",
+        "checkboxUpdateError": "Checkbox update error",
+        "pinSaveError": "Error saving pin",
+        "pinGroupSuccess": "Group pinned",
+        "pinDeleteError": "Error deleting pin",
+        "loadedElements": "Loaded {count} elements"
     }
 }

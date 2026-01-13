@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { LogOut, User, Globe, Shield, LayoutGrid, BarChart, Settings as SettingsIcon, Clock, Info, Check } from 'lucide-react'
+import { notify } from '@/utils/notify'
 import { useTimeFormat } from '@/hooks/useTimeFormat'
 import { useTranslations } from 'next-intl'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
@@ -44,6 +45,9 @@ export function SettingsForm({ user }: { user: UserData }) {
 
         if (!error) {
             router.refresh()
+            notify.successSaving('Profil zaktualizowany')
+        } else {
+            notify.error('Błąd aktualizacji profilu')
         }
         setUpdating(false)
     }
@@ -159,6 +163,18 @@ export function SettingsForm({ user }: { user: UserData }) {
                         <Link href="/ai-stats">
                             <Button variant="outline" size="sm" leftIcon={<BarChart className="w-4 h-4" />}>
                                 {tSettings('viewStats')}
+                            </Button>
+                        </Link>
+                    </div>
+
+                    <div className="border-t border-neutral-800 pt-4 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-sm font-medium text-white">QR Codes</h3>
+                            <p className="text-xs text-neutral-400 mt-1">Manage universal redirects</p>
+                        </div>
+                        <Link href="/settings/qr-codes">
+                            <Button variant="outline" size="sm" leftIcon={<Globe className="w-4 h-4" />}>
+                                Manage
                             </Button>
                         </Link>
                     </div>

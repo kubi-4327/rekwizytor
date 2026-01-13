@@ -8,6 +8,7 @@ import { GroupScannerDialog } from '@/components/groups/GroupScannerDialog'
 import { EditGroupDialog } from '@/components/groups/EditGroupDialog'
 import { GroupImportDialog } from '@/components/groups/GroupImportDialog'
 import { rasterizeIcon } from '@/utils/icon-rasterizer'
+import { notify } from '@/utils/notify'
 import { Database } from '@/types/supabase'
 
 type Group = Pick<Database['public']['Tables']['groups']['Row'],
@@ -41,9 +42,7 @@ export function GroupsHeaderActions({ groups, currentParentId }: GroupsHeaderAct
 
 
     const handleGenerateAllLabels = async () => {
-        try {
-            setIsGenerating(true)
-
+        const generateLabelsPromise = (async () => {
             // Sort groups by location name, then by group name
             const sortedGroups = [...groups].sort((a, b) => {
                 const locA = a.locations?.name || 'Unassigned'
@@ -88,12 +87,14 @@ export function GroupsHeaderActions({ groups, currentParentId }: GroupsHeaderAct
             a.click()
             document.body.removeChild(a)
             URL.revokeObjectURL(url)
-        } catch (error) {
-            console.error('Error generating labels:', error)
-            alert('Failed to generate labels. Please try again.')
-        } finally {
-            setIsGenerating(false)
-        }
+        })()
+
+        setIsGenerating(true)
+        notify.promise(generateLabelsPromise, {
+            loading: 'Generowanie etykiet...',
+            success: 'Etykiety wygenerowane!',
+            error: 'Błąd generowania etykiet'
+        }, 'pdf').finally(() => setIsGenerating(false))
     }
 
     return (

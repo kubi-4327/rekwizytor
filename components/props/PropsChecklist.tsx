@@ -5,7 +5,7 @@ import { Check, Plus, Trash2, Edit2, X, Camera } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { addProp, deleteProp, updatePropStatus, updatePropName, bulkInsertProps } from '@/app/actions/performance-props'
 import { useTranslations } from 'next-intl'
-import toast from 'react-hot-toast'
+import { notify } from '@/utils/notify'
 import { PropsScannerDialog } from './PropsScannerDialog'
 import { ManualAddDialog } from './ManualAddDialog'
 import { DropdownAction } from '@/components/ui/DropdownAction'
@@ -51,7 +51,7 @@ export function PropsChecklist({ performanceId, initialProps, variant = 'checkli
             setProps(prev => prev.map(p =>
                 p.id === propId ? { ...p, is_checked: currentStatus } : p
             ))
-            toast.error(t('errorUpdating'))
+            notify.error(t('errorUpdating'))
         }
     }
 
@@ -65,9 +65,9 @@ export function PropsChecklist({ performanceId, initialProps, variant = 'checkli
         if (result.success && result.data) {
             setProps(prev => [...prev, result.data])
             setNewPropName('')
-            toast.success(t('propAdded'))
+            notify.success(t('propAdded'))
         } else {
-            toast.error(result.error || t('errorAdding'))
+            notify.error(result.error || t('errorAdding'))
         }
         setIsSubmitting(false)
     }
@@ -82,9 +82,9 @@ export function PropsChecklist({ performanceId, initialProps, variant = 'checkli
         if (!result.success) {
             // Revert on error
             setProps(originalProps)
-            toast.error(t('errorDeleting'))
+            notify.error(t('errorDeleting'))
         } else {
-            toast.success(t('propDeleted'))
+            notify.success(t('propDeleted'))
         }
     }
 
@@ -112,9 +112,9 @@ export function PropsChecklist({ performanceId, initialProps, variant = 'checkli
             ))
             setEditingId(null)
             setEditingName('')
-            toast.success(t('propUpdated'))
+            notify.success(t('propUpdated'))
         } else {
-            toast.error(result.error || t('errorUpdating'))
+            notify.error(result.error || t('errorUpdating'))
         }
     }
 

@@ -11,6 +11,7 @@ interface PageHeaderProps {
     className?: string
     children?: React.ReactNode // For actions/buttons
     iconColor?: string
+    backLink?: string
 }
 
 export function PageHeader({
@@ -19,7 +20,8 @@ export function PageHeader({
     icon,
     className,
     children,
-    iconColor = "text-white"
+    iconColor = "text-white",
+    backLink
 }: PageHeaderProps) {
     return (
         <div className={clsx("flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6 mb-6", className)}>

@@ -9,7 +9,7 @@ export function QuickNav() {
 
     const items = [
         {
-            href: '/items',
+            href: '/groups',
             icon: Box,
             title: t('propsInventory'),
             description: t('propsInventoryDesc'),

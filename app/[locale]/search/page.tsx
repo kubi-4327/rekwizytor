@@ -67,7 +67,6 @@ export default function SearchPage() {
     const entityTypes = React.useMemo(() => [
         { value: 'all', label: 'All', icon: LayoutGrid }, // Pseudo-type for "All"
         { value: 'performance', label: t('productions'), icon: Layers },
-        { value: 'item', label: t('items'), icon: Box },
         { value: 'group', label: t('groups'), icon: Box },
         { value: 'location', label: t('locations'), icon: MapPin },
         { value: 'note', label: t('notes'), icon: StickyNote },

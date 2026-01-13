@@ -4,8 +4,9 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Save, X, Move, Trash2, Maximize2, MousePointer, PenTool, Square, Plus, X as XIcon, Scaling, AlignCenterHorizontal, AlignCenterVertical, Undo, Redo } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
-import { toast } from 'react-hot-toast'
+import { notify } from '@/utils/notify'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 interface SvgMapEditorProps {
     locationId: string
@@ -186,6 +187,7 @@ export function SvgMapEditor({ locationId, initialSvgContent, onClose }: SvgMapE
     const [isSaving, setIsSaving] = useState(false)
     const router = useRouter()
     const supabase = createClient()
+    const t = useTranslations('Notifications')
 
     // History Management
     const pushHistory = useCallback((newElements: SvgElement[]) => {
@@ -437,7 +439,7 @@ export function SvgMapEditor({ locationId, initialSvgContent, onClose }: SvgMapE
             ...el, attributes: { ...el.attributes, d: newD }
         })))
 
-        toast(`Dodano punkt (${clickX}, ${clickY})`, { icon: '📍' })
+        notify.success(t('pointAdded', { x: clickX, y: clickY }))
     }
 
     // Custom hover handler with delay for vertices
@@ -530,14 +532,14 @@ export function SvgMapEditor({ locationId, initialSvgContent, onClose }: SvgMapE
                 const parserError = doc.querySelector('parsererror')
                 if (parserError) {
                     console.error('DOMParser Error:', parserError.textContent)
-                    toast.error('Błąd parsowania XML SVG')
+                    notify.error(t('svgParseError'))
                     return
                 }
 
                 const svgRoot = doc.querySelector('svg')
 
                 if (svgRoot) {
-                    toast('SVG Parsed Successfully', { icon: '🔍' })
+                    notify.success(t('svgParsed'))
                     setViewBox(svgRoot.getAttribute('viewBox') || "0 0 800 600")
 
                     const parsedElements = parseElementsRecursively(svgRoot.children)
@@ -546,16 +548,16 @@ export function SvgMapEditor({ locationId, initialSvgContent, onClose }: SvgMapE
                     setHistory([parsedElements])
                     setHistoryIndex(0)
                     console.log('SvgMapEditor Parsed Elements:', parsedElements.length, parsedElements)
-                    toast(`Loaded ${parsedElements.length} root elements`, { icon: '✅' })
+                    notify.success(t('loadedElements', { count: parsedElements.length }))
                 } else {
-                    toast.error('No SVG Root found in content')
+                    notify.error(t('noSvgRoot'))
                 }
             } catch (e) {
                 console.error("Error parsing SVG", e)
-                toast.error("Błąd odczytu mapy do edycji")
+                notify.error(t('svgLoadError'))
             }
         } else {
-            toast('No initial SVG content', { icon: '⚠️' })
+            notify.error(t('noInitialContent'))
         }
     }, [initialSvgContent])
 
@@ -622,7 +624,7 @@ export function SvgMapEditor({ locationId, initialSvgContent, onClose }: SvgMapE
         pushHistory([...elements, newEl])
         setDrawingPoints([])
         setMode('select')
-        toast.success('Pomieszczenie dodane')
+        notify.success(t('roomAdded'))
     }
 
     const addElement = (el: SvgElement) => {
@@ -1198,12 +1200,12 @@ export function SvgMapEditor({ locationId, initialSvgContent, onClose }: SvgMapE
 
             if (error) throw error
 
-            toast.success('Mapa zaktualizowana')
+            notify.success(t('mapUpdated'))
             onClose()
             router.refresh()
         } catch (e) {
             console.error(e)
-            toast.error('Błąd zapisu')
+            notify.error(t('saveError'))
         } finally {
             setIsSaving(false)
         }

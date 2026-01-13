@@ -4,16 +4,12 @@ import { useState } from 'react'
 import { Download, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Database } from '@/types/supabase'
+import { notify } from '@/utils/notify'
 import { useTranslations } from 'next-intl'
 import { format } from 'date-fns'
 
 type Performance = Database['public']['Tables']['performances']['Row']
-type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] & {
-    items: {
-        name: string
-        image_url: string | null
-    } | null
-}
+type PerformanceProp = Database['public']['Tables']['performance_props']['Row']
 type Note = Database['public']['Tables']['notes']['Row']
 type Scene = Database['public']['Tables']['scenes']['Row']
 type User = {
@@ -23,7 +19,7 @@ type User = {
 
 interface ExportPerformanceButtonProps {
     production: Performance
-    items: PerformanceItem[]
+    items: PerformanceProp[]
     scenes?: Scene[]
     notes?: Note[]
     user: User | null
@@ -35,8 +31,7 @@ export function ExportPerformanceButton({ production, items, scenes = [], notes 
     const [isExporting, setIsExporting] = useState(false)
 
     const handleExportPDF = async () => {
-        setIsExporting(true)
-        try {
+        const exportPromise = (async () => {
             const response = await fetch('/api/generate-performance-pdf', {
                 method: 'POST',
                 headers: {
@@ -57,12 +52,14 @@ export function ExportPerformanceButton({ production, items, scenes = [], notes 
             a.click()
             document.body.removeChild(a)
             window.URL.revokeObjectURL(url)
-        } catch (error) {
-            console.error("Export failed", error)
-            alert("Failed to generate PDF. Please try again.")
-        } finally {
-            setIsExporting(false)
-        }
+        })()
+
+        setIsExporting(true)
+        notify.promise(exportPromise, {
+            loading: 'Generowanie PDF...',
+            success: 'PDF wygenerowany!',
+            error: 'Błąd generowania PDF'
+        }, 'pdf').finally(() => setIsExporting(false))
     }
 
     if (variant === 'menu') {

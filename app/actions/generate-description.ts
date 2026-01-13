@@ -151,26 +151,14 @@ export async function generateItemDescriptions(itemId: string, currentName: stri
             })
         }
 
-        // Generate Embedding from new AI description
-        // If we used existing notes, analysis.description might be undefined, so use currentNotes
-        const descriptionToEmbed = analysis.ai_description || analysis.description || currentNotes || currentName
-        const embedding = await generateEmbedding(descriptionToEmbed, TaskType.RETRIEVAL_DOCUMENT)
-
-        // Prepare update object
-        const updateData: Database['public']['Tables']['items']['Update'] = {
-            ai_description: analysis.ai_description,
-            attributes: analysis.attributes as any,
-            embedding: JSON.stringify(embedding)
-        }
-
-        // Only update notes if we generated them (i.e. source was NOT 'notes')
-        if (source !== 'notes' && analysis.description) {
-            updateData.notes = analysis.description
+        // Prepare update object (simplified since performance_props has fewer columns)
+        const updateData: any = {
+            item_name: analysis.name, // If we want to overwrite name? Or maybe just return it.
         }
 
         // Update item in database
         const { error } = await supabase
-            .from('items')
+            .from('performance_props')
             .update(updateData)
             .eq('id', itemId)
 

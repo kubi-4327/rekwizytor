@@ -3,16 +3,11 @@ import { Database } from '@/types/supabase'
 import { CheckSquare, Square } from 'lucide-react'
 
 type Scene = Database['public']['Tables']['scenes']['Row']
-type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] & {
-    items: {
-        name: string
-        image_url: string | null
-    } | null
-}
+type PerformanceProp = Database['public']['Tables']['performance_props']['Row']
 
 type Props = {
     production: Database['public']['Tables']['performances']['Row']
-    assignedProps: PerformanceItem[]
+    assignedProps: PerformanceProp[]
     scenes: Scene[]
     user: {
         name: string
@@ -37,11 +32,11 @@ export const PerformancePrintView = forwardRef<HTMLDivElement, Props>(({ product
     }
 
     // Group props by Act and Scene
-    const propsByActAndScene: Record<number, Record<string, PerformanceItem[]>> = {}
+    const propsByActAndScene: Record<number, Record<string, PerformanceProp[]>> = {}
 
     assignedProps?.forEach((prop) => {
-        const actNum = getActNumber(prop.scene_number)
-        const sceneNum = prop.scene_number || 'Unassigned'
+        const actNum = getActNumber(prop.scene_number?.toString() || '1')
+        const sceneNum = prop.scene_number?.toString() || 'Unassigned'
 
         if (!propsByActAndScene[actNum]) propsByActAndScene[actNum] = {}
         if (!propsByActAndScene[actNum][sceneNum]) propsByActAndScene[actNum][sceneNum] = []
@@ -100,10 +95,7 @@ export const PerformancePrintView = forwardRef<HTMLDivElement, Props>(({ product
                                         {props.map((prop) => (
                                             <div key={prop.id} className="flex items-center gap-3 py-1 border-b border-neutral-100 last:border-0">
                                                 <div className="w-5 h-5 border-2 border-neutral-300 rounded flex-shrink-0" />
-                                                <span className="text-base">{prop.items?.name || 'Unnamed Item'}</span>
-                                                {(prop.usage_notes || prop.notes_snapshot) && (
-                                                    <span className="text-sm text-neutral-500 italic">({prop.usage_notes || prop.notes_snapshot})</span>
-                                                )}
+                                                <span className="text-base">{prop.item_name || 'Unnamed Item'}</span>
                                             </div>
                                         ))}
                                     </div>

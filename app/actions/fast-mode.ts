@@ -5,26 +5,19 @@ import { revalidatePath } from 'next/cache'
 
 import { geminiFlash } from '@/utils/gemini'
 import { sanitizeAIInput, validateAIResponse, FastModeSchema, sanitizeAIOutput } from '@/utils/ai-security'
-import { generateEmbedding } from '@/utils/embeddings'
-import { TaskType } from '@google/generative-ai'
 import { Database } from '@/types/supabase'
 
 export async function uploadAndAnalyzeImages(formData: FormData) {
     const supabase = await createClient()
     const images = formData.getAll('images') as File[]
     const thumbnails = formData.getAll('thumbnails') as File[]
-    const locationId = formData.get('locationId') as string | null
-    const groupId = formData.get('groupId') as string | null
     const performanceId = formData.get('performanceId') as string | null
 
-    if (!images.length || (!locationId && !performanceId)) {
-        throw new Error('Missing required fields')
+    if (!images.length || !performanceId) {
+        throw new Error('Missing required fields: performanceId and images are required now.')
     }
 
     const results = []
-
-    const { data: groups } = await supabase.from('groups').select('id, name')
-    const groupsList = groups?.map(g => g.name).join(', ') || ''
 
     for (let i = 0; i < images.length; i++) {
         const image = images[i]
@@ -37,7 +30,7 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
         const thumbPath = `fast-mode/thumb_${fileName}`
 
         const { error: uploadError } = await supabase.storage
-            .from('items')
+            .from('items') // Keeping the bucket name 'items' as it likely still exists
             .upload(filePath, image)
 
         if (uploadError) {
@@ -51,40 +44,28 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
 
         if (thumbUploadError) {
             console.error('Thumbnail upload error:', thumbUploadError)
-            // Continue without thumbnail? Or fail? Let's continue.
         }
 
         const { data: { publicUrl } } = supabase.storage
             .from('items')
             .getPublicUrl(filePath)
 
-        const { data: { publicUrl: thumbnailUrl } } = supabase.storage
-            .from('items')
-            .getPublicUrl(thumbPath)
-
         // 2. AI Analysis with Gemini Vision
         try {
-            // Convert file to base64 for Gemini
             const arrayBuffer = await image.arrayBuffer()
             const base64Data = Buffer.from(arrayBuffer).toString('base64')
-
-            // 1. SANITIZE INPUTS
-            // fileName is used in logging, safe to keep as is or sanitize if displayed
-            const safeGroups = sanitizeAIInput(groupsList, 1000)
 
             const prompt = `
             Przeanalizuj to zdjęcie rekwizytu teatralnego.
             Zidentyfikuj główny obiekt. Zignoruj tło, jeśli to możliwe.
             
-            Dostępne kategorie (grupy): ${safeGroups}
-
             Zwróć obiekt JSON z następującymi polami:
             - name: Krótka, opisowa nazwa po polsku (np. "Stara brązowa walizka")
             - description: Szczegółowy opis po polsku uwzględniający materiał, kolor, styl, epokę, stan i cechy charakterystyczne. Pełne zdania, język naturalny.
             - ai_description: Zbiór słów kluczowych i atrybutów oddzielonych przecinkami. Tylko konkretne cechy fizyczne, materiały, style, kolory. Bez zbędnych słów łączących. (np. "walizka, skóra, brązowy, metalowe klamry, vintage, lata 70, zniszczona")
             - tags: Tablica stringów po polsku (np. ["walizka", "vintage", "skóra", "lata 70."])
-            - category: Sugerowana nazwa kategorii z listy dostępnych (lub najbardziej pasująca nowa, jeśli żadna nie pasuje).
-            - attributes: Obiekt JSON z konkretnymi cechami, np. { "era": "lata 70", "material": "skóra", "color": "brązowy", "condition": "dobry" }. Klucze mogą być po angielsku lub polsku, ale trzymaj się konwencji.
+            - category: Sugerowana nazwa kategorii.
+            - attributes: Obiekt JSON z konkretnymi cechami, np. { "era": "lata 70", "material": "skóra", "color": "brązowy", "condition": "dobry" }.
             - confidence: Liczba od 0.0 do 1.0 oznaczająca pewność identyfikacji.
 
             Output ONLY the JSON object.
@@ -118,83 +99,24 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
             }
 
             const responseText = result.response.text()
-            // Clean up code blocks if present
             const jsonString = responseText.replace(/```json\n?|\n?```/g, '').trim()
             const rawAnalysis = JSON.parse(jsonString)
 
-            // 2. VALIDATE OUTPUT
             const validatedAnalysis = validateAIResponse(rawAnalysis, FastModeSchema)
-
-            // 3. SANITIZE OUTPUT TEXT
             const analysis = {
                 ...validatedAnalysis,
                 name: sanitizeAIOutput(validatedAnalysis.name),
-                description: sanitizeAIOutput(validatedAnalysis.description),
-                ai_description: sanitizeAIOutput(validatedAnalysis.ai_description),
-                category: validatedAnalysis.category ? sanitizeAIOutput(validatedAnalysis.category) : undefined,
-                tags: validatedAnalysis.tags.map(t => sanitizeAIOutput(t)),
-                // attributes are JSON
             }
 
-            if (analysis.confidence < 0.6) {
-                console.warn(`Low confidence (${analysis.confidence}) for image: ${fileName}`)
-            }
-
-            // Find matching group
-            let matchedGroupId = groupId
-            if (!matchedGroupId && analysis.category && groups) {
-                let matchedGroup = groups.find(g => g.name.toLowerCase() === (analysis.category?.toLowerCase() || ''))
-                if (matchedGroup) {
-                    matchedGroupId = matchedGroup.id
-                } else {
-                    // Simple fuzzy match (case insensitive contains)
-                    const fuzzyMatch = groups.find(g => g.name.toLowerCase().includes(analysis.category?.toLowerCase() || '') || (analysis.category?.toLowerCase() || '').includes(g.name.toLowerCase()))
-                    if (fuzzyMatch) {
-                        matchedGroupId = fuzzyMatch.id
-                        matchedGroup = fuzzyMatch // Assign fuzzy match to matchedGroup for later use
-                    }
-                }
-
-                // If no group was found, create a new one
-                if (!matchedGroup && analysis.category) {
-                    const { data: newGroup } = await supabase
-                        .from('groups')
-                        .insert({ name: analysis.category })
-                        .select()
-                        .single()
-                    if (newGroup) {
-                        matchedGroupId = newGroup.id
-
-                        // Generate embedding for the new group in background
-                        import('./generate-group-embeddings').then(({ generateGroupEmbedding }) => {
-                            generateGroupEmbedding(newGroup.id).catch(err =>
-                                console.error('Failed to generate group embedding:', err)
-                            )
-                        })
-                    }
-                }
-            }
-
-            // 3. Generate Embedding
-            // Use ai_description for embedding if available, otherwise fallback to name
-            const textForEmbedding = analysis.ai_description || analysis.name
-            const embedding = await generateEmbedding(textForEmbedding, TaskType.RETRIEVAL_DOCUMENT)
-
-            // 4. Create Draft Item
-            const { data: newItem, error: dbError } = await supabase
-                .from('items')
+            // 4. Create Prop in Performance
+            const { data: newProp, error: dbError } = await supabase
+                .from('performance_props')
                 .insert({
-                    name: analysis.name,
+                    performance_id: performanceId,
+                    item_name: analysis.name,
                     image_url: publicUrl,
-                    thumbnail_url: thumbnailUrl,
-                    location_id: locationId || null,
-                    group_id: matchedGroupId || null,
-                    status: 'draft' as Database['public']['Enums']['item_status_enum'],
-                    notes: analysis.description,
-                    ai_description: analysis.ai_description,
-                    attributes: analysis.attributes as any || {},
-                    embedding: JSON.stringify(embedding),
-                    performance_status: performanceId ? 'active' : 'unassigned'
+                    is_checked: false,
+                    // Note: attributes and description are lost for now unless we add more columns
                 })
                 .select()
                 .single()
@@ -202,63 +124,31 @@ export async function uploadAndAnalyzeImages(formData: FormData) {
             if (dbError) {
                 console.error('Database error:', dbError)
             } else {
-                results.push(newItem)
-
-                // If performanceId is present, link item to performance
-                if (performanceId && newItem) {
-                    const { error: linkError } = await supabase
-                        .from('performance_items')
-                        .insert({
-                            performance_id: performanceId,
-                            item_id: newItem.id,
-                            notes_snapshot: newItem.notes,
-                            item_name_snapshot: newItem.name,
-                            image_url_snapshot: newItem.image_url
-                        })
-
-                    if (linkError) {
-                        console.error('Failed to link item to performance:', linkError)
-                    }
-                }
+                results.push(newProp)
             }
 
         } catch (error) {
-            console.error('AI Processing error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
             console.error('AI Processing error:', error)
-            // Fallback: Create item without AI data if AI fails
-            const { data: newItem } = await supabase
-                .from('items')
+            // Fallback: Create prop without AI data
+            const { data: newProp } = await supabase
+                .from('performance_props')
                 .insert({
-                    name: `New Item (${new Date().toLocaleTimeString()})`,
+                    performance_id: performanceId,
+                    item_name: `Nowy rekwizyt (${new Date().toLocaleTimeString()})`,
                     image_url: publicUrl,
-                    location_id: locationId || null,
-                    group_id: groupId || null,
-                    status: 'draft' as Database['public']['Enums']['item_status_enum'],
-                    notes: "AI Analysis Failed",
-                    performance_status: performanceId ? 'active' : 'unassigned'
+                    is_checked: false
                 })
                 .select()
                 .single()
 
-            if (newItem) {
-                results.push(newItem)
-
-                // If performanceId is present, link item to performance (fallback case)
-                if (performanceId) {
-                    await supabase
-                        .from('performance_items')
-                        .insert({
-                            performance_id: performanceId,
-                            item_id: newItem.id,
-                            image_url_snapshot: newItem.image_url
-                        })
-                }
+            if (newProp) {
+                results.push(newProp)
             }
         }
     }
 
-    revalidatePath('/items')
-    revalidatePath('/items/review')
+    revalidatePath(`/performances/${performanceId}`)
+    revalidatePath(`/performances/${performanceId}/props`)
 
     return { success: true, count: results.length }
 }

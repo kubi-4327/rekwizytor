@@ -83,27 +83,12 @@ export default async function Home() {
       .order('premiere_date', { ascending: true })
       .limit(5),
 
-    // Legacy items table - removed
-    // supabase
-    //   .from('items')
-    //   .select('*', { count: 'exact', head: true })
-    //   .is('deleted_at', null),
-    Promise.resolve({ data: null, error: null, count: 0 }),
+    // Total props across all performances
+    supabase
+      .from('performance_props')
+      .select('*', { count: 'exact', head: true }),
 
-    // Legacy items table - removed
-    // supabase
-    //   .from('items')
-    //   .select('*', { count: 'exact', head: true })
-    //   .is('deleted_at', null)
-    //   .eq('performance_status', 'in_maintenance'),
     Promise.resolve({ data: null, error: null, count: 0 }),
-
-    // Legacy items table - removed
-    // supabase
-    //   .from('items')
-    //   .select('*', { count: 'exact', head: true })
-    //   .is('deleted_at', null)
-    //   .eq('performance_status', 'unassigned'),
     Promise.resolve({ data: null, error: null, count: 0 }),
 
     // Fetch Active Checklists

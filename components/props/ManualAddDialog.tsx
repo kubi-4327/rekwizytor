@@ -8,7 +8,7 @@ import { Modal } from '@/components/ui/Modal'
 import { bulkInsertProps } from '@/app/actions/performance-props'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import toast from 'react-hot-toast'
+import { notify } from '@/utils/notify'
 
 interface ManualAddDialogProps {
     isOpen: boolean
@@ -39,13 +39,13 @@ export function ManualAddDialog({ isOpen, onClose, performanceId, onItemsAdded }
         const result = await bulkInsertProps(performanceId, lines)
 
         if (result.success && result.data) {
-            toast.success(t('propsAdded', { count: result.data.length }))
+            notify.success(t('propsAdded', { count: result.data.length }))
             setBulkText('')
             router.refresh()
             if (onItemsAdded) onItemsAdded()
             handleClose()
         } else {
-            toast.error(result.error || t('errorBulkAdding'))
+            notify.error(result.error || t('errorBulkAdding'))
         }
         setIsSubmitting(false)
     }

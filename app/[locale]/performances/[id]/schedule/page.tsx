@@ -147,10 +147,10 @@ export default function ScheduleShowPage({ params }: Props) {
         setError(null)
 
         try {
-            // 1. Fetch master props and defined scenes (once for all)
+            // 1. Fetch performance props and defined scenes (once for all)
             const [propsResult, scenesResult] = await Promise.all([
                 supabase
-                    .from('performance_items')
+                    .from('performance_props')
                     .select('*')
                     .eq('performance_id', id),
                 supabase
@@ -169,7 +169,7 @@ export default function ScheduleShowPage({ params }: Props) {
             const propsByScene: Record<string, typeof masterProps> = {}
             if (masterProps.length > 0) {
                 masterProps.forEach(prop => {
-                    const scene = prop.scene_number || '1'
+                    const scene = prop.scene_number?.toString() || '1'
                     if (!propsByScene[scene]) {
                         propsByScene[scene] = []
                     }
@@ -218,7 +218,10 @@ export default function ScheduleShowPage({ params }: Props) {
 
                         const checklistItems = props.map(prop => ({
                             scene_checklist_id: checklist.id,
-                            item_id: prop.item_id,
+                            performance_prop_id: prop.id,
+                            item_name_snapshot: prop.item_name,
+                            item_image_url_snapshot: prop.image_url,
+                            item_id: '00000000-0000-0000-0000-000000000000', // Placeholder for non-null legacy column
                             is_prepared: false,
                             is_on_stage: false
                         }))

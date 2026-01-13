@@ -20,10 +20,9 @@ type ChecklistItem = {
     is_prepared: boolean | null
     is_on_stage: boolean | null
     live_notes: string | null
-    items: {
-        name: string
-        image_url: string | null
-    } | null
+    item_name_snapshot: string | null
+    item_image_url_snapshot: string | null
+    performance_prop_id: string | null
     assigned_to: string | null
 }
 
@@ -1026,10 +1025,10 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                                 <div className="flex items-center flex-1 min-w-0 mr-3">
                                     {/* Item Image/Icon */}
                                     <div className="h-12 w-12 flex-shrink-0 relative bg-neutral-800 rounded-lg overflow-hidden flex items-center justify-center mr-4">
-                                        {item.items?.image_url ? (
+                                        {item.item_image_url_snapshot ? (
                                             <NextImage
-                                                src={item.items.image_url}
-                                                alt={item.items.name}
+                                                src={item.item_image_url_snapshot}
+                                                alt={item.item_name_snapshot || ''}
                                                 fill
                                                 className="object-cover"
                                                 sizes="48px"
@@ -1045,7 +1044,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                                             "text-base font-medium break-words whitespace-normal leading-tight",
                                             item.is_on_stage ? "text-green-400" : item.is_prepared ? "text-burgundy-light" : "text-white"
                                         )}>
-                                            {item.items?.name}
+                                            {item.item_name_snapshot || t('unknownItem')}
                                         </h4>
                                         {item.live_notes && (
                                             <p className="text-xs text-yellow-500 mt-1 break-words whitespace-normal">

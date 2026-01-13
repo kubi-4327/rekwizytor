@@ -54,15 +54,6 @@ export const getEntityConfig = (item: SearchResult | { entity_type: string }) =>
                 borderClass: 'border-purple-400/20',
                 hoverBorder: 'group-hover:border-purple-400/50'
             }
-        case 'item':
-            return {
-                icon: Box,
-                label: 'Items',
-                colorClass: 'text-blue-400',
-                bgClass: 'bg-blue-400/10',
-                borderClass: 'border-blue-400/20',
-                hoverBorder: 'group-hover:border-blue-400/50'
-            }
         case 'group':
             return {
                 icon: Tag,
@@ -106,8 +97,6 @@ const getEntityUrl = (item: SearchResult): string => {
     switch (item.entity_type) {
         case 'performance':
             return `/performances/${item.id}`
-        case 'item':
-            return `/items?view=${item.id}`
         case 'group':
             return `/groups?viewGroup=${item.id}`
         case 'location':
@@ -174,8 +163,7 @@ const getEntityActions = (item: SearchResult, t: any, onOpenSchedule?: (performa
                     shortLabel: 'Etykieta',
                     icon: QrCode,
                     handler: async (i) => {
-                        const toastId = notify.loading('Generowanie etykiety...')
-                        try {
+                        const generatePromise = (async () => {
                             const response = await fetch('/api/generate-labels', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -195,13 +183,13 @@ const getEntityActions = (item: SearchResult, t: any, onOpenSchedule?: (performa
                             a.href = url
                             a.download = `etykieta_${i.name.replace(/[^a-z0-9]/gi, '_')}.pdf`
                             a.click()
-                            notify.dismiss(toastId)
-                            notify.success('Etykieta wygenerowana')
-                        } catch (e) {
-                            console.error('Group label generation failed:', e)
-                            notify.dismiss(toastId)
-                            notify.error('Błąd generowania etykiety')
-                        }
+                        })()
+
+                        notify.promise(generatePromise, {
+                            loading: 'Generowanie etykiety...',
+                            success: 'Etykieta wygenerowana!',
+                            error: 'Błąd generowania etykiety'
+                        }, 'pdf')
                     },
                 }
             ]
@@ -309,9 +297,7 @@ export function SearchResultCard({ item, aiMode, onClose }: SearchResultCardProp
 
     // Fix URL for items and groups
     let itemUrl = ''
-    if (item.entity_type === 'item') {
-        itemUrl = `/items?view=${item.id}`
-    } else if (item.entity_type === 'group') {
+    if (item.entity_type === 'group') {
         itemUrl = `/groups?viewGroup=${item.id}`
     } else {
         itemUrl = item.url || '#'

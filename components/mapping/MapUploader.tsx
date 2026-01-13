@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { Upload, Loader2 } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { toast } from 'react-hot-toast'
+import { notify } from '@/utils/notify'
+import { useTranslations } from 'next-intl'
 
 interface MapUploaderProps {
     locationId: string
@@ -14,6 +15,7 @@ export function MapUploader({ locationId }: MapUploaderProps) {
     const [uploading, setUploading] = useState(false)
     const supabase = createClient()
     const router = useRouter()
+    const t = useTranslations('Notifications')
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return
@@ -42,12 +44,12 @@ export function MapUploader({ locationId }: MapUploaderProps) {
 
             if (dbError) throw dbError
 
-            toast.success('Mapa wgrana pomyślnie')
+            notify.success(t('mapUploaded'))
             router.refresh()
 
         } catch (error) {
             console.error(error)
-            toast.error('Błąd podczas wgrywania mapy')
+            notify.error(t('mapUploadError'))
         } finally {
             setUploading(false)
         }

@@ -6,8 +6,9 @@ import { motion } from 'framer-motion'
 import { MapPin, ZoomIn, ZoomOut, Save, Sparkles, Loader2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { createClient } from '@/utils/supabase/client'
-import { toast } from 'react-hot-toast'
+import { notify } from '@/utils/notify'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { analyzeFloorPlan } from '@/app/actions/mapping-ai'
 import { deleteMap } from '@/app/actions/delete-map'
 import { SvgMapViewer } from './SvgMapViewer'
@@ -25,6 +26,7 @@ export function MapEditor({ locationId, initialMapUrl, initialMapSvg, initialPin
     const [isAnalyzing, setIsAnalyzing] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const router = useRouter()
+    const t = useTranslations('Notifications')
 
     const handleAnalyze = async () => {
         if (!initialMapUrl) return
@@ -33,13 +35,13 @@ export function MapEditor({ locationId, initialMapUrl, initialMapSvg, initialPin
         try {
             const result = await analyzeFloorPlan(locationId, initialMapUrl)
             if (result.success) {
-                toast.success('Plan wygenerowany!')
+                notify.success(t('planGenerated'))
                 router.refresh()
             } else {
-                toast.error(result.error || 'Błąd analizy')
+                notify.error(result.error || t('analysisError'))
             }
         } catch (e) {
-            toast.error('Wystąpił błąd')
+            notify.error(t('genericError'))
         } finally {
             setIsAnalyzing(false)
         }
@@ -51,13 +53,13 @@ export function MapEditor({ locationId, initialMapUrl, initialMapSvg, initialPin
         try {
             const result = await deleteMap(locationId)
             if (result.success) {
-                toast.success('Mapa usunięta')
+                notify.success(t('mapDeleted'))
                 router.refresh()
             } else {
-                toast.error(result.error || 'Błąd usuwania')
+                notify.error(result.error || t('deleteError'))
             }
         } catch (e) {
-            toast.error('Wystąpił błąd')
+            notify.error(t('genericError'))
         }
     }
 

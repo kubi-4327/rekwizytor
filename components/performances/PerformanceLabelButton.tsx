@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { QrCode, Ticket } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { rasterizeIcon } from '@/utils/icon-rasterizer'
+import { notify } from '@/utils/notify'
 
 interface PerformanceLabelButtonProps {
     performanceId: string
@@ -20,8 +21,7 @@ export function PerformanceLabelButton({ performanceId, performanceTitle, premie
         e.preventDefault() // Prevent navigation if inside a link
         e.stopPropagation() // Prevent bubbling
 
-        setIsGenerating(true)
-        try {
+        const generatePromise = (async () => {
             const response = await fetch('/api/generate-performance-labels', {
                 method: 'POST',
                 headers: {
@@ -48,13 +48,14 @@ export function PerformanceLabelButton({ performanceId, performanceTitle, premie
             a.click()
             document.body.removeChild(a)
             window.URL.revokeObjectURL(url)
+        })()
 
-        } catch (error) {
-            console.error("Label generation failed", error)
-            alert("Failed to generate label")
-        } finally {
-            setIsGenerating(false)
-        }
+        setIsGenerating(true)
+        notify.promise(generatePromise, {
+            loading: 'Generowanie etykiety...',
+            success: 'Etykieta wygenerowana!',
+            error: 'Błąd generowania etykiety'
+        }, 'pdf').finally(() => setIsGenerating(false))
     }
 
     if (variant === 'menu') {

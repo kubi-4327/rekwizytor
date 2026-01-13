@@ -5,14 +5,9 @@ import { Database } from '@/types/supabase'
 import { useTranslations } from 'next-intl'
 import { deletePerformanceItem } from '@/app/actions/performance-props'
 import { Trash2 } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { notify } from '@/utils/notify'
 
-type PerformanceItem = Database['public']['Tables']['performance_items']['Row'] & {
-    items: {
-        name: string
-        image_url: string | null
-    } | null
-}
+type PropItem = Database['public']['Tables']['performance_props']['Row']
 
 type Scene = Database['public']['Tables']['scenes']['Row']
 
@@ -20,13 +15,12 @@ import { getSceneNotesFromContent } from '@/components/notes/scene-utils'
 
 type Props = {
     performanceId: string
-    propsByAct: Record<number, PerformanceItem[]>
-    assignedProps: PerformanceItem[] | null
+    propsByAct: Record<number, PropItem[]>
     scenes: Scene[]
     sceneNote: any | null
 }
 
-export function PerformanceSceneView({ performanceId, propsByAct, assignedProps, scenes, sceneNote }: Props) {
+export function PerformanceSceneView({ performanceId, propsByAct, scenes, sceneNote }: Props) {
     const t = useTranslations('ProductionDetails')
 
     // Helper to get scenes for an act
@@ -135,13 +129,13 @@ export function PerformanceSceneView({ performanceId, propsByAct, assignedProps,
                                                         <td className="px-6 py-4 text-sm text-white align-top">
                                                             <div className="flex items-center justify-between gap-4">
                                                                 <span className="italic text-neutral-300">
-                                                                    {prop.usage_notes || prop.notes_snapshot || prop.setup_instructions || prop.items?.name || prop.item_name_snapshot}
+                                                                    {prop.item_name}
                                                                 </span>
                                                                 <button
                                                                     onClick={async () => {
                                                                         if (confirm(t('confirmDelete'))) {
                                                                             await deletePerformanceItem(prop.id, performanceId)
-                                                                            toast.success(t('propDeleted'))
+                                                                            notify.success(t('propDeleted'))
                                                                         }
                                                                     }}
                                                                     className="opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-red-500/20 text-neutral-500 hover:text-red-400 transition-all"
@@ -223,16 +217,16 @@ export function PerformanceSceneView({ performanceId, propsByAct, assignedProps,
                                                         <div key={prop.id} className="flex items-start justify-between gap-4">
                                                             <div className="flex-1">
                                                                 <h4 className="text-sm font-medium text-neutral-300 italic mb-1">
-                                                                    {prop.usage_notes || prop.notes_snapshot || prop.setup_instructions || prop.items?.name || prop.item_name_snapshot}
+                                                                    {prop.item_name}
                                                                 </h4>
                                                             </div>
                                                             <div className="flex items-center gap-2">
-                                                                {prop.items?.image_url && (
+                                                                {prop.image_url && (
                                                                     <div className="relative h-10 w-10 rounded bg-neutral-800 overflow-hidden shrink-0">
                                                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                                                         <img
-                                                                            src={prop.items.image_url}
-                                                                            alt={prop.items.name}
+                                                                            src={prop.image_url}
+                                                                            alt={prop.item_name}
                                                                             className="object-cover w-full h-full"
                                                                         />
                                                                     </div>
@@ -241,7 +235,7 @@ export function PerformanceSceneView({ performanceId, propsByAct, assignedProps,
                                                                     onClick={async () => {
                                                                         if (confirm(t('confirmDelete'))) {
                                                                             await deletePerformanceItem(prop.id, performanceId)
-                                                                            toast.success(t('propDeleted'))
+                                                                            notify.success(t('propDeleted'))
                                                                         }
                                                                     }}
                                                                     className="p-2 rounded hover:bg-neutral-800 text-neutral-500 hover:text-red-400 transition-colors"

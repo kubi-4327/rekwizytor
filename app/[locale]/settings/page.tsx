@@ -3,11 +3,9 @@ import { redirect } from 'next/navigation'
 import { SettingsForm } from '@/components/settings/SettingsForm'
 import { getTranslations } from 'next-intl/server';
 import { UserApprovalList } from '@/components/settings/UserApprovalList'
-import { ThumbnailRegenerator } from '@/components/admin/ThumbnailRegenerator'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Settings } from 'lucide-react'
-
-import { EmbeddingMigrationButton } from '@/components/admin/EmbeddingMigrationButton'
+import { AdminZoneWrapper } from '@/components/settings/AdminZoneWrapper'
 
 export default async function SettingsPage() {
     const supabase = await createClient()
@@ -40,15 +38,7 @@ export default async function SettingsPage() {
 
             <SettingsForm user={{ ...profile, email: user.email || undefined }} />
 
-            {profile && ((profile.role as string) === 'admin' || (profile.role as string) === 'superadmin') && (
-                <div className="pt-8 mt-8 border-t border-neutral-800 space-y-4">
-                    <h2 className="text-lg font-bold text-white mb-4">{t('adminZone')}</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <ThumbnailRegenerator />
-                        <EmbeddingMigrationButton />
-                    </div>
-                </div>
-            )}
+            {profile && <AdminZoneWrapper role={profile.role as string} />}
         </div>
     )
 }
