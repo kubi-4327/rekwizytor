@@ -13,7 +13,6 @@ import {
     DragStartEvent,
     DragEndEvent,
     DragOverEvent,
-    useDroppable,
     DropAnimation,
 } from '@dnd-kit/core'
 import {
@@ -125,7 +124,7 @@ function SortablePropItem({
                         e.stopPropagation() // Prevent drag start interference if clicked carefully? actually listener is on grip
                         onToggleCheck?.(prop.id, prop.is_checked || false)
                     }}
-                    className={`flex-shrink-0 h-5 w-5 rounded border-2 flex items-center justify-center transition-all ${prop.is_checked
+                    className={`shrink-0 h-5 w-5 rounded border-2 flex items-center justify-center transition-all ${prop.is_checked
                         ? 'border-transparent bg-burgundy-main'
                         : 'border-neutral-600 hover:border-neutral-500'
                         }`}
@@ -210,8 +209,7 @@ export function PropsKanbanBoard({ performanceId, initialProps, variant = 'check
     const columns = useMemo(() => {
         const cols: Record<number, Prop[]> = { 0: [], 1: [] }
 
-        // Sort by index first, then sort_order
-        // But what if old items don't have sort_order? created_at fallback
+        // Sort by sort_order, then created_at as fallback
         const sorted = [...props].sort((a, b) => {
             const orderA = a.sort_order ?? 0
             const orderB = b.sort_order ?? 0
@@ -219,12 +217,11 @@ export function PropsKanbanBoard({ performanceId, initialProps, variant = 'check
             return new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime()
         })
 
-        sorted.forEach(p => {
-            const col = p.column_index ?? 0
-            // Clamp to 0 or 1
-            const safeCol = col > 1 ? 0 : col
-            if (cols[safeCol]) cols[safeCol].push(p)
-            else cols[0].push(p) // Fallback
+        // Distribute evenly: odd indices to column 0, even indices to column 1
+        // If odd number of items, left column gets one more
+        sorted.forEach((p, index) => {
+            const col = index % 2 // 0 for even (left), 1 for odd (right)
+            cols[col].push(p)
         })
 
         return cols
@@ -259,55 +256,8 @@ export function PropsKanbanBoard({ performanceId, initialProps, variant = 'check
     }
 
     const handleDragOver = (event: DragOverEvent) => {
-        const { active, over } = event
-        if (!over) return
-
-        const activeId = active.id as string
-        const overId = over.id as string
-
-        // Find containers
-        const findContainer = (id: string) => {
-            if (id === 'col-0') return 0
-            if (id === 'col-1') return 1
-            const p = props.find(i => i.id === id)
-            return p?.column_index ?? 0
-        }
-
-        const activeContainer = findContainer(activeId)
-        const overContainer = findContainer(overId)
-
-        if (activeContainer !== overContainer) {
-            setProps((items) => {
-                const activeItems = items.filter(i => (i.column_index ?? 0) === activeContainer)
-                const overItems = items.filter(i => (i.column_index ?? 0) === overContainer)
-
-                const activeIndex = activeItems.findIndex(i => i.id === activeId)
-                const overIndex = overItems.findIndex(i => i.id === overId)
-
-                let newIndex: number
-                if (overId === `col-${overContainer}`) {
-                    newIndex = overItems.length + 1
-                } else {
-                    const isBelowOverItem = over &&
-                        active.rect.current.translated &&
-                        active.rect.current.translated.top > over.rect.top + over.rect.height;
-
-                    const modifier = isBelowOverItem ? 1 : 0;
-                    newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1;
-                }
-
-                return items.map(item => {
-                    if (item.id === activeId) {
-                        return {
-                            ...item,
-                            column_index: overContainer,
-                            sort_order: newIndex
-                        }
-                    }
-                    return item
-                })
-            })
-        }
+        // Visual-only columns - no cross-column dragging needed
+        // Items are automatically distributed after reordering
     }
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -319,72 +269,36 @@ export function PropsKanbanBoard({ performanceId, initialProps, variant = 'check
         const activeId = active.id as string
         const overId = over.id as string
 
-        const findContainer = (id: string) => {
-            if (id === 'col-0') return 0
-            if (id === 'col-1') return 1 // Fixed typo
-            const p = props.find(i => i.id === id)
-            // Clamp
-            const idx = p?.column_index ?? 0
-            return idx > 1 ? 0 : idx
-        }
+        // Skip if dropping on column container
+        if (overId.startsWith('col-')) return
 
-        const activeContainer = findContainer(activeId)
-        const overContainer = findContainer(overId)
+        // Find the old and new positions in the FULL sorted list
+        const sorted = [...props].sort((a, b) => {
+            const orderA = a.sort_order ?? 0
+            const orderB = b.sort_order ?? 0
+            if (orderA !== orderB) return orderA - orderB
+            return new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime()
+        })
 
-        if (activeContainer === overContainer) {
-            // Reorder within same column
-            const containerProps = columns[activeContainer as 0 | 1]
-            const oldIndex = containerProps.findIndex(i => i.id === activeId)
-            const newIndex = containerProps.findIndex(i => i.id === overId)
+        const oldIndex = sorted.findIndex(i => i.id === activeId)
+        const newIndex = sorted.findIndex(i => i.id === overId)
 
-            if (oldIndex !== newIndex) {
-                const newOrder = arrayMove(containerProps, oldIndex, newIndex)
+        if (oldIndex !== newIndex) {
+            const newOrder = arrayMove(sorted, oldIndex, newIndex)
 
-                // Update global props state
-                setProps(prev => {
-                    const otherProps = prev.filter(p => (p.column_index ?? 0) !== activeContainer)
-                    // Reassign sort orders
-                    const updatedContainerProps = newOrder.map((p, idx) => ({
-                        ...p,
-                        sort_order: idx
-                    }))
+            // Update all items with new sort_order
+            setProps(newOrder.map((p, idx) => ({
+                ...p,
+                sort_order: idx
+            })))
 
-                    // Add to pending updates
-                    updatedContainerProps.forEach(p => {
-                        pendingUpdates.current[p.id] = {
-                            column_index: activeContainer,
-                            sort_order: p.sort_order!
-                        }
-                    })
-                    scheduleSave()
-
-                    return [...otherProps, ...updatedContainerProps]
-                })
-            }
-        } else {
-            // Moved between columns (handled in dragOver mostly, just finalize sort orders here)
-            // Re-normalize sort orders in target column
-            const targetColProps = props
-                .filter(p => (p.column_index ?? 0) === overContainer)
-                .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-
-            // Add updates for all items in target column to ensure consistency
-            targetColProps.forEach((p, idx) => {
-                if (p.sort_order !== idx) {
-                    pendingUpdates.current[p.id] = {
-                        column_index: overContainer,
-                        sort_order: idx
-                    }
+            // Add to pending updates
+            newOrder.forEach((p, idx) => {
+                pendingUpdates.current[p.id] = {
+                    column_index: 0, // Not used anymore, but keep for DB compatibility
+                    sort_order: idx
                 }
             })
-            // Also need to update the moved item specifically if not caught
-            const movedItem = props.find(p => p.id === activeId)
-            if (movedItem) {
-                pendingUpdates.current[movedItem.id] = {
-                    column_index: overContainer,
-                    sort_order: movedItem.sort_order ?? 0 // Should have been set in dragOver
-                }
-            }
             scheduleSave()
         }
     }
@@ -413,12 +327,10 @@ export function PropsKanbanBoard({ performanceId, initialProps, variant = 'check
         }
     }
 
-    // Droppable Column
+    // Column component - visual only, no droppable needed
     const Column = ({ id, items }: { id: string | number, items: Prop[] }) => {
-        const { setNodeRef } = useDroppable({ id: `col-${id}` })
-
         return (
-            <div ref={setNodeRef} className="flex flex-col gap-2 min-h-[200px] bg-neutral-900/20 rounded-xl p-2 border border-neutral-800/50">
+            <div className="flex flex-col gap-2 min-h-[60px] bg-neutral-900/20 rounded-xl p-3 border border-neutral-800/50">
                 <SortableContext
                     id={`col-${id}`}
                     items={items.map(i => i.id)}
@@ -435,7 +347,7 @@ export function PropsKanbanBoard({ performanceId, initialProps, variant = 'check
                         />
                     ))}
                     {items.length === 0 && (
-                        <div className="flex-1 flex items-center justify-center text-neutral-600 text-sm border-2 border-dashed border-neutral-800/50 rounded-lg p-4">
+                        <div className="flex items-center justify-center text-neutral-600 text-sm border-2 border-dashed border-neutral-800/50 rounded-lg p-4">
                             Pusta kolumna
                         </div>
                     )}
@@ -454,7 +366,7 @@ export function PropsKanbanBoard({ performanceId, initialProps, variant = 'check
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
         >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Column id={0} items={columns[0]} />
                 <div className="hidden md:block">
                     <Column id={1} items={columns[1]} />

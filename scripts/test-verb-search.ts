@@ -4,6 +4,9 @@
  * Testing action/purpose-based queries (czasownikowe)
  */
 
+// Enable hybrid search for this test
+process.env.USE_HYBRID_SEARCH = 'true'
+
 import dotenv from 'dotenv'
 import path from 'path'
 

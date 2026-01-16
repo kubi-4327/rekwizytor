@@ -116,19 +116,32 @@ export function PerformanceGroups({ performanceId, performanceTitle, groups, per
             </div>
 
             <div className="p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {groups.map(group => (
-                        <GroupCard
-                            key={group.id}
-                            group={group}
-                            showLocationAsPrimary={true}
-                            onClick={() => openGroupDetails(group)}
-                            colorOverride={performanceColor || undefined}
-                        />
-                    ))}
+                <div className="flex flex-wrap gap-2 items-stretch">
+                    {groups.map(group => {
+                        const totalLength = (group.name?.length || 0) + (group.locations?.name?.length || 0)
+                        const isLong = totalLength > 20
+
+                        return (
+                            <div
+                                key={group.id}
+                                className={`min-w-0 max-w-full transition-all duration-200 ${isLong
+                                    ? 'basis-full grow'
+                                    : 'basis-full sm:basis-auto grow sm:grow-0 sm:min-w-[170px]'
+                                    }`}
+                            >
+                                <GroupCard
+                                    group={group}
+                                    showLocationAsPrimary={true}
+                                    onClick={() => openGroupDetails(group)}
+                                    colorOverride={performanceColor || undefined}
+                                    variant="compact"
+                                />
+                            </div>
+                        )
+                    })}
 
                     {groups.length === 0 && (
-                        <div className="col-span-full py-8 text-center border border-dashed border-neutral-800 rounded-lg text-neutral-500 text-sm">
+                        <div className="col-span-full py-8 text-center border border-dashed border-neutral-800 rounded-lg text-neutral-500 text-sm w-full">
                             Brak grup przypisanych do tego spektaklu.
                         </div>
                     )}

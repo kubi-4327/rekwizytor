@@ -16,6 +16,8 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { PerformanceNotesPreview } from '@/components/performances/PerformanceNotesPreview'
 import { PerformanceDetailActions } from '@/components/performances/PerformanceDetailActions'
 import { PerformanceGroups } from '@/components/performances/PerformanceGroups'
+import { PropsChecklist } from '@/components/props/PropsChecklist'
+import { Grid } from 'lucide-react'
 
 type Props = {
     params: Promise<{ id: string }>
@@ -234,26 +236,40 @@ export default async function ProductionDetailsPage({ params }: Props) {
                         title={production.title}
                         performanceColor={production.color}
                     />
+
+                    <PerformanceGroups
+                        performanceId={id}
+                        performanceTitle={production.title}
+                        groups={linkedGroups || []}
+                        performanceColor={production.color}
+                    />
                 </div>
 
                 {/* Right Column: Props List */}
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 space-y-8">
+                    {/* Scene Breakdown */}
                     <PerformanceContent
                         performanceId={id}
-                        allProps={allProps || []}
                         propsByAct={propsByAct}
                         scenes={scenes || []}
                         sceneNote={sceneNote}
-                        performanceColor={production.color}
                     />
 
-                    <div className="mt-8">
-                        <PerformanceGroups
-                            performanceId={id}
-                            performanceTitle={production.title}
-                            groups={linkedGroups || []}
-                            performanceColor={production.color}
-                        />
+                    {/* All Items Checklist */}
+                    <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl overflow-hidden flex flex-col">
+                        <div className="p-4 border-b border-neutral-800 flex items-center justify-between gap-4 bg-neutral-900/80 shrink-0">
+                            <h3 className="font-bold text-neutral-200 font-sans text-base leading-none flex items-center gap-2">
+                                <Grid className="w-4 h-4 text-neutral-400" />
+                                {t('allItemsView')}
+                            </h3>
+                        </div>
+                        <div className="p-6">
+                            <PropsChecklist
+                                performanceId={id}
+                                initialProps={allProps || []}
+                                variant="checklist"
+                            />
+                        </div>
                     </div>
 
                 </div>

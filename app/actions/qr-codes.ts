@@ -18,6 +18,7 @@ export interface QrCode {
     created_at: string
     clicks: number
     batch_group: string | null
+    short_id?: string
 }
 
 export async function getQrCodes() {
@@ -122,4 +123,50 @@ export async function deleteQrCode(code: string) {
 
     revalidatePath('/settings/qr-codes')
     return { success: true }
+}
+
+export async function getOrCreateGroupQrCode(groupId: string, groupName: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // We use relative URL for internal redirects
+    const targetUrl = `/groups?viewGroup=${groupId}`
+
+    // 1. Try to find existing QR code for this target
+    const { data: existingCodes } = await supabase
+        .from('qr_codes')
+        .select('*')
+        .eq('target_url', targetUrl)
+        .limit(1)
+
+    if (existingCodes && existingCodes.length > 0) {
+        return existingCodes[0] as QrCode
+    }
+
+    if (!user) return null
+
+    // 2. Create new if not found
+    // Uses the same generation logic as createQrCode but programmatic
+    const code = generateCode()
+
+    const { data: newCode, error } = await supabase
+        .from('qr_codes')
+        .insert({
+            code,
+            target_url: targetUrl,
+            description: `Grupa: ${groupName}`,
+            created_by: user.id,
+            access_level: 'authenticated', // Groups are usually protected
+            active: true,
+            batch_group: 'Grupy' // Auto-grouping
+        })
+        .select()
+        .single()
+
+    if (error) {
+        console.error('Error creating group QR code:', error)
+        return null
+    }
+
+    return newCode as QrCode
 }

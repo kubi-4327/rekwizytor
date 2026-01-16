@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import {
@@ -25,7 +25,10 @@ interface GroupDetailsDialogProps {
         icon: string | null
         color: string | null
         created_at: string | null
+        description?: string | null
+        performance_id?: string | null
         locations?: { name: string } | null
+        performances?: { title: string; color?: string | null } | null
     } | null
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -42,6 +45,30 @@ export function GroupDetailsDialog({
 }: GroupDetailsDialogProps) {
     const t = useTranslations('Groups')
     const [isGeneratingLabel, setIsGeneratingLabel] = useState(false)
+    const [qrUrl, setQrUrl] = useState<string>('')
+
+    useEffect(() => {
+        if (group && open) {
+            // Get or create unique QR Code and generate image
+            import('@/app/actions/qr-codes').then(({ getOrCreateGroupQrCode }) => {
+                getOrCreateGroupQrCode(group.id, group.name).then(qrData => {
+                    if (qrData?.code) {
+                        const qrLink = `${window.location.origin}/qr/${qrData.code}`
+                        import('qrcode').then(QRCode => {
+                            QRCode.toDataURL(qrLink, {
+                                width: 200,
+                                margin: 2,
+                                color: {
+                                    dark: '#000000',
+                                    light: '#ffffff'
+                                }
+                            }).then(setQrUrl).catch(console.error)
+                        })
+                    }
+                })
+            })
+        }
+    }, [group, open])
 
     if (!group) return null
 
@@ -99,7 +126,7 @@ export function GroupDetailsDialog({
         <Modal
             isOpen={open}
             onClose={() => onOpenChange(false)}
-            className="group-details-modal !p-0 gap-0 overflow-hidden sm:max-w-[500px] border-neutral-800 bg-neutral-900/95 backdrop-blur-xl shadow-2xl"
+            className="group-details-modal p-0! gap-0 overflow-hidden sm:max-w-[500px] border-neutral-800 bg-neutral-900/95 backdrop-blur-xl shadow-2xl"
         >
             {/* Header with Color Strip */}
             <div className="relative h-32 w-full overflow-hidden">
@@ -107,7 +134,7 @@ export function GroupDetailsDialog({
                     className="absolute inset-0 opacity-20"
                     style={{ backgroundColor: group.color || '#3b82f6' }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-neutral-900 via-neutral-900/60 to-transparent" />
 
                 <div className="absolute bottom-4 left-6 flex items-end gap-4 z-10 w-full pr-6">
                     <div
@@ -131,57 +158,104 @@ export function GroupDetailsDialog({
                 </div>
             </div>
 
+            {/* 1. Metadata & Link Grid */}
             <div className="p-6 space-y-6">
-                {/* Metadata Grid */}
-                <div className="grid grid-cols-1 gap-4">
-                    <div className="p-3 rounded-xl bg-neutral-800/50 border border-neutral-800 space-y-1 hover:bg-neutral-800 transition-colors">
-                        <div className="flex items-center gap-2 text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                            <Calendar className="w-3.5 h-3.5" />
+                <div className="grid grid-cols-2 gap-3">
+                    {/* Performance Link */}
+                    {group.performances && (
+                        <div className="col-span-2 p-3 rounded-xl bg-neutral-800/50 border border-neutral-800 flex items-center justify-between group cursor-default">
+                            <div className="flex items-center gap-3">
+                                <div
+                                    className="w-8 h-8 rounded-lg flex items-center justify-center bg-neutral-800"
+                                    style={{ color: group.performances.color || '#9ca3af' }}
+                                >
+                                    <Calendar className="w-4 h-4" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                                        {t('details.performance')}
+                                    </span>
+                                    <span className="text-sm font-semibold text-white truncate max-w-[200px]">
+                                        {group.performances.title}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Created At */}
+                    <div className="col-span-2 p-3 rounded-xl bg-neutral-800/50 border border-neutral-800 space-y-1">
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                            <Calendar className="w-3 h-3" />
                             {t('details.created')}
                         </div>
-                        <div className="text-sm font-medium text-neutral-300 truncate">
+                        <div className="text-xs font-medium text-neutral-300 truncate">
                             {formattedDate}
                         </div>
                     </div>
-
                 </div>
 
-                {/* Actions */}
-                <div className="grid grid-cols-2 gap-3 pt-2">
-                    <Button
-                        variant="secondary"
-                        onClick={handlePrintLabel}
-                        disabled={isGeneratingLabel}
-                        className="bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-200 w-full"
-                    >
-                        <QrCode className="w-4 h-4 mr-2" />
-                        {isGeneratingLabel ? t('labels.generating') : t('labels.print')}
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        onClick={() => {
-                            onOpenChange(false)
-                            onEdit(group)
-                        }}
-                        className="bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-200 w-full"
-                    >
-                        <Edit2 className="w-4 h-4 mr-2" />
-                        {t('actions.edit')}
-                    </Button>
-                </div>
+                {/* 2. Technical Note / Description (If present) - Highlighted */}
+                {group.description && (
+                    <div className="bg-amber-900/10 border border-amber-500/20 rounded-xl p-4 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-2 opacity-10">
+                            <LucideIcons.FileText className="w-24 h-24 text-amber-500" />
+                        </div>
+                        <h4 className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                            <LucideIcons.Info className="w-3 h-3" />
+                            {t('description')}
+                        </h4>
+                        <p className="text-sm text-neutral-200 leading-relaxed font-mono whitespace-pre-wrap">
+                            {group.description}
+                        </p>
+                    </div>
+                )}
 
-                <div className="pt-4 border-t border-neutral-800">
-                    <Button
-                        variant="destructive"
-                        onClick={() => {
-                            onOpenChange(false)
-                            onDelete(group)
-                        }}
-                        className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20"
-                    >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        {t('actions.delete')}
-                    </Button>
+                {/* 3. QR Code & Actions */}
+                <div className="flex gap-4 items-stretch">
+                    {/* QR Code Display */}
+                    <div className="w-24 h-24 bg-white p-2 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                        {qrUrl ? (
+                            <img src={qrUrl} alt="QR Code" className="w-full h-full object-contain mix-blend-multiply" />
+                        ) : (
+                            <div className="animate-pulse bg-neutral-200 w-full h-full rounded-lg" />
+                        )}
+                    </div>
+
+                    <div className="flex-1 flex flex-col gap-2 justify-center">
+                        <Button
+                            variant="primary"
+                            onClick={handlePrintLabel}
+                            disabled={isGeneratingLabel}
+                            className="bg-neutral-100 text-black hover:bg-white w-full h-10 font-semibold shadow-lg shadow-white/5 border-0"
+                        >
+                            <QrCode className="w-4 h-4 mr-2" />
+                            {isGeneratingLabel ? t('labels.generating') : t('labels.print')}
+                        </Button>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="secondary"
+                                onClick={() => {
+                                    onOpenChange(false)
+                                    onEdit(group)
+                                }}
+                                className="bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-300 flex-1 h-10"
+                            >
+                                <Edit2 className="w-4 h-4 mr-2" />
+                                {t('actions.edit')}
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={() => {
+                                    onOpenChange(false)
+                                    onDelete(group)
+                                }}
+                                className="h-10 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </Modal>

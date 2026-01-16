@@ -17,8 +17,9 @@ import { createClient } from '@/utils/supabase/client'
 import { notify } from '@/utils/notify'
 
 type Group = Pick<Database['public']['Tables']['groups']['Row'],
-    'id' | 'name' | 'icon' | 'color' | 'created_at' | 'location_id'> & {
+    'id' | 'name' | 'icon' | 'color' | 'created_at' | 'location_id' | 'description' | 'performance_id'> & {
         locations: { name: string } | null
+        performances: { title: string; color?: string | null } | null
     }
 
 interface GroupsListProps {
@@ -198,19 +199,41 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
         count: groupedByLocation[loc].length
     }))
 
+    // Clear activeLocation on manual scroll
+    useEffect(() => {
+        let isScrollingTimeout: NodeJS.Timeout
+
+        const handleScroll = () => {
+            // Only clear if it was set (to avoid unnecessary re-renders)
+            if (activeLocation) {
+                // We clear it immediately on interaction
+                setActiveLocation(undefined)
+            }
+        }
+
+        window.addEventListener('wheel', handleScroll)
+        window.addEventListener('touchmove', handleScroll)
+
+        return () => {
+            window.removeEventListener('wheel', handleScroll)
+            window.removeEventListener('touchmove', handleScroll)
+        }
+    }, [activeLocation])
+
     const handleJumpToLocation = (locationName: string) => {
         setActiveLocation(locationName)
         const element = document.getElementById(`location-${locationName.replace(/\s+/g, '-')}`)
         if (element) {
+            // Use block: 'start' and inline: 'nearest' for better positioning
             element.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
     }
 
     return (
         <>
-            <div className="space-y-8">
+            <div className="space-y-4">
                 {/* Static Filter Bar */}
-                <div className="mb-4">
+                <div className="mb-2">
                     <FilterBar>
                         <div className="flex-1 w-full xl:w-auto min-w-[300px]">
                             <MorphingSearchBar mode="trigger" context="group" className="w-full" />
@@ -222,7 +245,7 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
                 </div>
 
                 {/* Sticky Location Jump Bar */}
-                <div className="sticky top-0 z-30 bg-black/95 backdrop-blur-md -mx-4 px-4 py-3 md:-mx-10 md:px-10 border-b border-neutral-800 mb-6 transition-all duration-200">
+                <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md -mx-4 px-4 py-3 md:-mx-10 md:px-10 border-b border-neutral-800 mb-6 transition-all duration-200">
                     <LocationJumpBar
                         locations={locationItems}
                         activeLocation={activeLocation}
@@ -234,11 +257,11 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
                     <div
                         key={location}
                         id={`location-${location.replace(/\s+/g, '-')}`}
-                        className="space-y-4 scroll-mt-20"
+                        className="space-y-4 scroll-mt-36"
                     >
                         <button
                             onClick={() => toggleLocation(location)}
-                            className="sticky top-[64px] z-20 flex items-center gap-2 text-sm font-semibold text-neutral-500 uppercase tracking-wider hover:text-white transition-colors w-full text-left group bg-black/90 backdrop-blur-sm py-2 -my-2 px-2 -mx-2 rounded-lg"
+                            className="sticky top-[64px] z-20 flex items-center gap-2 text-sm font-semibold text-neutral-500 uppercase tracking-wider hover:text-white transition-all w-full text-left group bg-background/95 backdrop-blur-md py-3 px-2 -mx-2 rounded-lg border-b border-white/5 shadow-[0_10px_30px_-10px_rgba(255,255,255,0.05)]"
                         >
                             {expandedLocations[location] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                             <div className="flex items-center gap-2 text-neutral-400 group-hover:text-neutral-300">
@@ -252,14 +275,18 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
 
                         {expandedLocations[location] && (
                             viewMode === 'list' ? (
-                                <div className="flex flex-col bg-neutral-900/20 rounded-xl overflow-hidden border border-neutral-800 ml-2 mt-2">
+                                <div className="flex flex-col bg-neutral-900/20 rounded-xl overflow-hidden border border-neutral-800 ml-2 mt-4">
                                     {groupedByLocation[location].map(group => {
                                         // With no subgroups, count is 0
                                         const childrenCount = 0
+                                        // Effective color prioritization
+                                        const effectiveColor = group.performances?.color || group.color || '#A0232F'
+                                        const groupWithColor = { ...group, color: effectiveColor }
+
                                         return (
                                             <div key={group.id} id={`group-${group.id}`}>
                                                 <GroupListItem
-                                                    group={group}
+                                                    group={groupWithColor}
                                                     subgroupCount={childrenCount}
                                                     onClick={() => setSelectedGroupDetails(group)}
                                                     onEdit={() => handleEdit(group)}
@@ -269,14 +296,18 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
                                     })}
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pl-2 border-l border-neutral-800 ml-2 mt-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pl-2 border-l border-neutral-800 ml-2 mt-4">
                                     {groupedByLocation[location].map(group => {
                                         // With no subgroups, count is 0
                                         const childrenCount = 0
+                                        // Effective color prioritization
+                                        const effectiveColor = group.performances?.color || group.color || '#A0232F'
+                                        const groupWithColor = { ...group, color: effectiveColor }
+
                                         return (
                                             <div key={group.id} id={`group-${group.id}`} className="transition-all duration-300">
                                                 <GroupCard
-                                                    group={group}
+                                                    group={groupWithColor}
                                                     subgroupCount={childrenCount}
                                                     onClick={() => setSelectedGroupDetails(group)}
                                                     onEdit={() => handleEdit(group)}

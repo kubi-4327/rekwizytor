@@ -329,6 +329,7 @@ export type Database = {
           color: string | null
           created_at: string | null
           deleted_at: string | null
+          description: string | null
           embedding: string | null
           embedding_context: string | null
           embedding_identity: string | null
@@ -345,6 +346,7 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           deleted_at?: string | null
+          description?: string | null
           embedding?: string | null
           embedding_context?: string | null
           embedding_identity?: string | null
@@ -361,6 +363,7 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           deleted_at?: string | null
+          description?: string | null
           embedding?: string | null
           embedding_context?: string | null
           embedding_identity?: string | null
@@ -805,6 +808,41 @@ export type Database = {
           },
         ]
       }
+      scene_tasks: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          order_index: number
+          scene_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          order_index?: number
+          scene_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          order_index?: number
+          scene_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scene_tasks_scene_id_fkey"
+            columns: ["scene_id"]
+            isOneToOne: false
+            referencedRelation: "scenes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scenes: {
         Row: {
           act_number: number | null
@@ -884,6 +922,25 @@ export type Database = {
       }
       refresh_search_index: { Args: never; Returns: undefined }
       search_global: {
+        Args: {
+          fuzzy_threshold?: number
+          match_count?: number
+          match_threshold?: number
+          query_text: string
+        }
+        Returns: {
+          description: string
+          entity_type: string
+          id: string
+          image_url: string
+          match_type: string
+          metadata: Json
+          name: string
+          score: number
+          url: string
+        }[]
+      }
+      search_global_direct: {
         Args: {
           fuzzy_threshold?: number
           match_count?: number

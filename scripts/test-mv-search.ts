@@ -4,6 +4,9 @@
  * Tests search across different intent categories with real queries
  */
 
+// Enable hybrid search for this test
+process.env.USE_HYBRID_SEARCH = 'true'
+
 // CRITICAL: Load env vars BEFORE importing any modules that use GEMINI_API_KEY
 import dotenv from 'dotenv'
 import path from 'path'

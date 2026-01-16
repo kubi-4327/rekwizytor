@@ -17,15 +17,15 @@ export function LocationJumpBar({ locations, activeLocation, onLocationClick }: 
     if (locations.length <= 1) return null
 
     return (
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-transparent pb-1">
-            <MapPin className="w-4 h-4 text-neutral-500 flex-shrink-0" />
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+            <MapPin className="w-4 h-4 text-neutral-500 shrink-0" />
             {locations.map(({ name, count }) => (
                 <button
                     key={name}
                     onClick={() => onLocationClick(name)}
                     className={`
                         flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
-                        whitespace-nowrap flex-shrink-0 transition-all duration-200
+                        whitespace-nowrap shrink-0 transition-all duration-200
                         ${activeLocation === name
                             ? 'bg-white text-black'
                             : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white'

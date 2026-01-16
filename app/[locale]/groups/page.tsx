@@ -20,7 +20,7 @@ export default async function GroupsPage({ searchParams }: Props) {
     // Fetch all groups to build hierarchy and list - optimized query
     const { data: groups } = await supabase
         .from('groups')
-        .select('id, name, icon, color, created_at, location_id, locations(id, name)')
+        .select('id, name, icon, color, created_at, location_id, description, performance_id, locations(id, name), performances(id, title, color)')
         .order('name')
 
 

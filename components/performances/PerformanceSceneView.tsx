@@ -1,51 +1,79 @@
 'use client'
 
-import { Fragment } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import { Database } from '@/types/supabase'
 import { useTranslations } from 'next-intl'
 import { deletePerformanceItem } from '@/app/actions/performance-props'
 import { Trash2 } from 'lucide-react'
 import { notify } from '@/utils/notify'
+import { SceneDetailModal } from './SceneDetailModal'
+import { createClient } from '@/utils/supabase/client'
 
 type PropItem = Database['public']['Tables']['performance_props']['Row']
-
 type Scene = Database['public']['Tables']['scenes']['Row']
-
-import { getSceneNotesFromContent } from '@/components/notes/scene-utils'
+type SceneTask = Database['public']['Tables']['scene_tasks']['Row']
 
 type Props = {
     performanceId: string
     propsByAct: Record<number, PropItem[]>
     scenes: Scene[]
-    sceneNote: any | null
+    sceneNote: any | null // Keep for backward compatibility during migration
+    limitTasks?: boolean
+    enableScrolling?: boolean
 }
 
-export function PerformanceSceneView({ performanceId, propsByAct, scenes, sceneNote }: Props) {
+export function PerformanceSceneView({
+    performanceId,
+    propsByAct,
+    scenes,
+    sceneNote,
+    limitTasks = true,
+    enableScrolling = true
+}: Props) {
     const t = useTranslations('ProductionDetails')
+    const [selectedScene, setSelectedScene] = useState<Scene | null>(null)
+    const [sceneTasks, setSceneTasks] = useState<Record<string, SceneTask[]>>({})
+    const [loadingTasks, setLoadingTasks] = useState(true)
+    const supabase = createClient()
+
+    // Load tasks from database
+    useEffect(() => {
+        if (scenes.length === 0) {
+            setLoadingTasks(false)
+            return
+        }
+
+        const loadTasks = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('scene_tasks')
+                    .select('*')
+                    .in('scene_id', scenes.map(s => s.id))
+                    .order('order_index', { ascending: true })
+
+                if (error) throw error
+
+                // Group by scene_id
+                const grouped: Record<string, SceneTask[]> = {}
+                data?.forEach(task => {
+                    if (!grouped[task.scene_id]) grouped[task.scene_id] = []
+                    grouped[task.scene_id].push(task)
+                })
+
+                setSceneTasks(grouped)
+            } catch (error) {
+                console.error('Error loading scene tasks:', error)
+            } finally {
+                setLoadingTasks(false)
+            }
+        }
+
+        loadTasks()
+    }, [scenes, supabase])
 
     // Helper to get scenes for an act
     const getScenesForAct = (actNum: number) => {
         return scenes?.filter(s => s.act_number === actNum) || []
-    }
-
-    // Sanitize scenes for utils
-    const sanitizedScenes = scenes.map(s => ({
-        ...s,
-        act_number: s.act_number ?? 1
-    }))
-
-    // Extract notes map
-    const sceneNotesMap = sceneNote ? getSceneNotesFromContent(sceneNote.content, sanitizedScenes) : new Map()
-
-    // Helper to extract text from Tiptap nodes (for simple display)
-    const getTextFromNodes = (nodes: any[]): string => {
-        if (!nodes) return ''
-        return nodes.map(node => {
-            if (node.type === 'text') return node.text
-            if (node.content) return getTextFromNodes(node.content)
-            if (node.type === 'listItem' || node.type === 'paragraph') return getTextFromNodes(node.content || []) + '\n'
-            return ''
-        }).join('').trim()
     }
 
     // Get sorted act numbers
@@ -66,121 +94,76 @@ export function PerformanceSceneView({ performanceId, propsByAct, scenes, sceneN
     return (
         <div className="space-y-12">
             {/* Desktop Table View */}
-            <div className="hidden md:block overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/50">
-                <table className="w-full">
-                    <thead className="bg-neutral-900 border-b border-neutral-800">
-                        <tr>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider w-1/3">
-                                {t('scene')}
-                            </th>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                                {t('props')}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-800">
-                        {allActs.map(actNum => (
-                            <Fragment key={actNum}>
-                                {/* Act Header */}
-                                <tr className="bg-neutral-900/80">
-                                    <td colSpan={2} className="px-6 py-4 text-xs font-bold text-neutral-500 uppercase tracking-wider border-y border-neutral-800 text-center">
-                                        {t('act', { actNum })}
-                                    </td>
-                                </tr>
-                                {scenesByAct[actNum]
-                                    ?.sort((a, b) => a.scene_number - b.scene_number)
-                                    .map(scene => {
-                                        // Find props for this scene
-                                        const sceneProps = propsByAct[actNum]?.filter(p => p.scene_number?.toString() === scene.scene_number.toString()) || []
-                                        const noteContent = sceneNotesMap.get(scene.id)
-                                        const noteText = noteContent ? getTextFromNodes(noteContent) : null
+            <div className="hidden md:block overflow-hidden rounded-b-lg bg-neutral-900/50">
+                <div className={`${enableScrolling ? 'max-h-[500px] overflow-y-auto custom-scrollbar' : ''}`}>
+                    <table className="w-full relative">
+                        <thead className={`bg-neutral-900 border-b border-neutral-800 ${enableScrolling ? 'sticky top-0 z-10' : ''} shadow-sm`}>
+                            <tr>
+                                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider w-1/3 bg-neutral-900">
+                                    {t('scene')}
+                                </th>
+                                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider bg-neutral-900">
+                                    {t('props')}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-neutral-800">
+                            {allActs.map(actNum => (
+                                <Fragment key={actNum}>
+                                    {/* Act Header */}
+                                    <tr className="bg-neutral-900/80">
+                                        <td colSpan={2} className="px-6 py-4 text-xs font-bold text-neutral-500 uppercase tracking-wider border-y border-neutral-800 text-center">
+                                            {t('act', { actNum })}
+                                        </td>
+                                    </tr>
+                                    {scenesByAct[actNum]
+                                        ?.sort((a, b) => a.scene_number - b.scene_number)
+                                        .map(scene => {
+                                            // Get tasks for this scene from database
+                                            const allTasks = sceneTasks[scene.id] || []
+                                            const visibleTasks = limitTasks ? allTasks.slice(0, 3) : allTasks
+                                            const hasMoreTasks = limitTasks && allTasks.length > 3
 
-                                        // Combined list: props + note lines?
-                                        // Or separate? User wants "scene notes" 
-
-                                        // If we have note text, splitting by newline to mimic bullet points
-                                        const noteLines = noteText ? noteText.split('\n').filter((l: string) => l.trim().length > 0) : []
-
-                                        if (sceneProps.length === 0 && noteLines.length === 0) {
                                             return (
-                                                <tr key={scene.id} className="hover:bg-neutral-800/50">
+                                                <tr
+                                                    key={scene.id}
+                                                    onClick={() => setSelectedScene(scene)}
+                                                    className="hover:bg-neutral-800/50 cursor-pointer"
+                                                >
                                                     <td className="px-6 py-4 text-sm text-neutral-300 align-top border-r border-neutral-800/50">
                                                         <div className="font-medium">{scene.scene_number}</div>
                                                         {scene.name && <div className="text-xs text-neutral-500">{scene.name}</div>}
                                                     </td>
-                                                    <td className="px-6 py-4 text-sm text-neutral-600 italic align-top">
-                                                        {/* Empty cell */}
+                                                    <td className="px-6 py-4 text-sm text-white align-top">
+                                                        {allTasks.length > 0 && (
+                                                            <ul className="list-disc list-inside space-y-1 text-neutral-300 text-sm">
+                                                                {visibleTasks.map((task) => (
+                                                                    <li key={task.id} className="text-sm truncate">{task.content}</li>
+                                                                ))}
+                                                                {hasMoreTasks && (
+                                                                    <li className="text-xs text-neutral-500 italic pl-1 list-none pt-1">
+                                                                        +{allTasks.length - 3} {t('moreTasks')}
+                                                                    </li>
+                                                                )}
+                                                            </ul>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             )
-                                        }
+                                        })}
+                                </Fragment>
+                            ))}
 
-                                        return (
-                                            <Fragment key={scene.id}>
-                                                {/* Props from legacy items */}
-                                                {sceneProps.map((prop, index) => (
-                                                    <tr key={prop.id} className="group hover:bg-neutral-800/50">
-                                                        {index === 0 && (
-                                                            <td rowSpan={sceneProps.length + (noteLines.length > 0 ? 1 : 0)} className="px-6 py-4 text-sm text-neutral-300 align-top border-r border-neutral-800/50">
-                                                                <div className="font-medium">{scene.scene_number}</div>
-                                                                {scene.name && <div className="text-xs text-neutral-500">{scene.name}</div>}
-                                                            </td>
-                                                        )}
-                                                        <td className="px-6 py-4 text-sm text-white align-top">
-                                                            <div className="flex items-center justify-between gap-4">
-                                                                <span className="italic text-neutral-300">
-                                                                    {prop.item_name}
-                                                                </span>
-                                                                <button
-                                                                    onClick={async () => {
-                                                                        if (confirm(t('confirmDelete'))) {
-                                                                            await deletePerformanceItem(prop.id, performanceId)
-                                                                            notify.success(t('propDeleted'))
-                                                                        }
-                                                                    }}
-                                                                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-red-500/20 text-neutral-500 hover:text-red-400 transition-all"
-                                                                    title={t('deleteProp')}
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-
-                                                {/* Notes from SceneNote */}
-                                                {noteLines.length > 0 && (
-                                                    <tr className="hover:bg-neutral-800/50">
-                                                        {(sceneProps.length === 0) && (
-                                                            <td className="px-6 py-4 text-sm text-neutral-300 align-top border-r border-neutral-800/50">
-                                                                <div className="font-medium">{scene.scene_number}</div>
-                                                                {scene.name && <div className="text-xs text-neutral-500">{scene.name}</div>}
-                                                            </td>
-                                                        )}
-                                                        <td className="px-6 py-4 text-sm text-white align-top">
-                                                            <ul className="list-disc list-inside space-y-1 text-neutral-300">
-                                                                {noteLines.map((line: string, i: number) => (
-                                                                    <li key={i}>{line}</li>
-                                                                ))}
-                                                            </ul>
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </Fragment>
-                                        )
-                                    })}
-                            </Fragment>
-                        ))}
-
-                        {allActs.length === 0 && (
-                            <tr>
-                                <td colSpan={2} className="px-4 py-8 text-center text-sm text-neutral-500">
-                                    {t('noScenes')}
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+                            {allActs.length === 0 && (
+                                <tr>
+                                    <td colSpan={2} className="px-4 py-8 text-center text-sm text-neutral-500">
+                                        {t('noScenes')}
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {/* Mobile Card View */}
@@ -200,67 +183,25 @@ export function PerformanceSceneView({ performanceId, propsByAct, scenes, sceneN
                                 ?.sort((a, b) => a.scene_number - b.scene_number)
                                 .map(scene => {
                                     const sceneProps = propsByAct[actNum]?.filter(p => p.scene_number?.toString() === scene.scene_number.toString()) || []
-                                    const noteContent = sceneNotesMap.get(scene.id)
-                                    const noteText = noteContent ? getTextFromNodes(noteContent) : null
-                                    const noteLines = noteText ? noteText.split('\n').filter((l: string) => l.trim().length > 0) : []
+                                    const tasks = sceneTasks[scene.id] || []
 
                                     return (
-                                        <div key={scene.id} className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 space-y-3">
+                                        <div
+                                            key={scene.id}
+                                            onClick={() => setSelectedScene(scene)}
+                                            className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 space-y-3 cursor-pointer hover:bg-neutral-800/50 transition-colors"
+                                        >
                                             <div className="flex items-baseline gap-2 pb-2 border-b border-neutral-800 mb-2">
                                                 <span className="text-lg font-bold text-white">{scene.scene_number}</span>
                                                 {scene.name && <span className="text-sm text-neutral-400">{scene.name}</span>}
                                             </div>
 
-                                            {(sceneProps.length > 0 || noteLines.length > 0) ? (
-                                                <div className="space-y-3">
-                                                    {sceneProps.map(prop => (
-                                                        <div key={prop.id} className="flex items-start justify-between gap-4">
-                                                            <div className="flex-1">
-                                                                <h4 className="text-sm font-medium text-neutral-300 italic mb-1">
-                                                                    {prop.item_name}
-                                                                </h4>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                {prop.image_url && (
-                                                                    <div className="relative h-10 w-10 rounded bg-neutral-800 overflow-hidden shrink-0">
-                                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                                        <img
-                                                                            src={prop.image_url}
-                                                                            alt={prop.item_name}
-                                                                            className="object-cover w-full h-full"
-                                                                        />
-                                                                    </div>
-                                                                )}
-                                                                <button
-                                                                    onClick={async () => {
-                                                                        if (confirm(t('confirmDelete'))) {
-                                                                            await deletePerformanceItem(prop.id, performanceId)
-                                                                            notify.success(t('propDeleted'))
-                                                                        }
-                                                                    }}
-                                                                    className="p-2 rounded hover:bg-neutral-800 text-neutral-500 hover:text-red-400 transition-colors"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </button>
-                                                            </div>
-                                                        </div>
+                                            {tasks.length > 0 && (
+                                                <ul className="list-disc list-inside space-y-1.5 text-neutral-300 text-sm">
+                                                    {tasks.map((task) => (
+                                                        <li key={task.id}>{task.content}</li>
                                                     ))}
-
-                                                    {/* Display Scene Note content for Mobile */}
-                                                    {noteLines.length > 0 && (
-                                                        <div className="pt-2 mt-2 border-t border-neutral-800/50">
-                                                            <ul className="list-disc list-inside space-y-1 text-sm text-neutral-400">
-                                                                {noteLines.map((line: string, i: number) => (
-                                                                    <li key={i}>{line}</li>
-                                                                ))}
-                                                            </ul>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <div className="text-sm text-neutral-600 italic">
-                                                    {t('noPropsInScene')}
-                                                </div>
+                                                </ul>
                                             )}
                                         </div>
                                     )
@@ -269,6 +210,17 @@ export function PerformanceSceneView({ performanceId, propsByAct, scenes, sceneN
                     </div>
                 ))}
             </div>
+
+            {/* Scene Detail Modal */}
+            {selectedScene && (
+                <SceneDetailModal
+                    isOpen={!!selectedScene}
+                    onClose={() => setSelectedScene(null)}
+                    scene={selectedScene}
+                    sceneNote={sceneNote}
+                    allScenes={scenes}
+                />
+            )}
         </div>
     )
 }

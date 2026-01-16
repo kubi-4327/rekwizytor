@@ -140,8 +140,16 @@
         "save": "Zapisz Zmiany",
         "details": {
             "created": "Utworzono",
-            "type": "Typ"
+            "type": "Typ",
+            "location": "Lokalizacja",
+            "performance": "Spektakl",
+            "items": "Przedmioty"
         },
+        "description": "Notatnik Techniczny / Instrukcja",
+        "descriptionPlaceholder": "np. Uwaga na szkło, Spakować dnem do góry...",
+        "performance": "Przypisz do Spektaklu",
+        "selectPerformance": "Wybierz spektakl...",
+        "noPerformance": "Brak przypisania",
         "actions": {
             "edit": "Edytuj",
             "delete": "Usuń"
@@ -263,9 +271,10 @@
     },
     "ProductionDetails": {
         "backToProductions": "Powrót do Spektakli",
+        "backToProduction": "Powrót do Spektaklu",
         "scenes": "Sceny",
         "scene": "Scena",
-        "props": "Rekwizyty",
+        "props": "Zadania",
         "acts": "Akty",
         "liveView": "Podgląd Na Żywo",
         "manageScenes": "Zarządzaj Scenami",
@@ -294,7 +303,17 @@
         "addNote": "Dodaj notatkę",
         "addNewNote": "Dodaj nową notatkę",
         "noPropsInScene": "Brak rekwizytów w tej scenie",
-        "noScenes": "Brak zdefiniowanych scen dla tego spektaklu."
+        "noTasksInScene": "Brak zadań w tej scenie",
+        "noScenes": "Brak zdefiniowanych scen dla tego spektaklu.",
+        "deleteProp": "Usuń rekwizyt",
+        "sceneBreakdown": "Rozpiska Scen",
+        "editButton": "Edytuj",
+        "editScenes": "Sceny",
+        "editTasks": "Zadania",
+        "fullScreen": "Pełny Ekran",
+        "moreTasks": "więcej zadań",
+        "confirmDelete": "Czy na pewno chcesz usunąć ten rekwizyt?",
+        "propDeleted": "Rekwizyt usunięty"
     },
     "ManageScenes": {
         "backToProduction": "Powrót do Spektakli",
@@ -655,6 +674,12 @@
         "deleteError": "Błąd podczas usuwania terminu",
         "noScenesFound": "Nie znaleziono scen w notatce scenicznej."
     },
+    "SceneDetailModal": {
+        "title": "Szczegóły sceny",
+        "sceneNumber": "Scena",
+        "noContent": "Brak notatek dla tej sceny",
+        "edit": "Edytuj"
+    },
     "ReviewList": {
         "allCaughtUp": "Wszystko sprawdzone!",
         "noDraftItems": "Brak szkiców do przeglądu.",
@@ -716,7 +741,7 @@
     },
     "Waiting": {
         "title": "Konto Oczekujące na Zatwierdzenie",
-        "description": "Twoje konto oczekuje na zatwierdzenie.",
+        "description": "Twoje konto oczekuje na zatwierdzenie. Poczekaj aż zarejestrowany rekwizytor zatwierdzi Twoje konto.",
         "signOut": "Wyloguj się"
     },
     "Rejected": {
@@ -955,5 +980,9 @@
         "pinGroupSuccess": "Przypięto grupę",
         "pinDeleteError": "Błąd usuwania przypięcia",
         "loadedElements": "Załadowano {count} elementów"
+    },
+    "SuggestionTests": {
+        "title": "Test Podpowiedzi",
+        "subtitle": "Sprawdź działanie chmurek podpowiedzi w edytorze tekstu."
     }
 }

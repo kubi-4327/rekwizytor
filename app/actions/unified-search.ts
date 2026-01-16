@@ -56,49 +56,82 @@ export async function unifiedSearch(
 
         let results: SearchResult[] = []
 
-        // Execute hybrid search (FTS + Embeddings)
-        // Execute hybrid search (FTS + Embeddings) with Multi-Vector Logic
-        try {
-            // IMPORTANT: Correct typos before generating embedding
-            // This allows "szkoła roka" to match "School of Rock"
-            const correctedQuery = query.length > 3 ? await correctQueryTypos(query) : query
+        // Check if hybrid search is enabled (for testing only)
+        const useHybridSearch = process.env.USE_HYBRID_SEARCH === 'true'
 
-            // Generate embedding for the corrected query
-            const queryEmbedding = await generateEmbedding(correctedQuery, TaskType.RETRIEVAL_QUERY)
+        if (useHybridSearch) {
+            // HYBRID SEARCH MODE (for testing)
+            // Execute hybrid search (FTS + Embeddings) with Multi-Vector Logic
+            try {
+                // IMPORTANT: Correct typos before generating embedding
+                // This allows "szkoła roka" to match "School of Rock"
+                const correctedQuery = query.length > 3 ? await correctQueryTypos(query) : query
 
-            // Determine Intent & Weights
-            const intent = classifyQueryIntent(correctedQuery)
-            const weights = getWeightsForIntent(intent)
+                // Generate embedding for the corrected query
+                const queryEmbedding = await generateEmbedding(correctedQuery, TaskType.RETRIEVAL_QUERY)
 
-            console.log(`🔍 Search Intent: [${intent.toUpperCase()}] Weights: ID=${weights.identity}, PHYS=${weights.physical}, CTX=${weights.context}`)
+                // Determine Intent & Weights
+                const intent = classifyQueryIntent(correctedQuery)
+                const weights = getWeightsForIntent(intent)
 
-            const { data, error } = await supabase.rpc('search_global_hybrid_mv', {
-                query_text: query, // Use original for FTS
-                query_embedding: JSON.stringify(queryEmbedding), // Use corrected for semantic
-                weight_identity: weights.identity,
-                weight_physical: weights.physical,
-                weight_context: weights.context,
-                match_threshold: 0.4,
-                match_count: matchCount,
-                fuzzy_threshold: 0.3
-            })
+                console.log(`🔍 Search Intent: [${intent.toUpperCase()}] Weights: ID=${weights.identity}, PHYS=${weights.physical}, CTX=${weights.context}`)
 
-            if (error) {
-                console.error('Hybrid search error:', error)
-                // Fallback to FTS only if hybrid fails
-                const { data: ftsData } = await supabase.rpc('search_global', {
-                    query_text: query,
-                    match_threshold: 0.6,
+                const { data, error } = await supabase.rpc('search_global_hybrid_mv', {
+                    query_text: query, // Use original for FTS
+                    query_embedding: JSON.stringify(queryEmbedding), // Use corrected for semantic
+                    weight_identity: weights.identity,
+                    weight_physical: weights.physical,
+                    weight_context: weights.context,
+                    match_threshold: 0.4,
                     match_count: matchCount,
                     fuzzy_threshold: 0.3
                 })
-                results = (ftsData as SearchResult[]) || []
-            } else {
-                results = (data as SearchResult[]) || []
+
+                if (error) {
+                    console.error('Hybrid search error:', error)
+                    // Fallback to classic search if hybrid fails
+                    const { data: classicData } = await supabase.rpc('search_global_direct', {
+                        query_text: query,
+                        match_threshold: 0.5,
+                        match_count: matchCount,
+                        fuzzy_threshold: 0.3
+                    })
+                    results = (classicData as SearchResult[]) || []
+                } else {
+                    results = (data as SearchResult[]) || []
+                }
+            } catch (hybridError) {
+                console.error('Hybrid search error:', hybridError)
+                // Fallback to classic search
+                const { data: classicData } = await supabase.rpc('search_global_direct', {
+                    query_text: query,
+                    match_threshold: 0.5,
+                    match_count: matchCount,
+                    fuzzy_threshold: 0.3
+                })
+                results = (classicData as SearchResult[]) || []
             }
-        } catch (ftsError) {
-            console.error('FTS search error:', ftsError)
+        } else {
+            // CLASSIC SEARCH MODE (default, production)
+            // Execute classic search (FTS + Fuzzy only, no embeddings)
+            try {
+                const { data, error } = await supabase.rpc('search_global_direct', {
+                    query_text: query,
+                    match_threshold: 0.5,
+                    match_count: matchCount,
+                    fuzzy_threshold: 0.3
+                })
+
+                if (error) {
+                    console.error('Classic search error:', error)
+                } else {
+                    results = (data as SearchResult[]) || []
+                }
+            } catch (classicError) {
+                console.error('Classic search error:', classicError)
+            }
         }
+
 
 
         // Apply filters to results
@@ -166,7 +199,7 @@ export async function unifiedSearch(
 
         return {
             results,
-            strategy: 'hybrid',
+            strategy: useHybridSearch ? 'hybrid' : 'fts',
             totalCount: results.length
         }
     } catch (error) {

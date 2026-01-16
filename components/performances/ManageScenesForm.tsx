@@ -5,12 +5,10 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/ui/PageHeader'
-import { Plus, Trash2, Loader2, Wand2, ChevronDown, CheckCheck, ArrowLeft, Layers } from 'lucide-react'
+import { Plus, Trash2, Loader2, Wand2, ChevronDown, ArrowLeft, Layers } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { SceneImportWizard } from './SceneImportWizard'
 import { SceneKanbanBoard } from './SceneKanbanBoard'
-import { generateSceneNoteContent, syncSceneNoteContent } from '@/components/notes/utils'
-import { SmartSyncDialog } from './smart-sync-dialog'
 
 type Scene = {
     id: string
@@ -33,8 +31,6 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
     const [scenes, setScenes] = useState<Scene[]>(initialScenes)
     const [loading, setLoading] = useState(false)
     const [showWizard, setShowWizard] = useState(false)
-    const [showSyncDialog, setShowSyncDialog] = useState(false)
-    const [isSyncing, setIsSyncing] = useState(false)
 
     const router = useRouter()
     const supabase = createClient()
@@ -45,69 +41,12 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
     const hasChanges = JSON.stringify(initialScenes) !== JSON.stringify(scenes)
 
     const handleBackWithCheck = () => {
-        if (hasChanges) {
-            setShowSyncDialog(true)
-        } else {
-            router.back()
-        }
-    }
-
-    const performSync = async (scenesToSave: Scene[]) => {
-        setIsSyncing(true)
-        try {
-            // 1. Get Performance Title
-            const { data: performance } = await supabase.from('performances').select('title').eq('id', performanceId).single()
-            if (!performance) throw new Error('Performance not found')
-
-            const noteTitle = `Notatka sceniczna - ${performance.title}`
-
-            // 2. Find existing note
-            const { data: existingNote } = await supabase
-                .from('notes')
-                .select('*')
-                .eq('performance_id', performanceId)
-                .eq('title', noteTitle)
-                .single()
-
-            if (existingNote) {
-                // Sync existing
-                const newContent = syncSceneNoteContent(existingNote.content, initialScenes, scenesToSave)
-                const { error: updateError } = await supabase
-                    .from('notes')
-                    .update({ content: newContent })
-                    .eq('id', existingNote.id)
-
-                if (updateError) throw updateError
-            } else {
-                // Create new
-                const newContent = generateSceneNoteContent(scenesToSave)
-                const { data: userData } = await supabase.auth.getUser()
-
-                const { error: insertError } = await supabase.from('notes').insert({
-                    performance_id: performanceId,
-                    title: noteTitle,
-                    content: newContent,
-                    created_by: userData.user?.id
-                })
-
-                if (insertError) throw insertError
-            }
-        } catch (error) {
-            console.error('Sync error:', error)
-            alert(t('updateError') + ': ' + (error as any).message)
-        } finally {
-            setIsSyncing(false)
-        }
-    }
-
-    const handleConfirmSync = async () => {
-        await performSync(scenes)
         router.back()
     }
 
-    const handleIgnoreSync = () => {
-        router.back()
-    }
+
+
+
 
     // Handlers for Kanban
     const handleReorder = async (newScenes: Scene[]) => {
@@ -197,13 +136,7 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
 
     return (
         <div className="space-y-6">
-            <SmartSyncDialog
-                isOpen={showSyncDialog}
-                onConfirm={handleConfirmSync}
-                onCancel={() => setShowSyncDialog(false)}
-                onIgnore={handleIgnoreSync}
-                isSyncing={isSyncing}
-            />
+
 
             {showWizard && (
                 <SceneImportWizard
@@ -228,7 +161,7 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
                 </Button>
                 <Button
                     onClick={handleBackWithCheck}
-                    leftIcon={<CheckCheck className="w-4 h-4" />}
+                    leftIcon={<ArrowLeft className="w-4 h-4" />}
                 >
                     Done
                 </Button>

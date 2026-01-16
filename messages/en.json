@@ -272,7 +272,11 @@
         "addNote": "Add Note",
         "addNewNote": "Add New Note",
         "noPropsInScene": "No props in this scene",
-        "noScenes": "No scenes defined for this production."
+        "noScenes": "No scenes defined for this production.",
+        "sceneBreakdown": "Scene Breakdown",
+        "editButton": "Edit",
+        "editScenes": "Scenes",
+        "editTasks": "Tasks"
     },
     "ManageScenes": {
         "backToProduction": "Back to Production",
@@ -897,5 +901,9 @@
         "pinGroupSuccess": "Group pinned",
         "pinDeleteError": "Error deleting pin",
         "loadedElements": "Loaded {count} elements"
+    },
+    "SuggestionTests": {
+        "title": "Suggestion Tests",
+        "subtitle": "Test suggestion clouds and autocomplete behavior in the editor."
     }
 }
