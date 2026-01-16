@@ -48,3 +48,4 @@ LEARNING.md
 /components/admin/
 /app/[locale]/admin/migrate-embeddings/
 /app/[locale]/admin/test-alerts/
+/app/[locale]/admin/suggestion-clouds/
