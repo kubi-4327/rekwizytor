@@ -33,8 +33,9 @@ export async function processSingleGroupEmbedding(groupId: string, groupName: st
     try {
         // Step 1: Enrich
         console.log(`   🔤 [STEP 1] Enriching "${groupName}"...`)
-        const enrichedText = await enrichGroupNameForEmbedding(groupName)
-        const wasEnriched = enrichedText !== groupName && enrichedText.includes(':')
+        const enrichedResult = await enrichGroupNameForEmbedding(groupName)
+        const enrichedText = `${enrichedResult.identity} ${enrichedResult.physical} ${enrichedResult.context}`.trim()
+        const wasEnriched = enrichedResult.identity !== groupName || enrichedResult.physical || enrichedResult.context
         console.log(`   ${wasEnriched ? '✅' : '⚠️'} [STEP 1] ${wasEnriched ? 'Enriched' : 'Not enriched'}: "${enrichedText}"`)
 
         // Step 2: Generate embedding
