@@ -10,7 +10,7 @@ import { useTranslations } from 'next-intl'
 
 type ChecklistItem = {
     id: string
-    item_id: string
+    item_id: string | null
     is_prepared: boolean | null
     is_on_stage: boolean | null
     live_notes: string | null
