@@ -13,9 +13,10 @@ interface StepperProps {
     currentStep: number
     onStepClick?: (step: number) => void
     className?: string
+    color?: string | null
 }
 
-export function Stepper({ steps, currentStep, onStepClick, className }: StepperProps) {
+export function Stepper({ steps, currentStep, onStepClick, className, color }: StepperProps) {
     return (
         <div className={cn("flex flex-col md:flex-row gap-4 md:items-center", className)}>
             {steps.map((step, index) => {
@@ -32,12 +33,20 @@ export function Stepper({ steps, currentStep, onStepClick, className }: StepperP
                         )}
                         onClick={() => onStepClick?.(stepNum)}
                     >
-                        <div className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border transition-colors",
-                            isActive ? "bg-white text-black border-white" :
-                                isCompleted ? "bg-green-500 text-white border-green-500" :
-                                    "bg-transparent text-neutral-500 border-neutral-700 group-hover:border-neutral-500"
-                        )}>
+                        <div
+                            className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border transition-colors",
+                                isActive && !color ? "bg-white text-black border-white" :
+                                    isCompleted && !color ? "bg-green-500 text-white border-green-500" :
+                                        !isActive && !isCompleted ? "bg-transparent text-neutral-500 border-neutral-700 group-hover:border-neutral-500" :
+                                            ""
+                            )}
+                            style={color ? (isActive || isCompleted ? {
+                                backgroundColor: color,
+                                borderColor: color,
+                                color: 'white'
+                            } : undefined) : undefined}
+                        >
                             {isCompleted ? <Check className="w-4 h-4" /> : stepNum}
                         </div>
 
