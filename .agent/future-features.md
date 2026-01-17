@@ -591,6 +591,42 @@ Po implementacji bazowej wersji:
 
 ---
 
+## 🎨 Portal Współpracy Zewnętrznej (Guest Designer Mode)
+
+**Data dodania:** 2026-01-17  
+**Priorytet:** Średni  
+**Złożoność:** Średnia/Wysoka  
+
+### Problem
+Reżyserzy i scenografowie często nie wiedzą, co dokładnie znajduje się w magazynie rekwizytorni przed rozpoczęciem pracy nad spektaklem. Tworzą listy "w ciemno", co zmusza rekwizytora do ręcznego sprawdzania dostępności każdorazowo. Brak jest też bezpiecznego narzędzia, które pozwalałoby im przejrzeć zasoby bez ryzyka przypadkowej edycji bazy lub wglądu w dane innych spektakli.
+
+### Proponowane rozwiązanie
+Wprowadzenie dedykowanego typu konta ("Gość/Projektant") z uprawnieniami "Read-Only" do globalnego magazynu oraz modułem tworzenia "Listy Zapotrzebowania".
+
+**Główne funkcjonalności:**
+1. **Tryb Przeglądu (Inventory Sandbox):**
+   - Pełny dostęp do wyszukiwarki (w tym Smart Search) i filtrowania zasobów.
+   - Brak możliwości edycji istniejących przedmiotów, usuwania czy modyfikowania struktury grup.
+2. **Kreator Listy Zapotrzebowania:**
+   - Projektant wybiera przedmioty z bazy, które pasują do jego wizji.
+   - Możliwość dopisywania pozycji "zewnętrznych", których nie znalazł w magazynie (automatycznie oznaczane jako "Do kupienia / Do wykonania").
+3. **Inteligentny Raport dla Rekwizytora:**
+   - Zakończona lista jest przesyłana do rekwizytora w formie gotowego zestawienia.
+   - **Logistyka magazynowa:** System automatycznie grupuje przedmioty według ich **lokalizacji** (np. najpierw wszystkie rzeczy z "Sali 2", potem z "Magazynu Głównego"). Dzięki temu rekwizytor może zebrać wszystko za jednym razem, nie krążąc kilka razy po tych samych pomieszczeniach.
+   - Jasny podział na: "Mamy (Magazyn)", "Mamy podobne (Sugestie AI)", "Brak (Konieczny zakup)".
+4. **Pełna Izolacja:**
+   - Brak wglądu w listę innych użytkowników, systemy administracyjne oraz – co najważniejsze – w inne spektakle i ich wewnętrzne notatki.
+
+### Oszacowanie czasu
+- Implementacja ról i uprawnień (RBAC): 4-5h
+- UI Modułu Zapotrzebowania (Drafting list): 6-8h
+- Logika grupowania po lokalizacjach i generowanie raportu: 4h
+- Testy bezpieczeństwa i izolacji danych: 2h
+
+**Łącznie: ~16-19 godzin pracy**
+
+---
+
 ## 📋 Szablon dla kolejnych pomysłów
 
 ```markdown

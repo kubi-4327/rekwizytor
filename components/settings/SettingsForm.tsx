@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { LogOut, User, Globe, Shield, LayoutGrid, BarChart, Settings as SettingsIcon, Clock, Info, Check } from 'lucide-react'
+import { LogOut, User, Globe, Shield, LayoutGrid, BarChart, Settings as SettingsIcon, Clock, Info, Check, MessageSquare } from 'lucide-react'
 import { notify } from '@/utils/notify'
 import { useTimeFormat } from '@/hooks/useTimeFormat'
 import { useTranslations } from 'next-intl'
@@ -138,7 +138,7 @@ export function SettingsForm({ user }: { user: UserData }) {
                         <button
                             onClick={toggleFormat}
                             disabled={!mounted}
-                            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ai-primary focus:ring-offset-2 focus:ring-offset-neutral-900 ${is24Hour ? 'bg-ai-primary' : 'bg-neutral-700'}`}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ai-primary focus:ring-offset-2 focus:ring-offset-neutral-900 ${is24Hour ? 'bg-ai-primary' : 'bg-neutral-700'}`}
                         >
                             <span
                                 className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${is24Hour ? 'translate-x-5' : 'translate-x-0'}`}
@@ -161,7 +161,7 @@ export function SettingsForm({ user }: { user: UserData }) {
                             <p className="text-xs text-neutral-400 mt-1">{tSettings('statsDescription')}</p>
                         </div>
                         <Link href="/ai-stats">
-                            <Button variant="outline" size="sm" leftIcon={<BarChart className="w-4 h-4" />}>
+                            <Button variant="glassy-secondary" size="sm" leftIcon={<BarChart className="w-4 h-4" />}>
                                 {tSettings('viewStats')}
                             </Button>
                         </Link>
@@ -173,8 +173,20 @@ export function SettingsForm({ user }: { user: UserData }) {
                             <p className="text-xs text-neutral-400 mt-1">Manage universal redirects</p>
                         </div>
                         <Link href="/settings/qr-codes">
-                            <Button variant="outline" size="sm" leftIcon={<Globe className="w-4 h-4" />}>
-                                Manage
+                            <Button variant="glassy-secondary" size="sm" leftIcon={<Globe className="w-4 h-4" />}>
+                                {tSettings('manage')}
+                            </Button>
+                        </Link>
+                    </div>
+
+                    <div className="border-t border-neutral-800 pt-4 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-sm font-medium text-white">Podpowiedzi i Poradniki</h3>
+                            <p className="text-xs text-neutral-400 mt-1">Zarządzaj systemem podpowiedzi (Tour)</p>
+                        </div>
+                        <Link href="/settings/tours">
+                            <Button variant="glassy-secondary" size="sm" leftIcon={<MessageSquare className="w-4 h-4" />}>
+                                {tSettings('browse')}
                             </Button>
                         </Link>
                     </div>
@@ -185,8 +197,8 @@ export function SettingsForm({ user }: { user: UserData }) {
                             <p className="text-xs text-neutral-400 mt-1">{t('aboutDescription')}</p>
                         </div>
                         <Link href="/about">
-                            <Button variant="outline" size="sm" leftIcon={<Info className="w-4 h-4" />}>
-                                {t('viewAbout')}
+                            <Button variant="glassy-secondary" size="sm" leftIcon={<Info className="w-4 h-4" />}>
+                                {t('view')}
                             </Button>
                         </Link>
                     </div>
@@ -206,7 +218,7 @@ export function SettingsForm({ user }: { user: UserData }) {
                             <p className="text-xs text-neutral-500">Update your password to keep your account secure</p>
                         </div>
                         <Link href="/settings/password">
-                            <Button variant="outline" size="sm" leftIcon={<Shield className="w-4 h-4" />}>
+                            <Button variant="glassy-secondary" size="sm" leftIcon={<Shield className="w-4 h-4" />}>
                                 {t('changePassword')}
                             </Button>
                         </Link>
@@ -220,7 +232,7 @@ export function SettingsForm({ user }: { user: UserData }) {
                         <Button
                             onClick={handleSignOut}
                             disabled={loading}
-                            variant="destructive"
+                            variant="glassy-danger"
                             size="sm"
                             isLoading={loading}
                             leftIcon={<LogOut className="h-4 w-4" />}

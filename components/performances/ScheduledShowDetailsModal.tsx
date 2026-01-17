@@ -148,8 +148,8 @@ export function ScheduledShowDetailsModal({ isOpen, onClose, showDate, shows, pr
                         <div className="flex gap-2">
                             <Button
                                 onClick={() => setIsEditing(true)}
-                                variant="outline"
-                                className="text-neutral-400 hover:text-white border-neutral-700 hover:bg-neutral-800"
+                                variant="glassy-secondary"
+                                className="text-neutral-400 hover:text-white"
                             >
                                 <Edit2 className="h-4 w-4 mr-2" />
                                 {t('edit')}

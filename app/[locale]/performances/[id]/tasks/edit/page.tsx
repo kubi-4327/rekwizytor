@@ -48,7 +48,7 @@ export default async function PerformanceTasksPage({ params }: Props) {
             >
                 <Link
                     href={`/performances/${id}/tasks`}
-                    className={buttonVariants({ variant: 'ghost' })}
+                    className={buttonVariants({ variant: 'glassy-secondary' })}
                 >
                     Powrót
                 </Link>

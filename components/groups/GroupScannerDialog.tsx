@@ -205,7 +205,7 @@ export function GroupScannerDialog({ isOpen, onClose, parentId }: GroupScannerDi
                             Take a photo of items to automatically create a category.
                         </p>
                         <Button
-                            variant="primary"
+                            variant="glassy-primary"
                             onClick={() => fileInputRef.current?.click()}
                             className="w-full"
                         >

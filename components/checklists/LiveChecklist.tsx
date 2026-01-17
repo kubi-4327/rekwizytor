@@ -91,7 +91,7 @@ export function LiveChecklist({ initialItems }: Props) {
                 >
                     <div className="flex items-center flex-1 min-w-0">
                         {/* Item Image/Icon */}
-                        <div className="h-12 w-12 flex-shrink-0 relative bg-neutral-800 rounded-lg overflow-hidden flex items-center justify-center mr-4">
+                        <div className="h-12 w-12 shrink-0 relative bg-neutral-800 rounded-lg overflow-hidden flex items-center justify-center mr-4">
                             {item.item_image_url_snapshot ? (
                                 <NextImage
                                     src={item.item_image_url_snapshot}

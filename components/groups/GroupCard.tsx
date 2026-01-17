@@ -4,6 +4,7 @@
 import { Database } from '@/types/supabase'
 import { Folder, Edit2, Tag } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
+import { DEFAULT_GROUP_COLOR } from '@/utils/constants/colors'
 
 
 type Group = Pick<Database['public']['Tables']['groups']['Row'],
@@ -42,9 +43,9 @@ export function GroupCard({
 
     // Determine color to use
     // Priority: Override > Group Color > Default Brand Color
-    const themeColor = colorOverride || group.color || '#A0232F'
+    const themeColor = colorOverride || group.color || DEFAULT_GROUP_COLOR
     // For background opacity:
-    const bgColor = colorOverride || group.color || '#A0232F'
+    const bgColor = colorOverride || group.color || DEFAULT_GROUP_COLOR
 
     const isCompact = variant === 'compact'
 

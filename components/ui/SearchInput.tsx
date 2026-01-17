@@ -95,7 +95,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
                     onChange={onChange}
                     onFocus={() => setShowHistory(true)}
                     onKeyDown={handleKeyDown}
-                    className={`w-full rounded-md border bg-neutral-950 py-2 pl-9 pr-24 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 transition-colors
+                    className={`w-full rounded-xl border bg-neutral-900/80 py-2 pl-9 pr-24 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 transition-colors
                         ${isSmart
                             ? 'border-ai-primary/30 focus:border-ai-primary focus:ring-ai-primary'
                             : 'border-neutral-800 focus:border-neutral-500 focus:ring-neutral-500'

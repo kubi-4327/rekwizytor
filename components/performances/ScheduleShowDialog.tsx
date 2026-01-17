@@ -11,6 +11,7 @@ import { pl, enUS } from 'date-fns/locale'
 import { useTranslations, useLocale } from 'next-intl'
 import { Stepper } from '@/components/ui/Stepper'
 import { Modal } from '@/components/ui/Modal'
+import { Button } from '@/components/ui/Button'
 
 type Props = {
     isOpen: boolean
@@ -498,40 +499,41 @@ export function ScheduleShowDialog({ isOpen, onClose, performanceId, performance
                     </div>
 
                     <div className="flex justify-between items-center pt-8 mt-auto w-full">
-                        <button
+                        <Button
                             onClick={handleBack}
-                            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors text-neutral-400 hover:text-white`}
+                            variant="glassy-secondary"
+                            className="flex items-center gap-2"
                         >
                             <ChevronLeft className="w-4 h-4" />
                             {step === 1 && queue.length > 0 ? t('cancel') : t('back')}
-                        </button>
+                        </Button>
 
                         {step < 3 ? (
-                            <button
+                            <Button
                                 onClick={handleNext}
                                 disabled={step === 1 ? !selectedDate : !selectedTime}
-                                className="flex items-center gap-2 bg-white text-black px-6 py-2 rounded-lg font-bold hover:bg-neutral-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-white/10"
+                                variant="glassy-primary"
+                                className="flex items-center gap-2"
                             >
                                 {t('nextStep')}
-                                <ChevronRight className="w-4 h-4" />
-                            </button>
+                                <ChevronRight className="w-4 h-4 ml-2" />
+                            </Button>
                         ) : (
-                            <button
+                            <Button
                                 onClick={handleSubmit}
                                 disabled={loading || queue.length === 0}
-                                className="flex items-center gap-2 text-white px-6 py-2 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                                variant="glassy-primary"
+                                isLoading={loading}
+                                className="flex items-center gap-2"
                                 style={{
-                                    backgroundColor: performanceColor || '#2563eb',
-                                    boxShadow: `0 4px 10px -1px ${performanceColor || '#2563eb'}40`
+                                    backgroundColor: performanceColor || undefined,
+                                    borderColor: performanceColor || undefined,
+                                    boxShadow: performanceColor ? `0 4px 10px -1px ${performanceColor}40` : undefined
                                 }}
                             >
-                                {loading ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                    <CheckCircle2 className="w-4 h-4" />
-                                )}
+                                <CheckCircle2 className="w-4 h-4 mr-2" />
                                 {editData ? "Update Schedule" : (queue.length > 1 ? t('scheduleShows', { count: queue.length }) : t('confirm'))}
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </div>

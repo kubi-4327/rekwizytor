@@ -175,7 +175,7 @@ END:VCALENDAR`
                     {sortedDates.length > 0 && (
                         <button
                             onClick={handleDownloadAll}
-                            className="inline-flex items-center justify-center rounded-md border border-neutral-700 bg-neutral-800 p-1.5 text-white hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50 transition-colors"
+                            className="inline-flex items-center justify-center rounded-lg border border-white/5 bg-white/5 p-1.5 text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50 transition-colors backdrop-blur-sm"
                             title={t('exportAll')}
                         >
                             <Download className="h-3.5 w-3.5" />
@@ -183,7 +183,7 @@ END:VCALENDAR`
                     )}
                     <button
                         onClick={() => setIsScheduleModalOpen(true)}
-                        className="inline-flex items-center justify-center p-1.5 bg-white text-black rounded-md hover:bg-neutral-200 transition-colors"
+                        className="inline-flex items-center justify-center p-1.5 bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors"
                         title={t('schedule')}
                     >
                         <Plus className="w-3.5 h-3.5" />

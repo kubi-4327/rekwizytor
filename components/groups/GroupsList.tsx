@@ -1,6 +1,7 @@
 'use client'
 
 import { Database } from '@/types/supabase'
+import { DEFAULT_GROUP_COLOR } from '@/utils/constants/colors'
 import { GroupCard } from './GroupCard'
 import { GroupListItem } from './GroupListItem'
 import { usePathname, useSearchParams, useRouter } from 'next/navigation'
@@ -280,7 +281,7 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
                                         // With no subgroups, count is 0
                                         const childrenCount = 0
                                         // Effective color prioritization
-                                        const effectiveColor = group.performances?.color || group.color || '#A0232F'
+                                        const effectiveColor = group.performances?.color || group.color || DEFAULT_GROUP_COLOR
                                         const groupWithColor = { ...group, color: effectiveColor }
 
                                         return (
@@ -301,7 +302,7 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
                                         // With no subgroups, count is 0
                                         const childrenCount = 0
                                         // Effective color prioritization
-                                        const effectiveColor = group.performances?.color || group.color || '#A0232F'
+                                        const effectiveColor = group.performances?.color || group.color || DEFAULT_GROUP_COLOR
                                         const groupWithColor = { ...group, color: effectiveColor }
 
                                         return (

@@ -48,7 +48,7 @@ export default async function PerformancesPage() {
                     <PerformancesListActions scheduledShows={allScheduledShows || []} performances={performances || []} />
                     <Link
                         href="/performances/new"
-                        className={buttonVariants({ variant: "primary", className: "w-full justify-center md:w-auto md:min-w-[140px]" })}
+                        className={buttonVariants({ variant: "glassy-primary", className: "w-full justify-center md:w-auto md:min-w-[140px]" })}
                     >
                         <Plus className="sm:mr-2 h-4 w-4" />
                         <span className="hidden sm:inline">{t('addProduction')}</span>

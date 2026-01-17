@@ -154,7 +154,7 @@ export default function NotesList({ performanceId, initialNotes = [] }: { perfor
                 <div className="flex w-full md:w-auto justify-end">
                     <Button
                         onClick={() => createNote()}
-                        variant="primary"
+                        variant="glassy-primary"
                         className="w-full justify-center md:w-auto md:min-w-[140px]"
                     >
                         <Plus className="h-4 w-4 sm:mr-2" />
@@ -240,7 +240,7 @@ export default function NotesList({ performanceId, initialNotes = [] }: { perfor
                                                             {note.title}
                                                         </h3>
                                                         {isMaster && (
-                                                            <div className="flex-shrink-0">
+                                                            <div className="shrink-0">
                                                                 <FileText
                                                                     size={18}
                                                                     className="text-amber-500"

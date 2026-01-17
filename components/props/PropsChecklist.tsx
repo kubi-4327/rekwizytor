@@ -133,9 +133,9 @@ export function PropsChecklist({ performanceId, initialProps, variant = 'checkli
                 {variant === 'manage' && (
                     <div className="flex gap-2">
                         <DropdownAction
-                            label="Add Items"
+                            label={t('addItem')}
                             icon={<Plus className="h-4 w-4" />}
-                            variant="primary"
+                            variant="glassy-primary"
                             items={[
                                 {
                                     label: 'Scan Photo',

@@ -124,10 +124,10 @@ END:VCALENDAR`
 
     return (
         <DropdownAction
-            variant="secondary"
+            variant="glassy"
             icon={<MoreVertical className="h-5 w-5" />}
             label={t('actions')}
-            className="border-neutral-700 h-10 px-3 w-full justify-center md:w-auto min-w-0"
+            className="h-10 px-3 w-full justify-center md:w-auto min-w-0"
             showChevron={false}
             align="left"
             items={[

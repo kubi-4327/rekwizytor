@@ -23,11 +23,13 @@ import {
     Sparkles,
     MoreHorizontal
 } from 'lucide-react'
+import * as LucideIcons from 'lucide-react'
 import type { SearchResult } from '@/app/actions/unified-search'
 import { notify } from '@/utils/notify'
 import { rasterizeIcon } from '@/utils/icon-rasterizer'
 import { useTranslations } from 'next-intl'
 import { ScheduleShowDialog } from '@/components/performances/ScheduleShowDialog'
+import { DEFAULT_GROUP_COLOR } from '@/utils/constants/colors'
 
 // --- Helper Functions (moved from page.tsx to be self-contained) ---
 
@@ -348,12 +350,84 @@ export function SearchResultCard({ item, aiMode, onClose }: SearchResultCardProp
                 }}
             >
                 {/* Icon Box */}
-                <div className={clsx(
-                    "flex-shrink-0 w-10 h-10 rounded-md flex items-center justify-center",
-                    "bg-neutral-800 text-neutral-400",
-                )}>
-                    <ItemIcon className={clsx("h-5 w-5", itemConfig.colorClass)} />
-                </div>
+                {(() => {
+                    // Production: Image or Colored Icon
+                    if (item.entity_type === 'performance') {
+                        const color = item.metadata?.color || '#c084fc' // purple-400
+                        if (item.image_url) {
+                            return (
+                                <div className="relative w-10 h-10 shrink-0">
+                                    <img
+                                        src={item.image_url}
+                                        alt={item.name}
+                                        className="w-full h-full object-cover rounded-md border-2"
+                                        style={{ borderColor: color }}
+                                    />
+                                </div>
+                            )
+                        }
+                        return (
+                            <div
+                                className="shrink-0 w-10 h-10 rounded-md flex items-center justify-center border"
+                                style={{
+                                    backgroundColor: `${color}1A`, // ~10% opacity
+                                    borderColor: `${color}33`, // ~20% opacity
+                                    color: color
+                                }}
+                            >
+                                <Layers className="h-5 w-5" />
+                            </div>
+                        )
+                    }
+
+                    // Group: Dynamic Icon + Color
+                    if (item.entity_type === 'group') {
+                        const color = item.metadata?.performance_color || item.metadata?.color || DEFAULT_GROUP_COLOR // Use performance color or group color or default
+                        // @ts-ignore - Dynamic access to icons
+                        const GroupIcon = (item.metadata?.icon && LucideIcons[item.metadata.icon])
+                            ? LucideIcons[item.metadata.icon as keyof typeof LucideIcons]
+                            : Tag
+
+                        return (
+                            <div
+                                className="shrink-0 w-10 h-10 rounded-md flex items-center justify-center"
+                                style={{
+                                    backgroundColor: `${color}33`, // ~20% opacity
+                                    color: color
+                                }}
+                            >
+                                {/* @ts-ignore */}
+                                <GroupIcon className="h-5 w-5" />
+                            </div>
+                        )
+                    }
+
+                    // Note: Colored Note Icon
+                    if (item.entity_type === 'note') {
+                        const color = item.metadata?.color || '#fbbf24' // amber-400
+                        return (
+                            <div
+                                className="shrink-0 w-10 h-10 rounded-md flex items-center justify-center"
+                                style={{
+                                    backgroundColor: `${color}33`, // ~20% opacity
+                                    color: color
+                                }}
+                            >
+                                <StickyNote className="h-5 w-5" />
+                            </div>
+                        )
+                    }
+
+                    // Default (Locations, Items, etc.)
+                    return (
+                        <div className={clsx(
+                            "shrink-0 w-10 h-10 rounded-md flex items-center justify-center",
+                            "bg-neutral-800 text-neutral-400",
+                        )}>
+                            <ItemIcon className={clsx("h-5 w-5", itemConfig.colorClass)} />
+                        </div>
+                    )
+                })()}
 
                 {/* Content */}
                 <div className="ml-4 flex-1 min-w-0 flex flex-col justify-center">

@@ -83,20 +83,21 @@
         "recentActivity": "Recent Activity",
         "noActivity": "No recent activity to show.",
         "nearestPerformance": "Nearest Performance",
-        "quickActions": "Quick Actions",
+        "noUpcomingPerformances": "No upcoming performances scheduled",
         "manageProduction": "Manage Production",
+        "daysLeft": "{count, plural, one {in 1 day} other {in # days}}",
+        "today": "Today",
         "recentMentions": "Recent Mentions",
         "noMentions": "You haven't been mentioned in any notes recently.",
         "mentionedIn": "Mentioned in \"{title}\"",
+        "quickActions": "Quick Actions",
         "inventoryStats": "Inventory Statistics",
         "totalItems": "Total Items",
         "inMaintenance": "In Maintenance",
         "unassigned": "Unassigned",
         "upcomingPerformances": "Upcoming Performances",
-        "noUpcomingPerformances": "No upcoming performances scheduled",
         "daysUntil": "in {days} days",
         "tomorrow": "Tomorrow",
-        "today": "Today",
         "activeChecklists": "Active Checklists",
         "noActiveChecklists": "No active checklists",
         "checklistProgress": "{completed} of {total} items",
@@ -122,7 +123,8 @@
         "search": "Search",
         "searchPlaceholder": "Search...",
         "openGlobalSearchWithContext": "Search in {context}",
-        "more": "More"
+        "more": "More",
+        "about": "About"
     },
     "Groups": {
         "title": "Groups",
@@ -135,13 +137,39 @@
         "searchIcons": "Search icons (e.g. box, chair)...",
         "suggested": "Suggested",
         "cancel": "Cancel",
-        "save": "Save Changes"
+        "save": "Save Changes",
+        "details": {
+            "created": "Created",
+            "type": "Type",
+            "location": "Location",
+            "performance": "Performance",
+            "items": "Items"
+        },
+        "description": "Technical Notes / Instructions",
+        "descriptionPlaceholder": "e.g. Handle with care, Pack upside down...",
+        "performance": "Assign to Performance",
+        "selectPerformance": "Select performance...",
+        "noPerformance": "No assignment",
+        "actions": {
+            "edit": "Edit",
+            "delete": "Delete"
+        },
+        "labels": {
+            "print": "Print Label",
+            "generating": "Generating...",
+            "success": "Label generated",
+            "error": "Generation error"
+        },
+        "locations": {
+            "unassigned": "Unassigned"
+        }
     },
     "Items": {
         "title": "Props Inventory",
         "subtitle": "Manage your theater collection",
         "addProps": "Add Props",
-        "export": "Export"
+        "export": "Export",
+        "manageStructure": "Manage Structure"
     },
     "Performances": {
         "title": "Productions",
@@ -216,7 +244,8 @@
             "visionGroup": "Vision: Group",
             "visionProps": "Vision: Props",
             "mappingAI": "Mapping AI",
-            "queryCorrection": "Query Correction"
+            "queryCorrection": "Query Correction",
+            "embeddingIndexing": "Indexing (Vectors)"
         },
         "noLogs": "No logs found yet. Perform AI operations to see data.",
         "costBreakdown": "Cost Breakdown",
@@ -242,41 +271,49 @@
     },
     "ProductionDetails": {
         "backToProductions": "Back to Productions",
+        "backToProduction": "Back to Production",
         "scenes": "Scenes",
         "scene": "Scene",
-        "props": "Props",
+        "props": "Tasks",
         "acts": "Acts",
+        "liveView": "Live View",
         "manageScenes": "Manage Scenes",
         "editDetails": "Edit Details",
         "actions": "Actions",
-        "liveView": "Live View",
-        "propsList": "Props List",
-        "manageProps": "Manage Props",
-        "viewScenes": "View by Scenes",
-        "viewAll": "View All Items",
+        "propsList": "Scene List",
+        "viewScenes": "Scene View",
+        "viewAll": "All Items",
         "searchPlaceholder": "Search props...",
         "filterStatus": "Filter by status",
-        "addItem": "Add Item",
+        "addItem": "Add Items",
+        "manageProps": "Manage Props",
         "table": {
             "scene": "Scene",
-            "item": "Item",
+            "item": "Prop",
+            "tasks": "Tasks",
             "instructions": "Instructions"
         },
         "act": "Act {actNum}",
         "noProps": "No props assigned to this production yet.",
         "sceneView": "Scene View",
-        "allItemsView": "All Items View",
+        "allItemsView": "All Items",
         "notesTitle": "Notes",
         "viewAllNotes": "All ({count})",
         "noNotes": "No notes for this production.",
-        "addNote": "Add Note",
-        "addNewNote": "Add New Note",
+        "addNote": "Add note",
+        "addNewNote": "Add new note",
         "noPropsInScene": "No props in this scene",
+        "noTasksInScene": "No tasks in this scene",
         "noScenes": "No scenes defined for this production.",
+        "deleteProp": "Delete prop",
         "sceneBreakdown": "Scene Breakdown",
         "editButton": "Edit",
         "editScenes": "Scenes",
-        "editTasks": "Tasks"
+        "editTasks": "Tasks",
+        "fullScreen": "Full Screen",
+        "moreTasks": "more tasks",
+        "confirmDelete": "Are you sure you want to delete this prop?",
+        "propDeleted": "Prop deleted"
     },
     "ManageScenes": {
         "backToProduction": "Back to Production",
@@ -521,13 +558,20 @@
         "sceneName": "Scene Name",
         "noScenes": "No scenes defined yet. Start by adding Scene 1 of Act 1.",
         "deleteConfirm": "Are you sure? This will delete the scene definition.",
+        "deleteActConfirm": "Are you sure you want to delete Act {actNumber} and all its scenes?",
         "addError": "Failed to add scene",
         "deleteError": "Failed to delete scene",
         "updateError": "Failed to update scene",
         "manageScenes": "Manage Scenes",
         "actHeader": "Act {act}",
         "manualEntry": "Manual Entry",
-        "aiImport": "AI Import"
+        "aiImport": "AI Import",
+        "aiImportError": "Error during AI import",
+        "syncSceneNoteTitle": "Update scene note?",
+        "syncSceneNoteDescription": "Do you want to synchronize changes (name changes, order) with the scene note? Your text will be transferred according to the new scene structure.",
+        "syncAndSave": "Yes, sync and save",
+        "saveOnly": "No, save scenes only",
+        "cancel": "Cancel"
     },
     "ManagePropsForm": {
         "unassignedItems": "Unassigned Items",
@@ -595,7 +639,15 @@
         "importFromUrl": "Import from theater website",
         "import": "Fetch data",
         "datesFound": "Found {count} scheduled dates.",
-        "importDescription": "Paste the performance page link to automatically fill the data."
+        "importDescription": "Paste the performance page link to automatically fill the data.",
+        "importTitle": "Import Data",
+        "manualEntry": "Manual Entry (Skip Import)",
+        "fillDetails": "Fill Details",
+        "backToImport": "Back to Import",
+        "scheduleImported": "Schedule Imported",
+        "scheduleImportedDesc": "These dates will be automatically added after saving.",
+        "selectImage": "Select Image",
+        "next": "Next"
     },
     "ScheduledShowsList": {
         "title": "Scheduled",
@@ -624,6 +676,16 @@
         },
         "sceneBreakdown": "Scene Breakdown",
         "scene": "Scene {number}",
+        "edit": "Edit",
+        "confirmDelete": "Are you sure you want to delete this scheduled show? This will remove the scheduled event.",
+        "deleteSuccess": "Show deleted successfully",
+        "deleteError": "Error deleting show",
+        "noScenesFound": "No scenes found in scene note."
+    },
+    "SceneDetailModal": {
+        "title": "Scene Details",
+        "sceneNumber": "Scene",
+        "noContent": "No notes for this scene",
         "edit": "Edit"
     },
     "ReviewList": {
@@ -683,7 +745,11 @@
         "changePassword": "Change Password",
         "aboutTitle": "About App",
         "aboutDescription": "Version info and licenses",
-        "viewAbout": "View"
+        "viewAbout": "View",
+        "manage": "Manage",
+        "viewStats": "View Stats",
+        "browse": "Browse",
+        "view": "View"
     },
     "Waiting": {
         "title": "Account Pending Approval",
@@ -766,6 +832,8 @@
         "copied": "Copied to clipboard! You can now paste into Notion, Evernote, etc.",
         "loading": "Loading...",
         "edit": "Edit",
+        "editNote": "Edit Note",
+        "manageScenes": "Manage Scenes",
         "done": "Done"
     },
     "FastAddForm": {
@@ -860,6 +928,29 @@
         "loading": {
             "saving": "Saving...",
             "exporting": "Exporting...",
+            "generating": "Generating...",
+            "loading": "Loading...",
+            "processing": "Processing...",
+            "deleting": "Deleting..."
+        }
+    },
+    "QrManager": {
+        "title": "QR Codes",
+        "subtitle": "Manage universal redirect codes",
+        "filterAll": "All",
+        "filterGroups": "Groups",
+        "filterPerformances": "Performances",
+        "filterOthers": "Others",
+        "selected": "Selected: {count}",
+        "actions": {
+            "delete": "Delete",
+            "deactivate": "Deactivate",
+            "activate": "Activate"
+        },
+        "columns": {
+            "label": "Label",
+            "target": "Target",
+            "created": "Created",
             "clicks": "Clicks"
         },
         "edit": {

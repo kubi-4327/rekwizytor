@@ -104,7 +104,7 @@ export function GroupsHeaderActions({ groups, currentParentId }: GroupsHeaderAct
                 icon={<MoreVertical className="w-4 h-4" />}
                 align="left"
                 showChevron={false}
-                variant="secondary"
+                variant="glassy"
                 className="w-full justify-center"
             >
                 {({ close }) => (
@@ -143,7 +143,7 @@ export function GroupsHeaderActions({ groups, currentParentId }: GroupsHeaderAct
             <DropdownAction
                 label="Dodaj"
                 icon={<Plus className="w-4 h-4" />}
-                variant="primary"
+                variant="glassy-primary"
                 align="right"
                 className="w-full justify-center"
             >

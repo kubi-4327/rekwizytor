@@ -195,7 +195,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
                                 <div className="flex flex-col sm:flex-row gap-3 shrink-0 pt-2 lg:pt-0">
                                     <Link
                                         href={`/performances/${id}/live`}
-                                        className={buttonVariants({ variant: "destructive", className: "gap-2 shadow-lg hover:shadow-red-900/20" })}
+                                        className={buttonVariants({ variant: "glassy-danger", className: "gap-2" })}
                                     >
                                         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse mr-2 border border-red-400" />
                                         {t('liveView')}

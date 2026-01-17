@@ -227,11 +227,11 @@ export function SceneTaskEditor({ performanceId, scenes }: Props) {
                                                 }
                                             }}
                                             placeholder="Dodaj nowe zadanie..."
-                                            className="flex-1 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-600"
+                                            className="flex-1 px-3 py-2 bg-neutral-900/50 border border-neutral-700/50 rounded-xl text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-600 focus:bg-neutral-900"
                                         />
                                         <Button
                                             onClick={() => handleAddTask(scene.id)}
-                                            variant="ghost"
+                                            variant="glassy-primary"
                                             size="sm"
                                             leftIcon={<Plus className="w-4 h-4" />}
                                         >

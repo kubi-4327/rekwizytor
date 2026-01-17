@@ -285,7 +285,7 @@
         "viewAll": "Wszystkie Przedmioty",
         "searchPlaceholder": "Szukaj rekwizytów...",
         "filterStatus": "Filtruj po statusie",
-        "addItem": "Dodaj Przedmiot",
+        "addItem": "Dodaj Przedmioty",
         "manageProps": "Zarządzaj Rekwizytami",
         "table": {
             "scene": "Scena",
@@ -637,9 +637,17 @@
         "saveShow": "Zapisz Spektakl",
         "unknownError": "Wystąpił nieznany błąd",
         "importFromUrl": "Importuj ze strony teatru",
-        "import": "Pobierz dane",
+        "import": "Dalej",
         "datesFound": "Znaleziono {count} terminów do zaplanowania.",
-        "importDescription": "Wklej link do strony spektaklu aby automatycznie uzupełnić dane."
+        "importDescription": "Wklej link do strony spektaklu aby automatycznie uzupełnić dane.",
+        "importTitle": "Importuj dane",
+        "manualEntry": "Wypełnij ręcznie (Pomiń import)",
+        "fillDetails": "Uzupełnij szczegóły",
+        "backToImport": "Wróć do importu",
+        "scheduleImported": "Pobrano harmonogram",
+        "scheduleImportedDesc": "Te terminy zostaną automatycznie dodane po zapisaniu.",
+        "selectImage": "Wybierz grafikę",
+        "next": "Dalej"
     },
     "ScheduledShowsList": {
         "title": "Zaplanowane",
@@ -737,7 +745,11 @@
         "changePassword": "Zmień Hasło",
         "aboutTitle": "O Aplikacji",
         "aboutDescription": "Informacje o wersji i licencjach",
-        "viewAbout": "Zobacz"
+        "viewAbout": "Zobacz",
+        "manage": "Zarządzaj",
+        "viewStats": "Zobacz statystyki",
+        "browse": "Przeglądaj",
+        "view": "Zobacz"
     },
     "Waiting": {
         "title": "Konto Oczekujące na Zatwierdzenie",

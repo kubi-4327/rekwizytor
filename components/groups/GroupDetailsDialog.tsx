@@ -17,6 +17,7 @@ import { pl } from 'date-fns/locale'
 import { useTranslations } from 'next-intl'
 import { notify } from '@/utils/notify'
 import { rasterizeIcon } from '@/utils/icon-rasterizer'
+import { DEFAULT_GROUP_COLOR } from '@/utils/constants/colors'
 
 interface GroupDetailsDialogProps {
     group: {
@@ -69,6 +70,9 @@ export function GroupDetailsDialog({
             })
         }
     }, [group, open])
+
+    // Resolve Effective Color (Unified Logic)
+    const effectiveColor = group?.performances?.color || group?.color || DEFAULT_GROUP_COLOR
 
     if (!group) return null
 
@@ -132,7 +136,7 @@ export function GroupDetailsDialog({
             <div className="relative h-32 w-full overflow-hidden">
                 <div
                     className="absolute inset-0 opacity-20"
-                    style={{ backgroundColor: group.color || '#3b82f6' }}
+                    style={{ backgroundColor: effectiveColor }}
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-neutral-900 via-neutral-900/60 to-transparent" />
 
@@ -140,8 +144,8 @@ export function GroupDetailsDialog({
                     <div
                         className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transform transition-transform duration-300 hover:scale-105 shrink-0"
                         style={{
-                            backgroundColor: group.color || '#3b82f6',
-                            boxShadow: `0 8px 32px -4px ${group.color}40`
+                            backgroundColor: effectiveColor,
+                            boxShadow: `0 8px 32px -4px ${effectiveColor}40`
                         }}
                     >
                         <IconComponent className="w-8 h-8 text-white" />
@@ -224,33 +228,33 @@ export function GroupDetailsDialog({
 
                     <div className="flex-1 flex flex-col gap-2 justify-center">
                         <Button
-                            variant="primary"
+                            variant="glassy-primary"
                             onClick={handlePrintLabel}
                             disabled={isGeneratingLabel}
-                            className="bg-neutral-100 text-black hover:bg-white w-full h-10 font-semibold shadow-lg shadow-white/5 border-0"
+                            className="w-full h-10 font-semibold shadow-lg"
                         >
                             <QrCode className="w-4 h-4 mr-2" />
                             {isGeneratingLabel ? t('labels.generating') : t('labels.print')}
                         </Button>
                         <div className="flex gap-2">
                             <Button
-                                variant="secondary"
+                                variant="glassy-secondary"
                                 onClick={() => {
                                     onOpenChange(false)
                                     onEdit(group)
                                 }}
-                                className="bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-300 flex-1 h-10"
+                                className="flex-1 h-10"
                             >
                                 <Edit2 className="w-4 h-4 mr-2" />
                                 {t('actions.edit')}
                             </Button>
                             <Button
-                                variant="destructive"
+                                variant="glassy-danger"
                                 onClick={() => {
                                     onOpenChange(false)
                                     onDelete(group)
                                 }}
-                                className="h-10 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20"
+                                className="h-10 px-3"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </Button>

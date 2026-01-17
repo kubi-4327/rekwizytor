@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Save, Calendar, Upload, X, Globe, ArrowDownToLine } from 'lucide-react'
+import { Save, Calendar, Upload, X, Globe, ArrowDownToLine, ArrowRight, SkipForward } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { compressImage, createThumbnail } from '@/utils/image-processing'
 import { extractTopColors } from '@/utils/colors'
@@ -15,6 +15,7 @@ import { useTranslations } from 'next-intl'
 import { Database } from '@/types/supabase'
 import { scrapePerformance } from '@/app/actions/scrape-performance'
 import { refreshSearchIndex } from '@/app/actions/unified-search'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export function CreatePerformanceForm() {
     const t = useTranslations('CreatePerformanceForm')
@@ -31,6 +32,7 @@ export function CreatePerformanceForm() {
     const [scrapeUrl, setScrapeUrl] = useState('')
     const [isScraping, setIsScraping] = useState(false)
     const [upcomingDates, setUpcomingDates] = useState<string[]>([])
+    const [step, setStep] = useState<'import' | 'edit'>('import')
 
     const router = useRouter()
     const supabase = createClient()
@@ -364,6 +366,9 @@ export function CreatePerformanceForm() {
                 if (data.dates && data.dates.length > 0) {
                     setUpcomingDates(data.dates)
                 }
+
+                // Move to next step on success
+                setStep('edit')
             } else {
                 setError(result.error || 'Failed to scrape data')
             }
@@ -376,206 +381,314 @@ export function CreatePerformanceForm() {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl">
-            <div className="space-y-6 bg-neutral-900/50 p-6 rounded-xl border border-neutral-800">
-                {/* Scraping Section */}
-                <div className="p-4 bg-neutral-950/50 rounded-lg border border-neutral-800 space-y-3">
-                    <label htmlFor="scrapeUrl" className="block text-sm font-medium text-neutral-300 flex items-center gap-2">
-                        <Globe className="w-4 h-4" />
-                        {t('importFromUrl', { defaultMessage: 'Importuj ze strony teatru' })}
-                    </label>
-                    <div className="flex gap-2">
-                        <input
-                            type="url"
-                            id="scrapeUrl"
-                            value={scrapeUrl}
-                            onChange={(e) => setScrapeUrl(e.target.value)}
-                            className="flex-1 rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
-                            placeholder="https://teatr-rozrywki.pl/..."
-                        />
-                        <Button
-                            type="button"
-                            onClick={handleScrape}
-                            disabled={isScraping || !scrapeUrl}
-                            isLoading={isScraping}
-                            variant="secondary"
-                            leftIcon={<ArrowDownToLine className="w-4 h-4" />}
-                        >
-                            {t('import', { defaultMessage: 'Pobierz dane' })}
-                        </Button>
-                    </div>
-                    {upcomingDates.length > 0 && (
-                        <div className="text-xs text-green-400 mt-2">
-                            {t('datesFound', { count: upcomingDates.length, defaultMessage: `Znaleziono ${upcomingDates.length} terminów do zaplanowania.` })}
-                        </div>
-                    )}
-                    <p className="text-xs text-neutral-500">
-                        {t('importDescription', { defaultMessage: 'Wklej link do strony spektaklu aby automatycznie uzupełnić dane.' })}
-                    </p>
-                </div>
-
-                <div>
-                    <label htmlFor="title" className="block text-sm font-medium text-neutral-300">
-                        {t('showTitle')} <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        id="title"
-                        required
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        className="mt-2 block w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
-                        placeholder={t('titlePlaceholder')}
-                    />
-                </div>
-
-                {/* Poster Upload */}
-                <div>
-                    <label className="block text-sm font-medium text-neutral-300 mb-2">
-                        {t('showPoster')}
-                    </label>
-                    <div
-                        className={`flex items-start gap-6 p-4 rounded-lg border-2 border-dashed transition-colors ${isDragging ? 'border-neutral-500 bg-neutral-800/50' : 'border-transparent'}`}
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
-                        onDrop={handleDrop}
+        <div className="w-full">
+            <AnimatePresence mode="wait">
+                {step === 'import' ? (
+                    <motion.div
+                        key="import-step"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-8 max-w-2xl mx-auto"
                     >
-                        <div
-                            className="relative w-32 h-48 bg-neutral-950 rounded-lg border border-neutral-800 overflow-hidden flex items-center justify-center shrink-0"
-                            style={{ borderColor: selectedColor || undefined }}
-                        >
-                            {imagePreview ? (
-                                <>
-                                    <Image
-                                        src={imagePreview}
-                                        alt="Preview"
-                                        fill
-                                        className="object-cover"
-                                        unoptimized
-                                        onError={(e) => console.error('[Client] Image preview failed to load:', e)}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setImageFile(null)
-                                            setImagePreview(null)
-                                            setExtractedColors([])
-                                            setSelectedColor(null)
-                                        }}
-                                        className="absolute top-1 right-1 bg-black/60 text-white p-1 rounded-full hover:bg-black/80"
-                                    >
-                                        <X className="w-3 h-3" />
-                                    </button>
-                                </>
-                            ) : (
-                                <div className="text-neutral-600 flex flex-col items-center gap-2">
-                                    <Upload className="w-6 h-6" />
-                                    <span className="text-xs">{t('noPoster')}</span>
-                                </div>
-                            )}
+                        <div className="space-y-2">
+                            <h2 className="text-2xl font-bold bg-linear-to-r from-white to-neutral-400 bg-clip-text text-transparent">
+                                {t('importTitle', { defaultMessage: 'Importuj dane' })}
+                            </h2>
+                            <p className="text-neutral-400">
+                                {t('importDescription', { defaultMessage: 'Wklej link do strony spektaklu aby automatycznie uzupełnić dane.' })}
+                            </p>
                         </div>
 
-                        <div className="flex-1 space-y-4">
-                            <div>
-                                <input
-                                    type="file"
-                                    id="poster"
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                    className="block w-full text-sm text-neutral-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-neutral-800 file:text-white hover:file:bg-neutral-700"
-                                />
-                                <p className="mt-2 text-xs text-neutral-500">
-                                    {t('uploadPoster')}
-                                    <br />
-                                    <span className="text-neutral-400">{t('dragDrop')}</span>
-                                </p>
+                        <div className="bg-neutral-900/50 p-8 rounded-xl border border-neutral-800 space-y-6 shadow-xl backdrop-blur-sm">
+                            <div className="space-y-4">
+                                <label htmlFor="scrapeUrl" className="text-sm font-medium text-neutral-300 flex items-center gap-2">
+                                    <Globe className="w-4 h-4 text-blue-400" />
+                                    {t('importFromUrl', { defaultMessage: 'Importuj ze strony teatru' })}
+                                </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="url"
+                                        id="scrapeUrl"
+                                        value={scrapeUrl}
+                                        onChange={(e) => setScrapeUrl(e.target.value)}
+                                        className="flex-1 rounded-lg border border-neutral-700 bg-neutral-950 px-4 py-3 text-white placeholder-neutral-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm transition-all"
+                                        placeholder="https://teatr-rozrywki.pl/..."
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                handleScrape();
+                                            }
+                                        }}
+                                    />
+                                    <Button
+                                        type="button"
+                                        onClick={handleScrape}
+                                        disabled={isScraping || !scrapeUrl}
+                                        isLoading={isScraping}
+                                        variant="glassy-primary"
+                                        leftIcon={<ArrowRight className="w-4 h-4" />}
+                                    >
+                                        {t('next', { defaultMessage: 'Dalej' })}
+                                    </Button>
+                                </div>
                             </div>
 
-                            {extractedColors.length > 0 && (
-                                <div className="space-y-2">
-                                    <p className="text-xs font-medium text-neutral-400">{t('selectThemeColor')}</p>
-                                    <div className="flex gap-3">
-                                        {extractedColors.map((color) => (
-                                            <button
-                                                key={color}
-                                                type="button"
-                                                onClick={() => setSelectedColor(color)}
-                                                className={`w-8 h-8 rounded-full shadow-sm ring-2 transition-all ${selectedColor === color ? 'ring-white scale-110' : 'ring-transparent hover:scale-105'}`}
-                                                style={{ backgroundColor: color }}
-                                                title={color}
-                                            />
-                                        ))}
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <span className="w-full border-t border-neutral-800" />
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-neutral-900 px-2 text-neutral-500">
+                                        Lub
+                                    </span>
+                                </div>
+                            </div>
+
+                            <Button
+                                type="button"
+                                onClick={() => setStep('edit')}
+                                variant="glassy-secondary"
+                                className="w-full justify-center"
+                                leftIcon={<SkipForward className="w-4 h-4" />}
+                            >
+                                {t('manualEntry', { defaultMessage: 'Wypełnij ręcznie (Pomiń import)' })}
+                            </Button>
+                        </div>
+
+                        {error && (
+                            <div className="rounded-md bg-red-900/20 p-4 text-sm text-red-400 border border-red-900/50">
+                                {error}
+                            </div>
+                        )}
+
+                        <div className="flex justify-end pt-4">
+                            <Button
+                                type="button"
+                                variant="glassy-secondary"
+                                onClick={() => router.back()}
+                                className="text-neutral-400 hover:text-white"
+                            >
+                                {t('cancel')}
+                            </Button>
+                        </div>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="edit-step"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="max-w-5xl mx-auto"
+                    >
+                        <form onSubmit={handleSubmit} className="space-y-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-xl font-semibold text-white">{t('fillDetails', { defaultMessage: 'Uzupełnij szczegóły' })}</h2>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setStep('import')}
+                                    className="text-neutral-400 hover:text-white text-xs"
+                                >
+                                    {t('backToImport', { defaultMessage: 'Wróć do importu' })}
+                                </Button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-neutral-900/50 p-6 rounded-xl border border-neutral-800">
+                                {/* Left Column: Image Upload */}
+                                <div className="md:col-span-1 space-y-4">
+                                    <label className="block text-sm font-medium text-neutral-300">
+                                        {t('showPoster')}
+                                    </label>
+                                    <div
+                                        className={`flex flex-col items-center gap-4 p-4 rounded-lg border-2 border-dashed transition-colors ${isDragging ? 'border-neutral-500 bg-neutral-800/50' : 'border-transparent bg-neutral-900/30'}`}
+                                        onDragOver={handleDragOver}
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={handleDrop}
+                                    >
+                                        <div
+                                            className="relative w-full aspect-2/3 bg-neutral-950 rounded-lg border border-neutral-800 overflow-hidden flex items-center justify-center shrink-0 shadow-lg"
+                                            style={{ borderColor: selectedColor || undefined }}
+                                        >
+                                            {imagePreview ? (
+                                                <>
+                                                    <Image
+                                                        src={imagePreview}
+                                                        alt="Preview"
+                                                        fill
+                                                        className="object-cover"
+                                                        unoptimized
+                                                        onError={(e) => console.error('[Client] Image preview failed to load:', e)}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setImageFile(null)
+                                                            setImagePreview(null)
+                                                            setExtractedColors([])
+                                                            setSelectedColor(null)
+                                                        }}
+                                                        className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-black/80 transition-colors"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <div className="text-neutral-600 flex flex-col items-center gap-3 p-4 text-center">
+                                                    <Upload className="w-10 h-10 opacity-50" />
+                                                    <span className="text-xs">{t('noPoster')}</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="w-full space-y-4">
+                                            <div>
+                                                <input
+                                                    type="file"
+                                                    id="poster"
+                                                    accept="image/*"
+                                                    onChange={handleImageChange}
+                                                    className="hidden"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="secondary"
+                                                    size="sm"
+                                                    className="w-full text-xs"
+                                                    onClick={() => document.getElementById('poster')?.click()}
+                                                >
+                                                    {t('selectImage', { defaultMessage: 'Wybierz grafikę' })}
+                                                </Button>
+                                                <div className="mt-3 text-center space-y-1">
+                                                    <p className="text-[10px] text-neutral-400 leading-tight">
+                                                        {t('uploadPoster')}
+                                                    </p>
+                                                    <p className="text-[10px] text-neutral-500">
+                                                        {t('dragDrop')}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {extractedColors.length > 0 && (
+                                                <div className="space-y-2 pt-2 border-t border-neutral-800">
+                                                    <p className="text-xs font-medium text-neutral-400 text-center">{t('selectThemeColor')}</p>
+                                                    <div className="flex gap-2 justify-center flex-wrap">
+                                                        {extractedColors.map((color) => (
+                                                            <button
+                                                                key={color}
+                                                                type="button"
+                                                                onClick={() => setSelectedColor(color)}
+                                                                className={`w-6 h-6 rounded-full shadow-sm ring-2 transition-all ${selectedColor === color ? 'ring-white scale-110' : 'ring-transparent hover:scale-105'}`}
+                                                                style={{ backgroundColor: color }}
+                                                                title={color}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                    {/* Hex code removed as per user request */}
+                                </div>
+
+                                {/* Right Column: Fields */}
+                                <div className="md:col-span-2 space-y-6">
+                                    {upcomingDates.length > 0 && (
+                                        <div className="p-4 bg-green-900/10 border border-green-900/30 rounded-lg flex items-start gap-3">
+                                            <Calendar className="w-5 h-5 text-green-400 mt-0.5" />
+                                            <div>
+                                                <h4 className="text-sm font-medium text-green-400">{t('scheduleImported', { defaultMessage: 'Pobrano harmonogram' })}</h4>
+                                                <p className="text-xs text-green-500/80 mt-1">
+                                                    {t('datesFound', { count: upcomingDates.length, defaultMessage: `Znaleziono ${upcomingDates.length} terminów do zaplanowania.` })}
+                                                    {' '}{t('scheduleImportedDesc', { defaultMessage: 'Te terminy zostaną automatycznie dodane po zapisaniu.' })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label htmlFor="title" className="block text-sm font-medium text-neutral-300">
+                                            {t('showTitle')} <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="title"
+                                            required
+                                            value={title}
+                                            onChange={(e) => setTitle(e.target.value)}
+                                            className="mt-2 block w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
+                                            placeholder={t('titlePlaceholder')}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="premiereDate" className="block text-sm font-medium text-neutral-300">
+                                            {t('premiereDate')}
+                                        </label>
+                                        <div className="relative mt-2">
+                                            <DatePicker
+                                                selected={premiereDate ? new Date(premiereDate) : null}
+                                                onChange={(date) => {
+                                                    if (date) {
+                                                        setPremiereDate(date.toISOString())
+                                                    } else {
+                                                        setPremiereDate('')
+                                                    }
+                                                }}
+                                                dateFormat="dd.MM.yyyy"
+                                                locale={pl}
+                                                className="block w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm pl-10"
+                                                placeholderText={t('datePlaceholder')}
+                                                wrapperClassName="w-full"
+                                            />
+                                            <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-neutral-500 pointer-events-none" />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="notes" className="block text-sm font-medium text-neutral-300">
+                                            {t('notes')}
+                                        </label>
+                                        <textarea
+                                            id="notes"
+                                            rows={6}
+                                            value={notes}
+                                            onChange={(e) => setNotes(e.target.value)}
+                                            className="mt-2 block w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
+                                            placeholder={t('notesPlaceholder')}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {error && (
+                                <div className="rounded-md bg-red-900/20 p-4 text-sm text-red-400 border border-red-900/50">
+                                    {error}
                                 </div>
                             )}
-                        </div>
-                    </div>
-                </div>
 
-                <div>
-                    <label htmlFor="premiereDate" className="block text-sm font-medium text-neutral-300">
-                        {t('premiereDate')}
-                    </label>
-                    <div className="relative mt-2">
-                        <DatePicker
-                            selected={premiereDate ? new Date(premiereDate) : null}
-                            onChange={(date) => {
-                                if (date) {
-                                    setPremiereDate(date.toISOString())
-                                } else {
-                                    setPremiereDate('')
-                                }
-                            }}
-                            dateFormat="dd.MM.yyyy"
-                            locale={pl}
-                            className="block w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm pl-10"
-                            placeholderText={t('datePlaceholder')}
-                            wrapperClassName="w-full"
-                        />
-                        <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-neutral-500 pointer-events-none" />
-                    </div>
-                </div>
-
-                <div>
-                    <label htmlFor="notes" className="block text-sm font-medium text-neutral-300">
-                        {t('notes')}
-                    </label>
-                    <textarea
-                        id="notes"
-                        rows={3}
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        className="mt-2 block w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
-                        placeholder={t('notesPlaceholder')}
-                    />
-                </div>
-            </div>
-
-            {error && (
-                <div className="rounded-md bg-red-900/20 p-4 text-sm text-red-400 border border-red-900/50">
-                    {error}
-                </div>
-            )}
-
-            <div className="flex justify-end gap-4">
-                <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => router.back()}
-                    className="text-neutral-400 hover:text-white"
-                >
-                    {t('cancel')}
-                </Button>
-                <Button
-                    type="submit"
-                    variant="primary"
-                    isLoading={loading}
-                    leftIcon={<Save className="w-4 h-4" />}
-                >
-                    {t('saveShow')}
-                </Button>
-            </div>
-        </form>
+                            <div className="flex justify-end gap-4">
+                                <Button
+                                    type="button"
+                                    variant="glassy-secondary"
+                                    onClick={() => router.back()}
+                                    className="text-neutral-400 hover:text-white"
+                                >
+                                    {t('cancel')}
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    variant="glassy-success"
+                                    isLoading={loading}
+                                    leftIcon={<Save className="w-4 h-4" />}
+                                >
+                                    {t('saveShow')}
+                                </Button>
+                            </div>
+                        </form>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     )
 }

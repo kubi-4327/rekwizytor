@@ -91,11 +91,11 @@ export function SceneDetailModal({ isOpen, onClose, scene, sceneNote, allScenes 
             <div className="pt-4 mt-4 border-t border-neutral-800 flex justify-end">
                 <Button
                     onClick={() => {
-                        // TODO: Implement edit functionality
-                        console.log('Edit scene:', scene.id)
+                        // Navigate to task editor
+                        window.location.href = `/performances/${scene.performance_id}/tasks/edit`
                     }}
-                    variant="outline"
-                    className="text-neutral-400 hover:text-white border-neutral-700 hover:bg-neutral-800"
+                    variant="glassy-secondary"
+                    className="text-neutral-400 hover:text-white"
                 >
                     <Edit2 className="h-4 w-4 mr-2" />
                     {t('edit')}

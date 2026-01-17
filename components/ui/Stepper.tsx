@@ -1,12 +1,11 @@
-'use client'
-
-import { motion } from 'framer-motion'
+import React from 'react'
 import { Check } from 'lucide-react'
-import { cn } from '@/utils/cn'
+import { cn } from '@/lib/utils'
 
-interface Step {
-    id: number
+type Step = {
+    id?: number
     label: string
+    description?: string
 }
 
 interface StepperProps {
@@ -14,90 +13,51 @@ interface StepperProps {
     currentStep: number
     onStepClick?: (step: number) => void
     className?: string
-    color?: string | null
 }
 
-export function Stepper({ steps, currentStep, onStepClick, className, color }: StepperProps) {
-    const activeColor = color || '#3b82f6'
+export function Stepper({ steps, currentStep, onStepClick, className }: StepperProps) {
     return (
-        <div className={cn("flex items-center justify-center gap-4", className)}>
-            {steps.map((step, idx) => {
-                const isCompleted = currentStep > step.id
-                const isActive = currentStep === step.id
-                const isFuture = currentStep < step.id
+        <div className={cn("flex flex-col md:flex-row gap-4 md:items-center", className)}>
+            {steps.map((step, index) => {
+                const stepNum = index + 1
+                const isActive = stepNum === currentStep
+                const isCompleted = stepNum < currentStep
 
                 return (
-                    <div key={step.id} className="flex items-center gap-4">
-                        <div
-                            className={cn(
-                                "flex items-center gap-3 transition-colors duration-300",
-                                isFuture ? "text-neutral-600" : "text-white",
-                                onStepClick && isCompleted ? "cursor-pointer hover:text-neutral-300" : ""
-                            )}
-                            onClick={() => {
-                                if (onStepClick && isCompleted) {
-                                    onStepClick(step.id)
-                                }
-                            }}
-                        >
-                            <div className="relative">
-                                <motion.div
-                                    className={cn(
-                                        "w-10 h-10 rounded-full flex items-center justify-center border-2 z-10 relative bg-neutral-950",
-                                        isActive ? "text-white" :
-                                            isCompleted ? "text-white" : "border-neutral-800"
-                                    )}
-                                    style={{
-                                        borderColor: isActive || isCompleted ? activeColor : '#262626',
-                                        backgroundColor: isCompleted ? activeColor : '#0a0a0a',
-                                    }}
-                                    initial={false}
-                                    animate={{
-                                        borderColor: isActive || isCompleted ? activeColor : '#262626',
-                                        backgroundColor: isCompleted ? activeColor : '#0a0a0a',
-                                    }}
-                                    transition={{ duration: 0.3 }}
-                                >
-                                    {isCompleted ? (
-                                        <motion.div
-                                            initial={{ scale: 0, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            <Check className="w-5 h-5" />
-                                        </motion.div>
-                                    ) : (
-                                        <span className="font-medium">{step.id}</span>
-                                    )}
-                                </motion.div>
-
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="stepper-glow"
-                                        className="absolute inset-0 rounded-full blur-md"
-                                        style={{ backgroundColor: `${activeColor}33` }}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                    />
-                                )}
-                            </div>
-                            <span className="text-sm font-medium hidden sm:inline">{step.label}</span>
+                    <div
+                        key={step.label}
+                        className={cn(
+                            "flex items-center gap-3",
+                            onStepClick && "cursor-pointer group"
+                        )}
+                        onClick={() => onStepClick?.(stepNum)}
+                    >
+                        <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border transition-colors",
+                            isActive ? "bg-white text-black border-white" :
+                                isCompleted ? "bg-green-500 text-white border-green-500" :
+                                    "bg-transparent text-neutral-500 border-neutral-700 group-hover:border-neutral-500"
+                        )}>
+                            {isCompleted ? <Check className="w-4 h-4" /> : stepNum}
                         </div>
 
-                        {idx < steps.length - 1 && (
-                            <div className="w-12 h-0.5 relative bg-neutral-800 overflow-hidden rounded-full">
-                                <motion.div
-                                    className="absolute inset-0"
-                                    style={{ backgroundColor: activeColor }}
-                                    initial={{ x: '-100%' }}
-                                    animate={{
-                                        x: isCompleted ? '0%' : '-100%'
-                                    }}
-                                    transition={{ duration: 0.4, ease: "easeInOut" }}
-                                />
-                            </div>
+                        <div className="flex flex-col">
+                            <span className={cn(
+                                "text-sm font-medium transition-colors",
+                                isActive || isCompleted ? "text-white" : "text-neutral-500 group-hover:text-neutral-400"
+                            )}>
+                                {step.label}
+                            </span>
+                            {step.description && (
+                                <span className="text-[10px] text-neutral-600 hidden md:block">
+                                    {step.description}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Connector Line (except for last item) */}
+                        {index < steps.length - 1 && (
+                            <div className="hidden md:block w-12 h-px bg-neutral-800 mx-2" />
                         )}
                     </div>
                 )

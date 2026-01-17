@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { PerformanceSceneView } from '@/components/performances/PerformanceSceneView'
 import { Layers, Edit, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { buttonVariants } from '@/components/ui/button-variants'
 
 type Props = {
     params: Promise<{ id: string }>
@@ -78,16 +79,16 @@ export default async function PerformanceTasksPage({ params }: Props) {
                 <div className="flex items-center gap-2">
                     <Link
                         href={`/performances/${id}`}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white transition-colors"
+                        className={buttonVariants({ variant: 'glassy-secondary', size: 'sm' })}
                     >
-                        <ArrowLeft className="w-4 h-4" />
+                        <ArrowLeft className="w-4 h-4 mr-2" />
                         {t('backToProduction')}
                     </Link>
 
                     {/* Edit Actions Dropdown */}
                     <div className="relative group">
-                        <button className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg transition-colors border border-neutral-700">
-                            <Edit className="w-4 h-4" />
+                        <button className={buttonVariants({ variant: 'glassy-primary', size: 'sm' })}>
+                            <Edit className="w-4 h-4 mr-2" />
                             {t('editButton')}
                         </button>
 

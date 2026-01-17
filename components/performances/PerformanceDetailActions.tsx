@@ -41,7 +41,7 @@ export function PerformanceDetailActions({
 
     return (
         <DropdownAction
-            variant="secondary"
+            variant="glassy"
             icon={<MoreVertical className="w-4 h-4" />}
             label={t('actions')}
             className="h-10"

@@ -153,7 +153,7 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
                 iconColor="text-purple-400"
             >
                 <Button
-                    variant="ghost"
+                    variant="glassy"
                     onClick={() => setShowWizard(true)}
                     leftIcon={<Wand2 className="w-4 h-4" />}
                 >
@@ -161,9 +161,10 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
                 </Button>
                 <Button
                     onClick={handleBackWithCheck}
+                    variant="glassy-success"
                     leftIcon={<ArrowLeft className="w-4 h-4" />}
                 >
-                    Done
+                    {t('done')}
                 </Button>
             </PageHeader>
 

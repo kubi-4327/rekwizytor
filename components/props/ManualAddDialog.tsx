@@ -76,11 +76,11 @@ export function ManualAddDialog({ isOpen, onClose, performanceId, onItemsAdded }
                     />
 
                     <div className="flex gap-2 pt-2">
-                        <Button variant="secondary" onClick={handleClose} className="flex-1">
+                        <Button variant="glassy-secondary" onClick={handleClose} className="flex-1">
                             Cancel
                         </Button>
                         <Button
-                            variant="primary"
+                            variant="glassy-primary"
                             onClick={handleBulkAdd}
                             disabled={!bulkText.trim() || isSubmitting}
                             isLoading={isSubmitting}

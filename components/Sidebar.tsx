@@ -22,6 +22,9 @@ export function Sidebar() {
     const t = useTranslations('Navigation')
     const { openSearch } = useGlobalSearch()
 
+    // Remove locale from pathname for comparison (e.g., /pl/performances -> /performances)
+    const pathnameWithoutLocale = pathname.replace(/^\/[a-z]{2}(\/|$)/, '/')
+
     const navigation = [
         { name: t('productions'), href: '/performances', icon: Layers },
         { name: t('groups'), href: '/groups', icon: Tag },
@@ -41,126 +44,92 @@ export function Sidebar() {
     return (
         <div className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
             <div className="flex min-h-0 flex-1 flex-col bg-[#1a1a1a] border-r border-neutral-800">
-                <div className="flex h-24 flex-shrink-0 items-center justify-center bg-[#2a2a2a] border-b border-neutral-800">
-                    <Link href="/" className="flex items-center hover:opacity-80 transition-opacity w-full h-full justify-center">
-                        <div className="relative w-full h-full">
-                            <Image
-                                src="/logo-sidebar.png"
-                                alt="Rekwizytor"
-                                fill
-                                className="object-contain"
-                                priority
-                            />
-                        </div>
-                    </Link>
+                <div className="flex flex-col gap-5 p-4 border-b border-neutral-800/50">
+                    <div className="flex items-center justify-center mt-2.5 mb-2">
+                        <h1 className="font-bold text-white text-xl tracking-tight leading-none">Rekwizytor</h1>
+                    </div>
+
+
                 </div>
-                <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
-                    <div className="px-2 mb-2">
+                <div className="flex flex-1 flex-col overflow-y-auto pt-2 pb-4">
+                    <nav className="mt-2 flex-1 space-y-1 px-3">
                         <button
                             onClick={() => openSearch()}
-                            className="flex w-full items-center justify-between rounded-md bg-neutral-800 px-3 py-2 text-sm text-neutral-400 hover:bg-neutral-700 hover:text-white transition-colors"
+                            className="w-full bg-[#0d0d0d] border border-neutral-800 rounded-xl py-2 px-4 text-sm text-neutral-500 hover:text-neutral-400 hover:border-neutral-700 focus:outline-none focus:ring-1 focus:ring-neutral-700 transition-all flex items-center gap-3 mb-3.5"
                         >
-                            <div className="flex items-center gap-3">
-                                <Search className="h-4 w-4" />
-                                <span>{t('search')}</span>
+                            <Search className="w-4 h-4 text-neutral-600 shrink-0" />
+                            <span className="flex-1 text-left text-neutral-500">Szukaj...</span>
+                            <div className="bg-neutral-800 border border-neutral-700 rounded px-1.5 py-0.5 shrink-0 flex items-center">
+                                <span className="text-[10px] font-medium text-neutral-400 leading-none">⌘ K</span>
                             </div>
-                            <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-neutral-600 bg-neutral-700 px-1.5 font-mono text-[10px] font-medium text-neutral-400">
-                                <span className="text-xs">⌘K</span>
-                            </kbd>
                         </button>
-                    </div>
-                    <nav className="mt-1 flex-1 space-y-1 px-2">
                         {navigation.map((item) => {
-                            const isActive = pathname.startsWith(item.href) && !navigation.some(nav =>
+                            const isActive = pathnameWithoutLocale.startsWith(item.href) && !navigation.some(nav =>
                                 nav !== item &&
                                 nav.href.startsWith(item.href) &&
                                 nav.href.length > item.href.length &&
-                                pathname.startsWith(nav.href)
+                                pathnameWithoutLocale.startsWith(nav.href)
                             )
                             return (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className={clsx(
-                                        isActive
-                                            ? 'text-burgundy-main'
-                                            : 'text-neutral-400 hover:text-white',
-                                        'group relative flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200'
-                                    )}
-                                >
-                                    <AnimatePresence>
-                                        {isActive && (
-                                            <motion.div
-                                                layoutId="sidebar-active"
-                                                className="absolute inset-0 bg-burgundy-main/10 border-l-4 border-burgundy-main rounded-md"
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                transition={{
-                                                    type: "spring",
-                                                    stiffness: 350,
-                                                    damping: 30
-                                                }}
-                                            />
+                                <div key={item.name} className="relative group">
+                                    <Link
+                                        href={item.href}
+                                        className={clsx(
+                                            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative z-10',
+                                            isActive
+                                                ? 'bg-neutral-800 text-white'
+                                                : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
                                         )}
-                                    </AnimatePresence>
-                                    <span className="relative z-10 flex items-center">
+                                    >
                                         <item.icon
                                             className={clsx(
-                                                isActive ? 'text-burgundy-main' : 'text-neutral-500 group-hover:text-white',
-                                                'mr-3 flex-shrink-0 h-6 w-6 transition-colors duration-200'
+                                                'w-5 h-5 transition-colors',
+                                                isActive ? 'text-white' : 'text-neutral-500 group-hover:text-white'
                                             )}
                                             aria-hidden="true"
                                         />
-                                        {item.name}
-                                    </span>
-                                </Link>
+                                        <span className="flex-1 text-left">{item.name}</span>
+                                    </Link>
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="sidebar-active-indicator"
+                                            className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-white rounded-r-full pointer-events-none z-20"
+                                            initial={{ opacity: 0, scaleY: 0 }}
+                                            animate={{ opacity: 1, scaleY: 1 }}
+                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                        />
+                                    )}
+                                </div>
                             )
                         })}
                     </nav>
                 </div>
-                <div className="flex flex-col gap-1 bg-[#2a2a2a] border-t border-neutral-800 p-4">
-                    <Link
-                        href="/settings"
-                        className={clsx(
-                            pathname.startsWith('/settings')
-                                ? 'text-burgundy-main'
-                                : 'text-neutral-400 hover:text-white',
-                            'group relative flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors'
-                        )}
-                    >
-                        <AnimatePresence>
-                            {pathname.startsWith('/settings') && (
-                                <motion.div
-                                    layoutId="sidebar-active"
-                                    className="absolute inset-0 bg-burgundy-main/10 border-l-4 border-burgundy-main rounded-md"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{
-                                        type: "spring",
-                                        stiffness: 350,
-                                        damping: 30
-                                    }}
-                                />
+                <div className="p-4 bg-[#1a1a1a]">
+                    <div className="bg-[#141414] rounded-xl border border-neutral-800/50 p-2 flex flex-col gap-0.5 shadow-sm">
+                        <Link
+                            href="/settings"
+                            className={clsx(
+                                pathname.startsWith('/settings')
+                                    ? 'text-white bg-neutral-800'
+                                    : 'text-neutral-500 hover:text-white hover:bg-neutral-800/50',
+                                'group flex items-center px-3 py-2 text-xs font-medium rounded-lg transition-all'
                             )}
-                        </AnimatePresence>
-                        <span className="relative z-10 flex items-center">
+                        >
                             <Settings className={clsx(
-                                pathname.startsWith('/settings') ? 'text-burgundy-main' : 'text-neutral-500 group-hover:text-white',
-                                'mr-3 h-5 w-5 transition-colors'
+                                pathname.startsWith('/settings') ? 'text-white' : 'text-neutral-600 group-hover:text-white',
+                                'mr-3 h-4 w-4 transition-colors'
                             )} />
                             {t('settings')}
-                        </span>
-                    </Link>
-                    <Button
-                        variant="ghost"
-                        onClick={handleSignOut}
-                        className="w-full justify-start text-neutral-400 hover:text-white px-2"
-                        leftIcon={<LogOut className="h-5 w-5 text-neutral-500 group-hover:text-white transition-colors" />}
-                    >
-                        {t('signOut')}
-                    </Button>
+                        </Link>
+                        <Button
+                            variant="ghost"
+                            onClick={handleSignOut}
+                            className="w-full justify-start px-3 py-2 text-xs font-medium text-neutral-500 hover:text-red-300 hover:bg-red-900/10"
+                            leftIcon={<LogOut className="h-4 w-4 text-neutral-600 group-hover:text-red-400" />}
+                        >
+                            {t('signOut')}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

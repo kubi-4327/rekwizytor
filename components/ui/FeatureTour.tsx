@@ -17,9 +17,10 @@ interface FeatureTourProps {
     isOpen: boolean
     onClose: () => void
     onComplete?: () => void
+    variant?: 'default' | 'minimal'
 }
 
-export function FeatureTour({ steps, isOpen, onClose, onComplete }: FeatureTourProps) {
+export function FeatureTour({ steps, isOpen, onClose, onComplete, variant = 'default' }: FeatureTourProps) {
     const [currentStep, setCurrentStep] = useState(0)
     const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
     const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 })
@@ -72,8 +73,8 @@ export function FeatureTour({ steps, isOpen, onClose, onComplete }: FeatureTourP
                     left = coords.l
 
                     // Collision Detection (specifically for right edge)
-                    // We assume a width of ~320px for the tooltip
-                    const tooltipWidth = 320
+                    // We assume a width for the tooltip depending on variant
+                    const tooltipWidth = variant === 'minimal' ? 280 : 360
                     const halfWidth = tooltipWidth / 2
                     const margin = 20
 
@@ -130,7 +131,7 @@ export function FeatureTour({ steps, isOpen, onClose, onComplete }: FeatureTourP
                 window.removeEventListener('scroll', updatePosition)
             }
         }
-    }, [isOpen, currentStep, steps])
+    }, [isOpen, currentStep, steps, variant])
 
     const handleNext = () => {
         if (currentStep < steps.length - 1) {
@@ -187,57 +188,62 @@ export function FeatureTour({ steps, isOpen, onClose, onComplete }: FeatureTourP
                             initial={{ opacity: 0, scale: 0.9, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             key={currentStep} // Animate when step changes
-                            className={`bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white p-6 rounded-2xl shadow-xl max-w-sm w-[360px] relative border border-zinc-200 dark:border-zinc-800 ${actualPlacement === 'top' ? '-translate-x-1/2 -translate-y-full' :
-                                actualPlacement === 'left' ? '-translate-x-full -translate-y-1/2' :
-                                    actualPlacement === 'right' ? '-translate-y-1/2' :
-                                        '-translate-x-1/2' // default bottom
+                            className={`bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white rounded-2xl shadow-xl relative border border-zinc-200 dark:border-zinc-800 ${variant === 'minimal' ? 'w-[280px] p-4' : 'max-w-sm w-[360px] p-6'
+                                } ${actualPlacement === 'top' ? '-translate-x-1/2 -translate-y-full' :
+                                    actualPlacement === 'left' ? '-translate-x-full -translate-y-1/2' :
+                                        actualPlacement === 'right' ? '-translate-y-1/2' :
+                                            '-translate-x-1/2' // default bottom
                                 }`}
                         >
-                            <button onClick={onClose} className="absolute top-3 right-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+                            <button onClick={onClose} className={`absolute text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 ${variant === 'minimal' ? 'top-2 right-2' : 'top-3 right-3'}`}>
                                 <X size={16} />
                             </button>
 
-                            <div className="mb-4">
-                                <h3 className="font-bold text-lg mb-2 pr-6">{steps[currentStep].title}</h3>
-                                <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
+                            <div className={variant === 'minimal' ? 'mt-1' : 'mb-4'}>
+                                {variant !== 'minimal' && (
+                                    <h3 className="font-bold text-lg mb-2 pr-6">{steps[currentStep].title}</h3>
+                                )}
+                                <p className={`text-zinc-600 dark:text-zinc-400 leading-relaxed ${variant === 'minimal' ? 'text-sm pr-4' : 'text-sm'}`}>
                                     {steps[currentStep].content}
                                 </p>
                             </div>
 
-                            <div className="flex items-center justify-between mt-6 pt-2">
-                                <div className="flex gap-2">
-                                    {steps.length > 1 && (
-                                        <div className="flex gap-1">
-                                            {steps.map((_, idx) => (
-                                                <div
-                                                    key={idx}
-                                                    className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentStep ? 'w-6 bg-indigo-500' : 'w-1.5 bg-zinc-200 dark:bg-zinc-700'}`}
-                                                />
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex gap-3">
-                                    {currentStep > 0 && (
-                                        <button
-                                            onClick={handlePrev}
-                                            className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
-                                        >
-                                            Wróć
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={handleNext}
-                                        className="px-5 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
-                                    >
-                                        {currentStep === steps.length - 1 ? 'Rozumiem' : (
-                                            <>
-                                                Dalej <ChevronRight size={14} className="stroke-3" />
-                                            </>
+                            {variant !== 'minimal' && (
+                                <div className="flex items-center justify-between mt-6 pt-2">
+                                    <div className="flex gap-2">
+                                        {steps.length > 1 && (
+                                            <div className="flex gap-1">
+                                                {steps.map((_, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentStep ? 'w-6 bg-indigo-500' : 'w-1.5 bg-zinc-200 dark:bg-zinc-700'}`}
+                                                    />
+                                                ))}
+                                            </div>
                                         )}
-                                    </button>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        {currentStep > 0 && (
+                                            <button
+                                                onClick={handlePrev}
+                                                className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
+                                            >
+                                                Wróć
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={handleNext}
+                                            className="px-5 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                                        >
+                                            {currentStep === steps.length - 1 ? 'Rozumiem' : (
+                                                <>
+                                                    Dalej <ChevronRight size={14} className="stroke-3" />
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Arrow Pointer */}
                             <div

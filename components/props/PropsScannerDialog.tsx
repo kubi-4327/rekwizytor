@@ -169,7 +169,7 @@ export function PropsScannerDialog({ isOpen, onClose, performanceId, onItemsAdde
                             Take a photo of props to automatically extract a list of items.
                         </p>
                         <Button
-                            variant="primary"
+                            variant="glassy-primary"
                             onClick={() => fileInputRef.current?.click()}
                             className="w-full"
                         >
@@ -277,7 +277,7 @@ export function PropsScannerDialog({ isOpen, onClose, performanceId, onItemsAdde
                                     className="flex-1 bg-neutral-900 border border-neutral-700 rounded-md py-2 px-3 text-white text-sm placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-accent-main"
                                 />
                                 <Button
-                                    variant="secondary"
+                                    variant="glassy-secondary"
                                     size="sm"
                                     onClick={handleAddItem}
                                     disabled={!newItemName.trim()}
@@ -288,9 +288,9 @@ export function PropsScannerDialog({ isOpen, onClose, performanceId, onItemsAdde
                         </div>
 
                         <div className="flex gap-2 pt-2">
-                            <Button variant="secondary" onClick={reset} className="flex-1">Retake</Button>
+                            <Button variant="glassy-secondary" onClick={reset} className="flex-1">Retake</Button>
                             <Button
-                                variant="primary"
+                                variant="glassy-primary"
                                 onClick={handleSave}
                                 isLoading={isSaving}
                                 disabled={items.length === 0}
