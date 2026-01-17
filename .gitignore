@@ -46,4 +46,4 @@ LEARNING.md
 
 # admin tools (local only)
 /components/admin/
-/app/[locale]/admin/
+app/*/admin/
