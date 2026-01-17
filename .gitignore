@@ -46,6 +46,4 @@ LEARNING.md
 
 # admin tools (local only)
 /components/admin/
-/app/[locale]/admin/migrate-embeddings/
-/app/[locale]/admin/test-alerts/
-/app/[locale]/admin/suggestion-clouds/
+/app/[locale]/admin/
