@@ -41,7 +41,7 @@ const PerformanceListItem = ({ show, index }: { show: Performance; index: number
                 }}
             >
                 {/* Thumbnail */}
-                <div className="relative h-24 w-16 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-800 shadow-inner">
+                <div className="relative h-24 w-16 shrink-0 rounded-lg overflow-hidden bg-neutral-800 shadow-inner">
                     {show.thumbnail_url ? (
                         <Image
                             src={show.thumbnail_url}
@@ -133,7 +133,7 @@ const PerformanceGridItem = ({ show, index }: { show: Performance; index: number
                                 <Layers className="w-16 h-16 opacity-20" />
                             </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/50 to-transparent" />
+                        <div className="absolute inset-0 bg-linear-to-t from-neutral-950 via-neutral-950/50 to-transparent" />
                     </div>
                 </div>
 
@@ -194,11 +194,11 @@ export function PerformancesList({ performances }: Props) {
         <div className="space-y-8">
             {/* Filter Bar */}
             <FilterBar>
-                <div className="flex-1 w-full xl:w-auto min-w-[300px]">
+                <div className="flex-1 min-w-[200px]">
                     <MorphingSearchBar mode="trigger" context="performance" className="w-full" />
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+                <div className="shrink-0">
                     <ViewToggle viewMode={viewMode} onViewModeChange={handleViewModeChange} />
                 </div>
             </FilterBar>

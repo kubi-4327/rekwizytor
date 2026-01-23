@@ -14,6 +14,7 @@ import { pl } from 'date-fns/locale'
 import { useTranslations } from 'next-intl'
 import { Database } from '@/types/supabase'
 import { scrapePerformance } from '@/app/actions/scrape-performance'
+import { revalidatePerformances } from '@/app/actions/revalidate'
 import { refreshSearchIndex } from '@/app/actions/unified-search'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -214,7 +215,8 @@ export function CreatePerformanceForm() {
                     status: ((premiereDate && new Date(premiereDate) > new Date()) ? 'upcoming' : 'active') as Database["public"]["Enums"]["performance_status_enum"],
                     image_url: imageUrl,
                     thumbnail_url: thumbnailUrl,
-                    color: selectedColor
+                    color: selectedColor,
+                    source_url: scrapeUrl || null
                 })
                 .select()
                 .single()
@@ -309,8 +311,10 @@ export function CreatePerformanceForm() {
                 console.error('Failed to refresh search index:', e)
             }
 
+            // Revalidate the list page so we get fresh data
+            await revalidatePerformances()
+
             router.push('/performances')
-            router.refresh()
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message)
@@ -400,7 +404,7 @@ export function CreatePerformanceForm() {
                             </p>
                         </div>
 
-                        <div className="bg-neutral-900/50 p-8 rounded-xl border border-neutral-800 space-y-6 shadow-xl backdrop-blur-sm">
+                        <div className="bg-neutral-900/50 p-4 md:p-8 rounded-xl border border-neutral-800 space-y-6 shadow-xl backdrop-blur-sm">
                             <div className="space-y-4">
                                 <label htmlFor="scrapeUrl" className="text-sm font-medium text-neutral-300 flex items-center gap-2">
                                     <Globe className="w-4 h-4 text-blue-400" />
@@ -643,6 +647,20 @@ export function CreatePerformanceForm() {
                                             />
                                             <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-neutral-500 pointer-events-none" />
                                         </div>
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="sourceUrl" className="block text-sm font-medium text-neutral-300">
+                                            {t('sourceUrl', { defaultMessage: 'Link do strony (źródłowy)' })}
+                                        </label>
+                                        <input
+                                            type="url"
+                                            id="sourceUrl"
+                                            value={scrapeUrl}
+                                            onChange={(e) => setScrapeUrl(e.target.value)}
+                                            className="mt-2 block w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
+                                            placeholder="https://teatr..."
+                                        />
                                     </div>
 
                                     <div>

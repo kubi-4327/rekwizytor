@@ -3,7 +3,10 @@
 import { Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { X, BarChart, Settings, LogOut, Tag, Layers, ClipboardList } from 'lucide-react'
+
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { clsx } from 'clsx'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -17,6 +20,7 @@ export function MobileMenu({ isOpen, onClose }: Props) {
     const t = useTranslations('Navigation')
     const router = useRouter()
     const supabase = createClient()
+    const pathname = usePathname() // Import needed! Wait, import is missing.
 
     const menuItems = [
         { name: t('productions'), href: '/performances', icon: Layers },
@@ -72,17 +76,27 @@ export function MobileMenu({ isOpen, onClose }: Props) {
                                         {t('more')}
                                     </Dialog.Title>
                                     <div className="grid grid-cols-1 gap-2">
-                                        {menuItems.map((item) => (
-                                            <Link
-                                                key={item.name}
-                                                href={item.href}
-                                                onClick={onClose}
-                                                className="flex items-center gap-3 rounded-lg p-3 text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors"
-                                            >
-                                                <item.icon className="h-5 w-5" />
-                                                <span className="font-medium">{item.name}</span>
-                                            </Link>
-                                        ))}
+                                        {menuItems.map((item) => {
+                                            const isActive = pathname === item.href || pathname.startsWith(item.href) && item.href !== '/settings'
+
+                                            // Handle settings specifically if needed, or general logic
+                                            return (
+                                                <Link
+                                                    key={item.name}
+                                                    href={item.href}
+                                                    onClick={onClose}
+                                                    className={clsx(
+                                                        'flex items-center gap-3 rounded-lg p-3 transition-colors',
+                                                        isActive
+                                                            ? 'bg-neutral-800 text-white'
+                                                            : 'text-neutral-400 hover:bg-neutral-800/50 hover:text-white'
+                                                    )}
+                                                >
+                                                    <item.icon className={clsx("h-5 w-5", isActive ? "text-white" : "text-neutral-500")} />
+                                                    <span className="font-medium whitespace-nowrap">{item.name}</span>
+                                                </Link>
+                                            )
+                                        })}
 
                                         <div className="my-2 border-t border-neutral-800" />
 

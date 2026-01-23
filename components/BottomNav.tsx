@@ -63,40 +63,28 @@ export function BottomNav() {
                                 key={item.name}
                                 href={item.href}
                                 className={clsx(
-                                    isActive ? 'text-burgundy-main' : 'text-neutral-500 hover:text-white',
+                                    isActive ? 'text-white' : 'text-neutral-500 hover:text-neutral-300',
                                     'relative flex flex-col items-center justify-center w-full h-full py-1 transition-colors duration-200'
                                 )}
                             >
-                                <AnimatePresence>
-                                    {isActive && (
-                                        <motion.div
-                                            layoutId="bottom-nav-active"
-                                            className="absolute inset-x-0 top-0 h-0.5 bg-burgundy-main shadow-[0_0_10px_rgba(160,35,47,0.5)]"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{
-                                                type: "spring",
-                                                stiffness: 350,
-                                                damping: 30
-                                            }}
-                                        />
-                                    )}
-                                </AnimatePresence>
-                                <AnimatePresence>
-                                    {isActive && (
-                                        <motion.div
-                                            className="absolute inset-0 bg-gradient-to-b from-burgundy-main/10 to-transparent"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                        />
-                                    )}
-                                </AnimatePresence>
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="bottom-nav-active"
+                                        className="absolute inset-x-2 top-1 bottom-1 bg-neutral-800 rounded-lg -z-10"
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.9 }}
+                                        transition={{
+                                            type: "spring",
+                                            stiffness: 300,
+                                            damping: 25
+                                        }}
+                                    />
+                                )}
                                 <item.icon
                                     className={clsx(
-                                        isActive ? 'text-burgundy-main' : 'text-neutral-500',
-                                        'h-6 w-6 mb-1 transition-colors duration-200 relative z-10'
+                                        isActive ? 'text-white' : 'text-neutral-500',
+                                        'h-5 w-5 mb-1 transition-colors duration-200 relative z-10'
                                     )}
                                 />
                                 <span className="text-[10px] font-medium relative z-10">{item.name}</span>

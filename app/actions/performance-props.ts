@@ -198,42 +198,15 @@ export async function addProp(performanceId: string, name: string) {
         return { success: false, error: 'Prop name cannot be empty' }
     }
 
-    // Get current counts to decide target column
-    const { count: count0 } = await supabase
-        .from('performance_props')
-        .select('*', { count: 'exact', head: true })
-        .eq('performance_id', performanceId)
-        .eq('column_index', 0)
-
-    const { count: count1 } = await supabase
-        .from('performance_props')
-        .select('*', { count: 'exact', head: true })
-        .eq('performance_id', performanceId)
-        .eq('column_index', 1)
-
-    // Determine target column (balance counts)
-    const targetCol = (count0 || 0) <= (count1 || 0) ? 0 : 1
-
-    // Get max sort order in target column
-    const { data: existing } = await supabase
-        .from('performance_props')
-        .select('sort_order')
-        .eq('performance_id', performanceId)
-        .eq('column_index', targetCol)
-        .order('sort_order', { ascending: false })
-        .limit(1)
-        .single()
-
-    const nextOrder = ((existing as any)?.sort_order ?? -1) + 1
-
+    // Simplified insertion without column balancing which causes schema errors if column_index is missing
     const { data, error } = await supabase
         .from('performance_props')
         .insert({
             performance_id: performanceId,
             item_name: trimmedName,
             is_checked: false,
-            column_index: targetCol,
-            sort_order: nextOrder
+            // Default to column 0, or let DB handle defaults if column exists
+            // Since we got an error about column_index not found, we should OMIT it.
         } as any)
         .select()
         .single()

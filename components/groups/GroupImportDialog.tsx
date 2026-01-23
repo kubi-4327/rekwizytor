@@ -272,6 +272,7 @@ export function GroupImportDialog({ isOpen, onClose, parentId, locations = [] }:
                         </div>
                         <div className="flex justify-end pt-2">
                             <Button
+                                type="button"
                                 variant="glassy-primary"
                                 onClick={handleParse}
                                 disabled={!inputText.trim()}

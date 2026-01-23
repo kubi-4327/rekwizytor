@@ -651,7 +651,8 @@
         "scheduleImported": "Pobrano harmonogram",
         "scheduleImportedDesc": "Te terminy zostaną automatycznie dodane po zapisaniu.",
         "selectImage": "Wybierz grafikę",
-        "next": "Dalej"
+        "next": "Dalej",
+        "sourceUrl": "Link do strony (źródłowy)"
     },
     "ScheduledShowsList": {
         "title": "Zaplanowane",
@@ -894,6 +895,9 @@
         "testVersionWarning": "To jest wersja testowa aplikacji. Niektóre funkcje mogą nie działać poprawnie."
     },
     "PropsChecklist": {
+        "addItem": "Dodaj Przedmiot",
+        "scanPhoto": "Skanuj Zdjęcie",
+        "manualList": "Lista Ręczna",
         "progress": "{checked} z {total} odhaczonych",
         "showBulkAdd": "Dodawanie Masowe",
         "hideBulkAdd": "Ukryj Dodawanie Masowe",

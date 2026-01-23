@@ -78,7 +78,7 @@ export function Greeting({ name }: GreetingProps) {
 
     return (
         <div className="flex flex-col gap-1 py-1">
-            <span className="text-2xl font-bold text-white tracking-tight">
+            <span className="text-2xl font-bold text-white tracking-tight wrap-break-word">
                 {greetingPart}
             </span>
             <span className="text-base text-neutral-400 font-normal">

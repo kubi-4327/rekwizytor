@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/types/supabase'
 import { useTranslations } from 'next-intl'
 import { Plus, Trash2, GripVertical } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { KanbanBoard } from '@/components/ui/KanbanBoard'
 import { notify } from '@/utils/notify'
 
 type Scene = Database['public']['Tables']['scenes']['Row']
@@ -20,6 +21,7 @@ export function SceneTaskEditor({ performanceId, scenes }: Props) {
     const [tasks, setTasks] = useState<Record<string, SceneTask[]>>({})
     const [loading, setLoading] = useState(true)
     const [newTaskContent, setNewTaskContent] = useState<Record<string, string>>({})
+    const [originalContent, setOriginalContent] = useState<string | null>(null)
     const supabase = createClient()
     const t = useTranslations('ProductionDetails')
 
@@ -111,7 +113,20 @@ export function SceneTaskEditor({ performanceId, scenes }: Props) {
         }
     }
 
-    const handleUpdateTask = async (taskId: string, sceneId: string, newContent: string) => {
+    const isReverting = useRef(false)
+
+    // ... existing code ...
+
+    const updateLocalTask = (taskId: string, sceneId: string, newContent: string) => {
+        setTasks(prev => ({
+            ...prev,
+            [sceneId]: (prev[sceneId] || []).map(t =>
+                t.id === taskId ? { ...t, content: newContent } : t
+            )
+        }))
+    }
+
+    const saveTask = async (taskId: string, newContent: string) => {
         try {
             const { error } = await supabase
                 .from('scene_tasks')
@@ -119,16 +134,60 @@ export function SceneTaskEditor({ performanceId, scenes }: Props) {
                 .eq('id', taskId)
 
             if (error) throw error
-
-            setTasks(prev => ({
-                ...prev,
-                [sceneId]: (prev[sceneId] || []).map(t =>
-                    t.id === taskId ? { ...t, content: newContent } : t
-                )
-            }))
         } catch (error) {
-            console.error('Error updating task:', error)
-            notify.error('Błąd aktualizacji zadania')
+            console.error('Error saving task:', error)
+            notify.error('Błąd zapisu zadania')
+        }
+    }
+
+    // ... handleReorder ...
+
+    // ... renderItem replacement ...
+    const handleReorder = async (newItems: (SceneTask & { columnId: string })[]) => {
+        // Optimistic update
+        const grouped: Record<string, SceneTask[]> = {}
+        newItems.forEach(item => {
+            const sceneId = item.columnId
+            if (!grouped[sceneId]) grouped[sceneId] = []
+            // Remove columnId from the object stored in state if we want to match exact types, 
+            // but for now keeping it is fine or we can destructure.
+            // Actually, we should update the order_index based on the new array order
+            grouped[sceneId].push({ ...item, scene_id: sceneId })
+        })
+
+        // Recalculate order_index for all items in affected scenes
+        Object.keys(grouped).forEach(sceneId => {
+            grouped[sceneId].forEach((task, index) => {
+                task.order_index = index
+            })
+        })
+
+        setTasks(grouped)
+
+        // Find changed items and persist
+        // For simplicity and robustness, we can update all changed tasks. 
+        // A smarter diff would be better but let's start with updating the affected scenes.
+
+        try {
+            const updates = []
+            for (const item of newItems) {
+                updates.push({
+                    id: item.id,
+                    scene_id: item.columnId,
+                    order_index: newItems.filter(i => i.columnId === item.columnId).indexOf(item),
+                    content: item.content
+                })
+            }
+
+            const { error } = await supabase
+                .from('scene_tasks')
+                .upsert(updates)
+
+            if (error) throw error
+        } catch (error) {
+            console.error('Error updating task order:', error)
+            notify.error('Błąd zapisu kolejności')
+            loadTasks() // Revert on error
         }
     }
 
@@ -147,102 +206,139 @@ export function SceneTaskEditor({ performanceId, scenes }: Props) {
     }
 
     return (
-        <div className="space-y-8">
-            {sortedActs.map(actNum => (
-                <div key={actNum} className="space-y-4">
-                    {/* Act Header */}
-                    <div className="flex items-center gap-2 px-2">
-                        <div className="h-px flex-1 bg-neutral-800" />
-                        <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                            {t('act', { actNum })}
-                        </span>
-                        <div className="h-px flex-1 bg-neutral-800" />
-                    </div>
+        <div className="space-y-12">
+            {sortedActs.map(actNum => {
+                const actScenes = scenesByAct[actNum].sort((a, b) => a.scene_number - b.scene_number)
 
-                    {/* Scenes in this act */}
-                    {scenesByAct[actNum]
-                        .sort((a, b) => a.scene_number - b.scene_number)
-                        .map(scene => {
-                            const sceneTasks = tasks[scene.id] || []
+                // Prepare Kanban data for this Act
+                const columns = actScenes.map(scene => ({
+                    id: scene.id,
+                    title: `${scene.scene_number} ${scene.name || ''}`
+                }))
 
-                            return (
-                                <div
-                                    key={scene.id}
-                                    className="bg-neutral-900 border border-neutral-800 rounded-lg p-4"
-                                >
-                                    {/* Scene Header */}
-                                    <div className="flex items-baseline gap-2 mb-4 pb-3 border-b border-neutral-800">
+                const items = actScenes.flatMap(scene =>
+                    (tasks[scene.id] || []).map(task => ({
+                        ...task,
+                        columnId: scene.id // KanbanItem requirement
+                    }))
+                )
+
+                return (
+                    <div key={actNum} className="space-y-4">
+                        {/* Act Header */}
+                        <div className="flex items-center gap-2 px-2 mb-6">
+                            <div className="h-px flex-1 bg-neutral-800" />
+                            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                                {t('act', { actNum })}
+                            </span>
+                            <div className="h-px flex-1 bg-neutral-800" />
+                        </div>
+
+                        <div className="overflow-x-auto pb-4">
+                            <KanbanBoard
+                                columns={columns}
+                                items={items}
+                                onItemReorder={handleReorder}
+                                renderColumnHeader={(col) => (
+                                    <div className="flex items-baseline gap-2 mb-3 pb-3 border-b border-neutral-800">
                                         <span className="text-lg font-bold text-white">
-                                            {scene.scene_number}
+                                            {actScenes.find(s => s.id === col.id)?.scene_number}
                                         </span>
-                                        {scene.name && (
-                                            <span className="text-sm text-neutral-400">
-                                                {scene.name}
-                                            </span>
-                                        )}
+                                        <span className="text-sm text-neutral-400 truncate">
+                                            {actScenes.find(s => s.id === col.id)?.name}
+                                        </span>
                                     </div>
+                                )}
+                                renderItem={(task, isOverlay) => (
+                                    <div
+                                        key={task.id}
+                                        className={`group flex items-start gap-3 p-3 rounded-lg border transition-all ${isOverlay
+                                            ? 'bg-neutral-800 border-primary-500 shadow-xl scale-105'
+                                            : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700 hover:bg-neutral-800/50'
+                                            }`}
+                                    >
+                                        <GripVertical className="w-4 h-4 text-neutral-600 mt-1 shrink-0 cursor-grab active:cursor-grabbing" />
+                                        <div className="flex-1 min-w-0">
+                                            <input
+                                                type="text"
+                                                value={task.content}
+                                                onChange={(e) => updateLocalTask(task.id, task.scene_id, e.target.value)}
+                                                onFocus={() => setOriginalContent(task.content)}
+                                                onBlur={(e) => {
+                                                    if (isReverting.current) {
+                                                        isReverting.current = false
+                                                        setOriginalContent(null)
+                                                        return
+                                                    }
 
-                                    {/* Tasks List */}
-                                    <div className="space-y-2 mb-4">
-                                        {sceneTasks.length === 0 ? (
-                                            <p className="text-sm text-neutral-600 italic">
-                                                Brak zadań dla tej sceny
-                                            </p>
-                                        ) : (
-                                            sceneTasks.map(task => (
-                                                <div
-                                                    key={task.id}
-                                                    className="group flex items-start gap-3 p-2 rounded hover:bg-neutral-800/50 transition-colors"
-                                                >
-                                                    <GripVertical className="w-4 h-4 text-neutral-600 mt-0.5 shrink-0" />
-                                                    <input
-                                                        type="text"
-                                                        value={task.content}
-                                                        onChange={(e) => handleUpdateTask(task.id, scene.id, e.target.value)}
-                                                        className="flex-1 bg-transparent text-sm text-neutral-300 border-none outline-none focus:text-white"
-                                                    />
-                                                    <button
-                                                        onClick={() => handleDeleteTask(scene.id, task.id)}
-                                                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-500/20 text-neutral-500 hover:text-red-400 transition-all"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-
-                                    {/* Add Task Input */}
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="text"
-                                            value={newTaskContent[scene.id] || ''}
-                                            onChange={(e) => setNewTaskContent(prev => ({
-                                                ...prev,
-                                                [scene.id]: e.target.value
-                                            }))}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    handleAddTask(scene.id)
-                                                }
-                                            }}
-                                            placeholder="Dodaj nowe zadanie..."
-                                            className="flex-1 px-3 py-2 bg-neutral-900/50 border border-neutral-700/50 rounded-xl text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-600 focus:bg-neutral-900"
-                                        />
-                                        <Button
-                                            onClick={() => handleAddTask(scene.id)}
-                                            variant="glassy-primary"
-                                            size="sm"
-                                            leftIcon={<Plus className="w-4 h-4" />}
+                                                    const val = e.target.value.trim()
+                                                    if (!val) {
+                                                        handleDeleteTask(task.scene_id, task.id)
+                                                    } else if (originalContent !== val) {
+                                                        saveTask(task.id, val)
+                                                    }
+                                                    setOriginalContent(null)
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Escape') {
+                                                        if (originalContent !== null) {
+                                                            isReverting.current = true
+                                                            updateLocalTask(task.id, task.scene_id, originalContent)
+                                                                ; (e.target as HTMLInputElement).blur()
+                                                        }
+                                                    }
+                                                    if (e.key === 'Enter') {
+                                                        (e.target as HTMLInputElement).blur()
+                                                    }
+                                                }}
+                                                onMouseDown={(e) => e.stopPropagation()} // Prevent drag when clicking input
+                                                className="w-full bg-transparent text-sm text-neutral-300 border-none outline-none focus:text-white p-0 resize-none"
+                                            />
+                                        </div>
+                                        <button
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            onClick={() => handleDeleteTask(task.scene_id, task.id)}
+                                            className={`p-1 rounded hover:bg-red-500/20 text-neutral-500 hover:text-red-400 transition-all ${isOverlay ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                                                }`}
                                         >
-                                            Dodaj
-                                        </Button>
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
                                     </div>
-                                </div>
-                            )
-                        })}
-                </div>
-            ))}
+                                )}
+                                renderColumnFooter={(col) => (
+                                    <div className="mt-2">
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="text"
+                                                value={newTaskContent[col.id as string] || ''}
+                                                onChange={(e) => setNewTaskContent(prev => ({
+                                                    ...prev,
+                                                    [col.id]: e.target.value
+                                                }))}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        handleAddTask(col.id as string)
+                                                    }
+                                                }}
+                                                placeholder="Dodaj..."
+                                                className="flex-1 px-3 py-1.5 bg-neutral-900/50 border border-neutral-800 rounded-md text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600 focus:bg-neutral-900 transition-colors"
+                                            />
+                                            <Button
+                                                onClick={() => handleAddTask(col.id as string)}
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 w-8 p-0"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            />
+                        </div>
+                    </div>
+                )
+            })}
 
             {scenes.length === 0 && (
                 <div className="text-center py-12 text-neutral-500">

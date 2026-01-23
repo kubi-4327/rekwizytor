@@ -19,7 +19,7 @@ export function FilterBar({ className, children }: FilterBarProps) {
                 className
             )}
         >
-            <div className="flex flex-col xl:flex-row gap-4 justify-between xl:items-center">
+            <div className="flex flex-row flex-wrap gap-4 justify-between items-center">
                 {children}
             </div>
         </div>

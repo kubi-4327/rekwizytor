@@ -1,10 +1,11 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Trash2, GripVertical, Plus, Loader2 } from 'lucide-react'
+import { Trash2, GripVertical, Plus, Loader2, MoreVertical, Edit2 } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { KanbanBoard, KanbanColumn, KanbanItem } from '@/components/ui/KanbanBoard'
+import { DropdownAction } from '@/components/ui/DropdownAction'
 
 // Define local Scene type
 export type SceneItem = {
@@ -195,7 +196,7 @@ export function SceneKanbanBoard({ scenes, onReorder, onUpdate, onRemove, onRemo
     const renderExtraActions = (
         <button
             onClick={handleAddAct}
-            className="flex-shrink-0 w-full lg:w-[320px] h-auto border-2 border-dashed border-neutral-800 rounded-xl flex flex-col items-center justify-center text-neutral-500 hover:text-white hover:border-neutral-600 hover:bg-neutral-900 transition-all gap-2 group min-h-[150px] py-8"
+            className="shrink-0 w-full lg:w-[320px] h-auto border-2 border-dashed border-neutral-800 rounded-xl flex flex-col items-center justify-center text-neutral-500 hover:text-white hover:border-neutral-600 hover:bg-neutral-900 transition-all gap-2 group min-h-[150px] py-8"
         >
             <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center group-hover:bg-neutral-700 transition-colors">
                 <Plus className="w-5 h-5" />
@@ -248,7 +249,7 @@ function SortableScene({ scene, onUpdate, onRemove, isOverlay }: { scene: SceneI
     if (isOverlay) {
         return (
             <div className="p-4 bg-neutral-800 border border-neutral-600 rounded-lg shadow-2xl opacity-90 text-white font-medium w-[300px] flex items-center gap-3">
-                <div className="w-8 h-8 flex-shrink-0 bg-neutral-900 border border-neutral-800 rounded flex items-center justify-center text-white font-mono font-bold text-sm">
+                <div className="w-8 h-8 shrink-0 bg-neutral-900 border border-neutral-800 rounded flex items-center justify-center text-white font-mono font-bold text-sm">
                     {scene.scene_number}
                 </div>
                 <span>{scene.name}</span>
@@ -267,7 +268,7 @@ function SortableScene({ scene, onUpdate, onRemove, isOverlay }: { scene: SceneI
             </div>
 
             {/* Scene Number Badge */}
-            <div className="w-8 h-8 flex-shrink-0 bg-neutral-900 border border-neutral-800 rounded flex items-center justify-center text-white font-mono font-bold text-sm">
+            <div className="w-8 h-8 shrink-0 bg-neutral-900 border border-neutral-800 rounded flex items-center justify-center text-white font-mono font-bold text-sm">
                 {scene.scene_number}
             </div>
 
@@ -303,12 +304,31 @@ function SortableScene({ scene, onUpdate, onRemove, isOverlay }: { scene: SceneI
             </div>
 
             {/* Remove */}
-            <button
-                onClick={() => onRemove(scene.id)}
-                className="text-neutral-600 hover:text-red-400 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-                <Trash2 className="w-3.5 h-3.5" />
-            </button>
+            {/* Actions Menu */}
+            <div onClick={e => e.stopPropagation()} className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                <DropdownAction
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-neutral-500 hover:text-white data-[state=open]:opacity-100"
+                    icon={<MoreVertical className="w-4 h-4" />}
+                    align="right"
+                    showChevron={false}
+                    menuWidth="w-40"
+                    items={[
+                        {
+                            label: 'Zmień nazwę',
+                            icon: <Edit2 className="w-4 h-4" />,
+                            onClick: () => setIsEditing(true)
+                        },
+                        {
+                            label: 'Usuń',
+                            icon: <Trash2 className="w-4 h-4" />,
+                            onClick: () => onRemove(scene.id),
+                            danger: true
+                        }
+                    ]}
+                />
+            </div>
         </div>
     )
 }

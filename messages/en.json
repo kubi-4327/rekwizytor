@@ -890,6 +890,9 @@
         "testVersionWarning": "This is a test version of the application. Some features may not work correctly."
     },
     "PropsChecklist": {
+        "addItem": "Add Item",
+        "scanPhoto": "Scan Photo",
+        "manualList": "Manual List",
         "progress": "{checked} of {total} checked",
         "showBulkAdd": "Bulk Add",
         "hideBulkAdd": "Hide Bulk Add",

@@ -189,7 +189,7 @@ export function PerformanceSceneView({
                                         <div
                                             key={scene.id}
                                             onClick={() => setSelectedScene(scene)}
-                                            className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 space-y-3 cursor-pointer hover:bg-neutral-800/50 transition-colors"
+                                            className="bg-neutral-900 border border-neutral-800 p-4 space-y-3 cursor-pointer hover:bg-neutral-800/50 transition-colors first:rounded-t-lg last:rounded-b-lg md:rounded-lg"
                                         >
                                             <div className="flex items-baseline gap-2 pb-2 border-b border-neutral-800 mb-2">
                                                 <span className="text-lg font-bold text-white">{scene.scene_number}</span>

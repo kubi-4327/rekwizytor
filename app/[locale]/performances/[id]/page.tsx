@@ -127,7 +127,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
         <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
             <div>
                 {/* Header Container */}
-                <div className="bg-neutral-900/50 backdrop-blur-sm border border-neutral-800 rounded-xl p-6 shadow-xl">
+                <div className="relative z-30 bg-neutral-900/50 backdrop-blur-sm border border-neutral-800 rounded-xl p-4 md:p-6 shadow-xl">
                     <div className="flex flex-col md:flex-row gap-6 items-start">
                         {/* Poster */}
                         <div
@@ -192,10 +192,10 @@ export default async function ProductionDetailsPage({ params }: Props) {
                                     )}
                                 </div>
 
-                                <div className="flex flex-col sm:flex-row gap-3 shrink-0 pt-2 lg:pt-0">
+                                <div className="flex flex-row items-center gap-3 shrink-0 pt-2 lg:pt-0 w-full sm:w-auto">
                                     <Link
                                         href={`/performances/${id}/live`}
-                                        className={buttonVariants({ variant: "glassy-danger", className: "gap-2" })}
+                                        className={buttonVariants({ variant: "glassy-danger", className: "gap-2 flex-1 sm:flex-none justify-center" })}
                                     >
                                         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse mr-2 border border-red-400" />
                                         {t('liveView')}

@@ -50,280 +50,6 @@ export type Database = {
         }
         Relationships: []
       }
-      embedding_queue_state: {
-        Row: {
-          current_queue_item_id: string | null
-          id: string
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          current_queue_item_id?: string | null
-          id?: string
-          status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          current_queue_item_id?: string | null
-          id?: string
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "embedding_queue_state_current_queue_item_id_fkey"
-            columns: ["current_queue_item_id"]
-            isOneToOne: false
-            referencedRelation: "embedding_test_queue"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      embedding_regeneration_jobs: {
-        Row: {
-          created_at: string | null
-          current_enrichment: Json | null
-          current_group_id: string | null
-          current_group_name: string | null
-          embedding_model: string
-          enrichment_model: string
-          error_message: string | null
-          failed_groups: Json | null
-          id: string
-          processed_groups: number | null
-          status: string
-          total_groups: number
-          total_tokens: number | null
-          updated_at: string | null
-          use_sample_groups: boolean | null
-        }
-        Insert: {
-          created_at?: string | null
-          current_enrichment?: Json | null
-          current_group_id?: string | null
-          current_group_name?: string | null
-          embedding_model: string
-          enrichment_model: string
-          error_message?: string | null
-          failed_groups?: Json | null
-          id?: string
-          processed_groups?: number | null
-          status?: string
-          total_groups: number
-          total_tokens?: number | null
-          updated_at?: string | null
-          use_sample_groups?: boolean | null
-        }
-        Update: {
-          created_at?: string | null
-          current_enrichment?: Json | null
-          current_group_id?: string | null
-          current_group_name?: string | null
-          embedding_model?: string
-          enrichment_model?: string
-          error_message?: string | null
-          failed_groups?: Json | null
-          id?: string
-          processed_groups?: number | null
-          status?: string
-          total_groups?: number
-          total_tokens?: number | null
-          updated_at?: string | null
-          use_sample_groups?: boolean | null
-        }
-        Relationships: []
-      }
-      embedding_test_queue: {
-        Row: {
-          completed_at: string | null
-          config: Json
-          created_at: string | null
-          error_message: string | null
-          id: string
-          position: number
-          run_id: string | null
-          started_at: string | null
-          status: string
-        }
-        Insert: {
-          completed_at?: string | null
-          config: Json
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          position: number
-          run_id?: string | null
-          started_at?: string | null
-          status?: string
-        }
-        Update: {
-          completed_at?: string | null
-          config?: Json
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          position?: number
-          run_id?: string | null
-          started_at?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "embedding_test_queue_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "embedding_test_runs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      embedding_test_results: {
-        Row: {
-          applied_weights: Json | null
-          correct_rank: number | null
-          created_at: string | null
-          error_message: string | null
-          generated_query: string
-          id: string
-          query_intent: string | null
-          run_id: string
-          search_tokens: number | null
-          similarity_margin: number | null
-          source_group_id: string
-          source_group_name: string
-          tester_tokens: number | null
-          top_results: Json
-          top1_group_id: string | null
-          top1_group_name: string | null
-        }
-        Insert: {
-          applied_weights?: Json | null
-          correct_rank?: number | null
-          created_at?: string | null
-          error_message?: string | null
-          generated_query: string
-          id?: string
-          query_intent?: string | null
-          run_id: string
-          search_tokens?: number | null
-          similarity_margin?: number | null
-          source_group_id: string
-          source_group_name: string
-          tester_tokens?: number | null
-          top_results: Json
-          top1_group_id?: string | null
-          top1_group_name?: string | null
-        }
-        Update: {
-          applied_weights?: Json | null
-          correct_rank?: number | null
-          created_at?: string | null
-          error_message?: string | null
-          generated_query?: string
-          id?: string
-          query_intent?: string | null
-          run_id?: string
-          search_tokens?: number | null
-          similarity_margin?: number | null
-          source_group_id?: string
-          source_group_name?: string
-          tester_tokens?: number | null
-          top_results?: Json
-          top1_group_id?: string | null
-          top1_group_name?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "embedding_test_results_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "embedding_test_runs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "embedding_test_results_source_group_id_fkey"
-            columns: ["source_group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      embedding_test_runs: {
-        Row: {
-          completed_query_count: number | null
-          created_at: string | null
-          delay_between_queries_ms: number | null
-          difficulty_mode: string | null
-          embedding_model: string
-          error_message: string | null
-          id: string
-          match_threshold: number | null
-          mvs_weight_context: number | null
-          mvs_weight_identity: number | null
-          mvs_weight_physical: number | null
-          name: string
-          requires_reembedding: boolean | null
-          status: string
-          target_query_count: number
-          tester_model: string
-          tester_temperature: number | null
-          total_search_tokens: number | null
-          total_tester_tokens: number | null
-          updated_at: string | null
-          use_dynamic_weights: boolean | null
-          use_sample_groups: boolean | null
-        }
-        Insert: {
-          completed_query_count?: number | null
-          created_at?: string | null
-          delay_between_queries_ms?: number | null
-          difficulty_mode?: string | null
-          embedding_model: string
-          error_message?: string | null
-          id?: string
-          match_threshold?: number | null
-          mvs_weight_context?: number | null
-          mvs_weight_identity?: number | null
-          mvs_weight_physical?: number | null
-          name: string
-          requires_reembedding?: boolean | null
-          status?: string
-          target_query_count: number
-          tester_model: string
-          tester_temperature?: number | null
-          total_search_tokens?: number | null
-          total_tester_tokens?: number | null
-          updated_at?: string | null
-          use_dynamic_weights?: boolean | null
-          use_sample_groups?: boolean | null
-        }
-        Update: {
-          completed_query_count?: number | null
-          created_at?: string | null
-          delay_between_queries_ms?: number | null
-          difficulty_mode?: string | null
-          embedding_model?: string
-          error_message?: string | null
-          id?: string
-          match_threshold?: number | null
-          mvs_weight_context?: number | null
-          mvs_weight_identity?: number | null
-          mvs_weight_physical?: number | null
-          name?: string
-          requires_reembedding?: boolean | null
-          status?: string
-          target_query_count?: number
-          tester_model?: string
-          tester_temperature?: number | null
-          total_search_tokens?: number | null
-          total_tester_tokens?: number | null
-          updated_at?: string | null
-          use_dynamic_weights?: boolean | null
-          use_sample_groups?: boolean | null
-        }
-        Relationships: []
-      }
       groups: {
         Row: {
           color: string | null
@@ -392,6 +118,108 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      intent_classification_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          identity_score: number
+          latency_ms: number | null
+          model_name: string | null
+          physical_score: number
+          query: string
+          source: string
+          tokens: string[]
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          identity_score: number
+          latency_ms?: number | null
+          model_name?: string | null
+          physical_score: number
+          query: string
+          source?: string
+          tokens: string[]
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          identity_score?: number
+          latency_ms?: number | null
+          model_name?: string | null
+          physical_score?: number
+          query?: string
+          source?: string
+          tokens?: string[]
+        }
+        Relationships: []
+      }
+      intent_classification_stats: {
+        Row: {
+          avg_latency_ms: number | null
+          date: string
+          id: string
+          llm_fallback_count: number | null
+          rule_based_count: number | null
+          total_classifications: number | null
+          total_cost_usd: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          avg_latency_ms?: number | null
+          date?: string
+          id?: string
+          llm_fallback_count?: number | null
+          rule_based_count?: number | null
+          total_classifications?: number | null
+          total_cost_usd?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          avg_latency_ms?: number | null
+          date?: string
+          id?: string
+          llm_fallback_count?: number | null
+          rule_based_count?: number | null
+          total_classifications?: number | null
+          total_cost_usd?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      intent_keywords: {
+        Row: {
+          confidence: number
+          created_at: string | null
+          id: string
+          identity_weight: number
+          keyword: string
+          physical_weight: number
+          source: string
+          updated_at: string | null
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string | null
+          id?: string
+          identity_weight?: number
+          keyword: string
+          physical_weight?: number
+          source?: string
+          updated_at?: string | null
+        }
+        Update: {
+          confidence?: number
+          created_at?: string | null
+          id?: string
+          identity_weight?: number
+          keyword?: string
+          physical_weight?: number
+          source?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       locations: {
         Row: {
@@ -578,6 +406,7 @@ export type Database = {
           last_show_date: string | null
           notes: string | null
           premiere_date: string | null
+          source_url: string | null
           status: Database["public"]["Enums"]["performance_status_enum"]
           thumbnail_url: string | null
           title: string
@@ -594,6 +423,7 @@ export type Database = {
           last_show_date?: string | null
           notes?: string | null
           premiere_date?: string | null
+          source_url?: string | null
           status?: Database["public"]["Enums"]["performance_status_enum"]
           thumbnail_url?: string | null
           title: string
@@ -610,6 +440,7 @@ export type Database = {
           last_show_date?: string | null
           notes?: string | null
           premiere_date?: string | null
+          source_url?: string | null
           status?: Database["public"]["Enums"]["performance_status_enum"]
           thumbnail_url?: string | null
           title?: string
@@ -924,6 +755,17 @@ export type Database = {
           mean_reciprocal_rank: number
           successful_queries: number
           total_queries: number
+        }[]
+      }
+      get_intent_classification_stats: {
+        Args: { days?: number }
+        Returns: {
+          date: string
+          llm_fallback_count: number
+          llm_percentage: number
+          rule_based_count: number
+          rule_percentage: number
+          total_classifications: number
         }[]
       }
       get_storage_stats: {

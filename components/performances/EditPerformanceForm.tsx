@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Loader2, Save, Calendar, Trash2, Upload, X } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 import { compressImage, createThumbnail } from '@/utils/image-processing'
 import { extractTopColors } from '@/utils/colors'
 import Image from 'next/image'
@@ -208,8 +209,8 @@ export function EditPerformanceForm({ performance }: Props) {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl">
-            <div className="space-y-6 bg-neutral-900/50 p-6 rounded-xl border border-neutral-800">
+        <form onSubmit={handleSubmit} className="space-y-8 max-w-3xl">
+            <div className="space-y-8 bg-neutral-900/50 p-6 md:p-8 rounded-2xl border border-white/5 shadow-2xl backdrop-blur-sm">
                 <div>
                     <label htmlFor="title" className="block text-sm font-medium text-neutral-300">
                         {t('showTitle')} <span className="text-red-500">*</span>
@@ -220,7 +221,7 @@ export function EditPerformanceForm({ performance }: Props) {
                         required
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="mt-2 block w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
+                        className="mt-2 block w-full rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-white placeholder-neutral-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 shadow-inner transition-all sm:text-sm"
                     />
                 </div>
 
@@ -256,7 +257,7 @@ export function EditPerformanceForm({ performance }: Props) {
                                         }
                                     }
                                 }}
-                                className="block w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm pl-10 [color-scheme:dark]"
+                                className="block w-full rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-white placeholder-neutral-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 shadow-inner transition-all sm:text-sm pl-10 scheme-dark"
                             />
                             <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-neutral-500" />
                         </div>
@@ -270,7 +271,7 @@ export function EditPerformanceForm({ performance }: Props) {
                             id="status"
                             value={status}
                             onChange={(e) => setStatus(e.target.value as Performance['status'])}
-                            className="mt-2 block w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
+                            className="mt-2 block w-full rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-white placeholder-neutral-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 shadow-inner transition-all sm:text-sm"
                         >
                             <option value="upcoming">{t('statuses.upcoming')}</option>
                             <option value="active">{t('statuses.active')}</option>
@@ -288,7 +289,7 @@ export function EditPerformanceForm({ performance }: Props) {
                         rows={3}
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        className="mt-2 block w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-white placeholder-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 sm:text-sm"
+                        className="mt-2 block w-full rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-white placeholder-neutral-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 shadow-inner transition-all sm:text-sm"
                     />
                 </div>
 
@@ -394,36 +395,33 @@ export function EditPerformanceForm({ performance }: Props) {
             )}
 
             <div className="flex items-center justify-between">
-                <button
+                <Button
                     type="button"
                     onClick={handleDelete}
                     disabled={loading}
-                    className="flex items-center text-sm text-red-400 hover:text-red-300 disabled:opacity-50"
+                    variant="glassy-danger"
+                    leftIcon={<Trash2 className="h-4 w-4" />}
                 >
-                    <Trash2 className="mr-2 h-4 w-4" />
                     {t('deleteProduction')}
-                </button>
+                </Button>
 
                 <div className="flex gap-4">
-                    <button
+                    <Button
                         type="button"
                         onClick={() => router.back()}
-                        className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white"
+                        variant="ghost"
                     >
                         {t('cancel')}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="submit"
                         disabled={loading}
-                        className="flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                        variant="glassy-success"
+                        isLoading={loading}
+                        leftIcon={<Save className="h-4 w-4" />}
                     >
-                        {loading ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Save className="mr-2 h-4 w-4" />
-                        )}
                         {t('saveChanges')}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </form>
