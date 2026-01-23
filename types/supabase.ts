@@ -50,6 +50,60 @@ export type Database = {
         }
         Relationships: []
       }
+      embedding_regeneration_jobs: {
+        Row: {
+          created_at: string | null
+          current_enrichment: Json | null
+          current_group_id: string | null
+          current_group_name: string | null
+          embedding_model: string
+          enrichment_model: string
+          error_message: string | null
+          failed_groups: Json | null
+          id: string
+          processed_groups: number | null
+          status: string
+          total_groups: number
+          total_tokens: number | null
+          updated_at: string | null
+          use_sample_groups: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_enrichment?: Json | null
+          current_group_id?: string | null
+          current_group_name?: string | null
+          embedding_model: string
+          enrichment_model: string
+          error_message?: string | null
+          failed_groups?: Json | null
+          id?: string
+          processed_groups?: number | null
+          status?: string
+          total_groups: number
+          total_tokens?: number | null
+          updated_at?: string | null
+          use_sample_groups?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          current_enrichment?: Json | null
+          current_group_id?: string | null
+          current_group_name?: string | null
+          embedding_model?: string
+          enrichment_model?: string
+          error_message?: string | null
+          failed_groups?: Json | null
+          id?: string
+          processed_groups?: number | null
+          status?: string
+          total_groups?: number
+          total_tokens?: number | null
+          updated_at?: string | null
+          use_sample_groups?: boolean | null
+        }
+        Relationships: []
+      }
       groups: {
         Row: {
           color: string | null

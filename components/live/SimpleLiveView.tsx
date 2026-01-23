@@ -288,7 +288,7 @@ export function SimpleLiveView({
                                 {isNewAct && (
                                     <div className="px-3 py-2 text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-2">
                                         <div className="h-px bg-neutral-800 flex-1" />
-                                        {t('act', { number: scene.act_number })}
+                                        {t('act', { number: scene.act_number ?? 0 })}
                                         <div className="h-px bg-neutral-800 flex-1" />
                                     </div>
                                 )}
