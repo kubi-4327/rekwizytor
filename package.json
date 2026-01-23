@@ -7,7 +7,19 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "sync-types": "npx supabase gen types typescript --project-id rjxcpqxhkbfhedhhxbau > types/supabase.ts"
+    "sync-types": "npx supabase gen types typescript --project-id rjxcpqxhkbfhedhhxbau > types/supabase.ts",
+    "export:supabase": "npx tsx scripts/export-from-supabase.ts",
+    "import:pocketbase": "npx tsx scripts/import-to-pocketbase.ts",
+    "test:compare": "npx tsx scripts/compare-embeddings.ts",
+    "test:clean-db": "npx tsx scripts/clean-pocketbase.ts",
+    "test:create-tables": "npx tsx scripts/create-pocketbase-tables.ts",
+    "test:start": "chmod +x scripts/test-env-start.sh && ./scripts/test-env-start.sh",
+    "test:stop": "chmod +x scripts/test-env-stop.sh && ./scripts/test-env-stop.sh",
+    "test:clean": "chmod +x scripts/test-env-clean.sh && ./scripts/test-env-clean.sh",
+    "test:setup": "npx tsx scripts/pocketbase-helper.ts setup",
+    "test:seed": "npx tsx scripts/pocketbase-helper.ts seed",
+    "test:reset": "npx tsx scripts/pocketbase-helper.ts reset",
+    "test:init": "npx tsx scripts/pocketbase-helper.ts all"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -39,6 +51,7 @@
     "next": "^16.0.8",
     "next-intl": "^4.5.5",
     "ogl": "^1.0.11",
+    "pocketbase": "^0.26.6",
     "qrcode": "^1.5.4",
     "react": "19.2.0",
     "react-datepicker": "^8.9.0",
@@ -50,6 +63,7 @@
     "react-to-print": "^3.2.0",
     "tailwind-merge": "^3.4.0",
     "tippy.js": "^6.3.7",
+    "wandb": "^0.1.0",
     "xlsx": "^0.18.5",
     "zod": "^4.1.13"
   },

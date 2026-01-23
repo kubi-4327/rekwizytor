@@ -407,7 +407,11 @@
         "actDuration": "Czas Trwania Aktu",
         "totalDuration": "Całkowity Czas (bez przerw)",
         "resumeShow": "Wznów Spektakl",
-        "goToActive": "Idź do Aktywnej Sceny"
+        "goToActive": "Idź do Aktywnej Sceny",
+        "resetAll": "Reset wszystkich",
+        "exit": "Wyjdź",
+        "confirmResetAll": "Czy na pewno chcesz zresetować wszystkie oznaczenia? Ta operacja wyczyści status wszystkich zadań.",
+        "unknownItem": "Nieznany przedmiot"
     },
     "ChecklistPage": {
         "backToPerformance": "Powrót do Spektakli",

@@ -229,19 +229,37 @@ async function runRegenerationInBackground(
             ])
 
             // Generate key: enricher_embedder
+            // Generate key: enricher_embedder
             const generateKey = (enricher: string, embedder: string): string => {
-                const shortEnricher = enricher.includes('gemini') ? 'gemini' :
-                    enricher.includes('gpt') ? 'openai' :
-                        enricher.includes('mistral') ? 'mistral' : 'gemini'
+                // Map enrichment models to short identifiers
+                const enrichmentMap: Record<string, string> = {
+                    'gemini-2.5-flash-lite': 'g25fl',
+                    'gemini-2.5-flash': 'g25f',
+                    'gemini-2.0-flash-exp': 'g20f',
+                    'gemini-1.5-flash': 'g15f',
+                    'gpt-5-nano': 'gpt5n',
+                    'gpt-5-mini': 'gpt5m',
+                    'gpt-4.1-mini': 'gpt41m',
+                    'gpt-4.1-nano': 'gpt41n',
+                    'gpt-4o-mini': 'gpt4om',
+                    'gpt-4o': 'gpt4o',
+                    'mistral-large-latest': 'mstl'
+                }
 
-                const shortEmbedder = embedder.includes('gemini') || embedder.includes('text-embedding-004') ? 'gemini' :
-                    embedder.includes('mistral') ? 'mistral' :
-                        embedder.includes('text-embedding-3-large') ? 'openai_large' :
-                            embedder.includes('text-embedding-3-small') ? 'openai_small' :
-                                embedder.includes('voyage-3.5-lite') ? 'voyage_lite' :
-                                    embedder.includes('voyage') ? 'voyage' : 'gemini'
+                // Map embedding models to short identifiers
+                const embeddingMap: Record<string, string> = {
+                    'gemini-text-embedding-004': 'gem004',
+                    'text-embedding-3-large': 'oai3l',
+                    'text-embedding-3-small': 'oai3s',
+                    'mistral-embed': 'mste',
+                    'voyage-3.5-lite': 'voy35l',
+                    'voyage-3.5': 'voy35'
+                }
 
-                return `${shortEnricher}_${shortEmbedder}`
+                const enrichKey = enrichmentMap[enricher] || (enricher.includes('gemini') ? 'gemini' : enricher.includes('gpt') ? 'openai' : 'mistral')
+                const embedKey = embeddingMap[embedder] || (embedder.includes('gemini') ? 'gemini' : 'openai')
+
+                return `${enrichKey}_${embedKey}`
             }
 
             const embeddingKey = generateKey(enrichmentModel, embeddingModel)

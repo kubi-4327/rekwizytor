@@ -47,3 +47,7 @@ LEARNING.md
 # admin tools (local only)
 /components/admin/
 app/*/admin/
+
+# Docker & PocketBase test data
+pocketbase_data/
+pocketbase_public/

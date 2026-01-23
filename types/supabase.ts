@@ -810,30 +810,46 @@ export type Database = {
       }
       scene_tasks: {
         Row: {
+          assigned_to: string | null
           content: string
           created_at: string | null
           id: string
+          is_completed: boolean | null
+          live_notes: string | null
           order_index: number
           scene_id: string
           updated_at: string | null
         }
         Insert: {
+          assigned_to?: string | null
           content: string
           created_at?: string | null
           id?: string
+          is_completed?: boolean | null
+          live_notes?: string | null
           order_index?: number
           scene_id: string
           updated_at?: string | null
         }
         Update: {
+          assigned_to?: string | null
           content?: string
           created_at?: string | null
           id?: string
+          is_completed?: boolean | null
+          live_notes?: string | null
           order_index?: number
           scene_id?: string
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "scene_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "scene_tasks_scene_id_fkey"
             columns: ["scene_id"]
@@ -880,7 +896,22 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vw_searchable_entities: {
+        Row: {
+          description: string | null
+          embedding_context: string | null
+          embedding_identity: string | null
+          embedding_physical: string | null
+          entity_type: string | null
+          id: string | null
+          image_url: string | null
+          metadata: Json | null
+          name: string | null
+          updated_at: string | null
+          url: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_test_metrics: {
