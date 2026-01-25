@@ -97,80 +97,88 @@ export async function getTestRun(id: string): Promise<{
 }
 
 // Helper: Calculate test metrics from results
+// Helper: Calculate basic accuracy and MRR metrics
+function calculateBasicMetrics(results: PocketBaseTestResult[]) {
+    if (results.length === 0) {
+        return {
+            accuracy_at_1: 0, accuracy_at_5: 0, accuracy_at_10: 0,
+            mean_reciprocal_rank: 0, average_rank: 0,
+            total_queries: 0, successful_queries: 0
+        }
+    }
+
+    const totalQueries = results.length
+    const validResults = results.filter(r => r.correct_rank && r.correct_rank > 0)
+    const successfulQueries = validResults.length
+
+    if (successfulQueries === 0) {
+        return {
+            accuracy_at_1: 0, accuracy_at_5: 0, accuracy_at_10: 0,
+            mean_reciprocal_rank: 0, average_rank: 0,
+            total_queries: totalQueries, successful_queries: 0
+        }
+    }
+
+    const accuracyAt1 = validResults.filter(r => r.correct_rank === 1).length / totalQueries
+    const accuracyAt5 = validResults.filter(r => r.correct_rank! <= 5).length / totalQueries
+    const accuracyAt10 = validResults.filter(r => r.correct_rank! <= 10).length / totalQueries
+
+    const mrr = validResults.reduce((sum, r) => sum + (1 / r.correct_rank!), 0) / totalQueries
+    const avgRank = validResults.reduce((sum, r) => sum + r.correct_rank!, 0) / successfulQueries
+
+    return {
+        accuracy_at_1: accuracyAt1,
+        accuracy_at_5: accuracyAt5,
+        accuracy_at_10: accuracyAt10,
+        mean_reciprocal_rank: mrr,
+        average_rank: avgRank,
+        total_queries: totalQueries,
+        successful_queries: successfulQueries
+    }
+}
+
+// Helper: Calculate intent classification accuracy
+async function calculateIntentMetrics(pb: any, runId: string) {
+    try {
+        const intentData = await pb.collection('intent_test_data').getFullList({
+            filter: `test_result_id ~ "${runId}"`
+        })
+
+        if (!intentData || intentData.length === 0) return {}
+
+        const total = intentData.length
+        const vectorMatchRate = intentData.filter((d: any) => d.vector_match === true).length / total
+
+        const getAccuracy = (type: string) => {
+            const tests = intentData.filter((d: any) => d.expected_dominant_vector === type)
+            return tests.length > 0
+                ? tests.filter((d: any) => d.vector_match === true).length / tests.length
+                : 0
+        }
+
+        return {
+            vector_match_rate: vectorMatchRate,
+            identity_accuracy: getAccuracy('identity'),
+            physical_accuracy: getAccuracy('physical'),
+            context_accuracy: getAccuracy('context'),
+            total_intent_tests: total
+        }
+    } catch (error) {
+        console.warn('Failed to calculate intent metrics:', error)
+        return {}
+    }
+}
+
 async function calculateTestMetrics(pb: any, runId: string): Promise<TestMetrics | null> {
     try {
         const results = await pb.collection('embedding_test_results').getFullList({
             filter: `run_id="${runId}"`
         }) as PocketBaseTestResult[]
 
-        if (results.length === 0) {
-            return {
-                accuracy_at_1: 0,
-                accuracy_at_5: 0,
-                accuracy_at_10: 0,
-                mean_reciprocal_rank: 0,
-                average_rank: 0,
-                total_queries: 0,
-                successful_queries: 0
-            }
-        }
+        const basicMetrics = calculateBasicMetrics(results)
+        const intentMetrics = await calculateIntentMetrics(pb, runId)
 
-        const validResults = results.filter((r: PocketBaseTestResult) => r.correct_rank && r.correct_rank > 0)
-        const totalQueries = results.length
-        const successfulQueries = validResults.length
-
-        const accuracyAt1 = validResults.filter((r: PocketBaseTestResult) => r.correct_rank === 1).length / totalQueries
-        const accuracyAt5 = validResults.filter((r: PocketBaseTestResult) => r.correct_rank! <= 5).length / totalQueries
-        const accuracyAt10 = validResults.filter((r: PocketBaseTestResult) => r.correct_rank! <= 10).length / totalQueries
-
-        const mrr = validResults.reduce((sum: number, r: PocketBaseTestResult) => sum + (1 / r.correct_rank!), 0) / totalQueries
-        const avgRank = validResults.reduce((sum: number, r: PocketBaseTestResult) => sum + r.correct_rank!, 0) / successfulQueries
-
-        // Calculate intent classification metrics
-        let intentMetrics = {}
-        try {
-            const intentData = await pb.collection('intent_test_data').getFullList({
-                filter: `test_result_id ~ "${runId}"`
-            })
-
-            if (intentData && intentData.length > 0) {
-                const totalIntentTests = intentData.length
-                const matches = intentData.filter((d: any) => d.vector_match === true).length
-                const vectorMatchRate = matches / totalIntentTests
-
-                // Accuracy by vector type
-                const identityTests = intentData.filter((d: any) => d.expected_dominant_vector === 'identity')
-                const physicalTests = intentData.filter((d: any) => d.expected_dominant_vector === 'physical')
-                const contextTests = intentData.filter((d: any) => d.expected_dominant_vector === 'context')
-
-                intentMetrics = {
-                    vector_match_rate: vectorMatchRate,
-                    identity_accuracy: identityTests.length > 0
-                        ? identityTests.filter((d: any) => d.vector_match === true).length / identityTests.length
-                        : 0,
-                    physical_accuracy: physicalTests.length > 0
-                        ? physicalTests.filter((d: any) => d.vector_match === true).length / physicalTests.length
-                        : 0,
-                    context_accuracy: contextTests.length > 0
-                        ? contextTests.filter((d: any) => d.vector_match === true).length / contextTests.length
-                        : 0,
-                    total_intent_tests: totalIntentTests
-                }
-            }
-        } catch (error) {
-            console.warn('Failed to calculate intent metrics:', error)
-        }
-
-        return {
-            accuracy_at_1: accuracyAt1,
-            accuracy_at_5: accuracyAt5,
-            accuracy_at_10: accuracyAt10,
-            mean_reciprocal_rank: mrr,
-            average_rank: avgRank,
-            total_queries: totalQueries,
-            successful_queries: successfulQueries,
-            ...intentMetrics
-        }
+        return { ...basicMetrics, ...intentMetrics }
     } catch (error) {
         console.error('Error calculating metrics:', error)
         return null
@@ -423,166 +431,162 @@ async function processSingleTestQuery(
     }
 }
 
+async function prepareTestContext(pb: any, runId: string) {
+    console.log('📋 [TEST] Fetching configuration...')
+    const run = await pb.collection('embedding_test_runs').getOne(runId) as PocketBaseTestRun
+    if (!run) throw new Error('Failed to fetch run config')
+
+    let wandbRun = null
+    if (process.env.WANDB_API_KEY) {
+        wandbRun = await initWandBRun(runId, {
+            embedding_model: run.embedding_model,
+            enrichment_model: (run as any).enrichment_variant || 'none',
+            tester_model: run.tester_model,
+            target_query_count: run.target_query_count,
+            difficulty_mode: run.difficulty_mode,
+            mvs_weight_identity: run.mvs_weight_identity,
+            mvs_weight_physical: run.mvs_weight_physical,
+            mvs_weight_context: run.mvs_weight_context,
+            use_dynamic_weights: run.use_dynamic_weights
+        })
+    }
+
+    await pb.collection('embedding_test_runs').update(runId, { status: 'running' })
+    return { run, wandbRun }
+}
+
+async function resolveTestGroups(pb: any, run: PocketBaseTestRun) {
+    const limit = run.use_sample_groups ? 200 : undefined
+    const allGroups = await pb.collection('groups').getFullList({
+        filter: 'embeddings != null',
+        fields: 'id,name,embeddings',
+        ...(limit && { limit })
+    }) as PocketBaseGroup[]
+
+    const embeddingKey = run.embedding_key || run.embedding_model
+    const groups = allGroups
+        .filter((g: any) => g.embeddings && g.embeddings[embeddingKey])
+        .map((g: any) => ({ id: g.id, name: g.name }))
+
+    if (groups.length === 0) throw new Error(`No groups found with embeddings for key: ${embeddingKey}`)
+    return { groups: run.use_sample_groups ? groups.slice(0, 50) : groups, embeddingKey }
+}
+
+async function executeTestQueries(pb: any, runId: string, run: PocketBaseTestRun, groups: any[], embeddingKey: string, wandbRun: any) {
+    let completed = 0, totalSearch = 0, totalTester = 0
+
+    for (let i = 0; i < run.target_query_count; i++) {
+        const targetGroup = groups[Math.floor(Math.random() * groups.length)]
+        const result = await processSingleTestQuery(pb, runId, run, targetGroup, embeddingKey)
+
+        if (result.success) {
+            totalSearch += result.searchTokens
+            totalTester += result.testerTokens
+            completed++
+
+            await pb.collection('embedding_test_runs').update(runId, {
+                completed_query_count: completed,
+                total_search_tokens: totalSearch,
+                total_tester_tokens: totalTester
+            })
+
+            if (wandbRun && completed % 10 === 0) {
+                const metrics = await calculateTestMetrics(pb, runId)
+                if (metrics) await logWandBMetrics(completed, metrics)
+            }
+        }
+
+        if (i < run.target_query_count - 1) {
+            await new Promise(resolve => setTimeout(resolve, run.delay_between_queries_ms || 500))
+        }
+    }
+    return { totalSearch, totalTester }
+}
+
 // Background test execution process
 async function runTestQueriesInBackground(runId: string) {
-    console.log('🚀 [TEST] Starting background test execution for run:', runId)
     const pb = await createPocketBaseAdmin()
-
-    // W&B run (will be null if W&B not configured)
-    let wandbRun: any = null
+    let wandbContext: any = null
 
     try {
-        // 1. Get run config
-        console.log('📋 [TEST] Fetching run configuration...')
-        const run = await pb.collection('embedding_test_runs').getOne<PocketBaseTestRun>(runId)
+        const { run, wandbRun } = await prepareTestContext(pb, runId)
+        wandbContext = wandbRun
 
-        if (!run) {
-            console.error('❌ [TEST] Failed to fetch run config')
-            return
-        }
-        console.log('✅ [TEST] Run config loaded:', { name: run.name, targetCount: run.target_query_count })
+        const { groups, embeddingKey } = await resolveTestGroups(pb, run)
+        const { totalSearch, totalTester } = await executeTestQueries(pb, runId, run, groups, embeddingKey, wandbRun)
 
-        // 2. Initialize W&B run (optional - graceful fallback)
-        if (process.env.WANDB_API_KEY) {
-            console.log('📊 [W&B] Initializing run...')
-            wandbRun = await initWandBRun(runId, {
-                embedding_model: run.embedding_model,
-                // @ts-ignore - enrichment_variant exists in runtime
-                enrichment_model: run.enrichment_variant || 'none',
-                tester_model: run.tester_model,
-                target_query_count: run.target_query_count,
-                difficulty_mode: run.difficulty_mode,
-                mvs_weight_identity: run.mvs_weight_identity,
-                mvs_weight_physical: run.mvs_weight_physical,
-                mvs_weight_context: run.mvs_weight_context,
-                use_dynamic_weights: run.use_dynamic_weights
-            })
-        }
-
-        // 3. Update status to running
-        console.log('🔄 [TEST] Updating status to running...')
-        await pb.collection('embedding_test_runs').update(runId, { status: 'running' })
-        console.log('✅ [TEST] Status updated to running')
-
-        // 3. Get source groups for query generation
-        console.log('👥 [TEST] Fetching groups...')
-        const limit = run.use_sample_groups ? 200 : undefined
-        const allGroups = await pb.collection('groups').getFullList<PocketBaseGroup>({
-            filter: 'embeddings != null',
-            fields: 'id,name,embeddings',
-            ...(limit && { limit })
-        })
-
-        if (!allGroups || allGroups.length === 0) {
-            console.error('❌ [TEST] No groups found for testing')
-            throw new Error('No groups found for testing')
-        }
-
-        // Use embedding_key from run config (composite key like "g25f_gem004")
-        const embeddingKey = run.embedding_key || run.embedding_model
-        console.log(`🔑 [TEST] Using embedding key: ${embeddingKey}`)
-
-        // Filter to only groups that have embeddings for the selected key
-        const groups = allGroups.filter((g: PocketBaseGroup) => {
-            const embeddings = g.embeddings
-            return embeddings && embeddings[embeddingKey]
-        }).map((g: PocketBaseGroup) => ({ id: g.id, name: g.name }))
-
-        if (groups.length === 0) {
-            const errorMsg = `No groups found with embeddings for key: ${embeddingKey}`
-            console.error(`❌ [TEST] ${errorMsg}`)
-            throw new Error(errorMsg)
-        }
-
-        // If using sample, limit to requested amount
-        const finalGroups = run.use_sample_groups ? groups.slice(0, 50) : groups
-        console.log(`✅ [TEST] Found ${finalGroups.length} groups with embeddings for key ${embeddingKey}`)
-
-        let completed = 0
-        let totalSearchTokens = 0
-        let totalTesterTokens = 0
-
-        // 4. Test Loop
-        console.log(`🔁 [TEST] Starting test loop for ${run.target_query_count} queries...`)
-        for (let i = 0; i < run.target_query_count; i++) {
-            console.log(`\n📝 [TEST] Query ${i + 1}/${run.target_query_count}`)
-
-            // Pick a random group as the "target"
-            const targetGroup = finalGroups[Math.floor(Math.random() * finalGroups.length)]
-            console.log(`🎯 [TEST] Target group: "${targetGroup.name}" (${targetGroup.id})`)
-
-            const result = await processSingleTestQuery(pb, runId, run, targetGroup, embeddingKey)
-
-            if (result.success) {
-                totalSearchTokens += result.searchTokens
-                totalTesterTokens += result.testerTokens
-                completed++
-
-                console.log(`✅ [TEST] Result saved. Completed: ${completed}/${run.target_query_count}`)
-
-                // Update run progress
-                console.log(`🔄 [TEST] Updating progress...`)
-                await pb.collection('embedding_test_runs').update(runId, {
-                    completed_query_count: completed,
-                    total_search_tokens: totalSearchTokens,
-                    total_tester_tokens: totalTesterTokens
-                })
-                console.log(`✅ [TEST] Progress updated: ${completed}/${run.target_query_count}`)
-
-                // Log to W&B every 10 queries (if enabled)
-                if (wandbRun && completed % 10 === 0) {
-                    const currentMetrics = await calculateTestMetrics(pb, runId)
-                    if (currentMetrics) {
-                        await logWandBMetrics(completed, {
-                            accuracy_at_1: currentMetrics.accuracy_at_1,
-                            accuracy_at_5: currentMetrics.accuracy_at_5,
-                            mean_reciprocal_rank: currentMetrics.mean_reciprocal_rank,
-                            total_queries: currentMetrics.total_queries,
-                            successful_queries: currentMetrics.successful_queries
-                        })
-                    }
-                }
-            }
-
-            // Delay
-            const delay = run.delay_between_queries_ms || 500
-            if (i < run.target_query_count - 1) {
-                console.log(`⏳ [TEST] Waiting ${delay}ms before next query...`)
-                await new Promise(resolve => setTimeout(resolve, delay))
-            }
-        }
-
-        // 5. Mark as completed
-        console.log('🎉 [TEST] All queries completed. Marking test as completed...')
         await pb.collection('embedding_test_runs').update(runId, { status: 'completed' })
-        console.log('✅ [TEST] Test marked as completed')
 
-        // Log final summary to W&B (if enabled)
         if (wandbRun) {
-            console.log('📊 [W&B] Logging final summary...')
             const finalMetrics = await calculateTestMetrics(pb, runId)
-            if (finalMetrics) {
-                await logWandBSummary({
-                    ...finalMetrics,
-                    total_search_tokens: totalSearchTokens,
-                    total_tester_tokens: totalTesterTokens
-                })
-            }
+            if (finalMetrics) await logWandBSummary({ ...finalMetrics, total_search_tokens: totalSearch, total_tester_tokens: totalTester })
             await finishWandBRun()
         }
-
     } catch (error: any) {
         console.error('💥 [TEST] Test run failed:', error)
+        if (wandbContext) await finishWandBRun()
+        await pb.collection('embedding_test_runs').update(runId, { status: 'failed', error_message: error.message })
+    }
+}
 
-        // Finish W&B run on error
-        if (wandbRun) {
-            await finishWandBRun()
+async function generateGeminiQuery(userPrompt: string, temp: number, systemInstruction: string) {
+    const { geminiFlash } = await import('@/utils/gemini')
+    if (!geminiFlash) throw new Error('Gemini not available')
+
+    const result = await geminiFlash.generateContent({
+        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        generationConfig: { temperature: temp, maxOutputTokens: 20 }
+    })
+
+    const text = result.response.text().trim()
+    const jsonMatch = text.match(/\{[^}]+\}/)
+
+    if (!jsonMatch) {
+        const query = text.replace(/^["']|["']$/g, '').split('\n')[0].substring(0, 100).trim()
+        return { query, tokensUsed: Math.ceil((systemInstruction.length + userPrompt.length) / 4) + Math.min(20, Math.ceil(query.length / 4)), dominant_vector: 'physical' as const }
+    }
+
+    const parsed = JSON.parse(jsonMatch[0])
+    return {
+        query: parsed.query || text,
+        dominant_vector: (parsed.dominant_vector || 'physical') as 'identity' | 'physical' | 'context',
+        tokensUsed: Math.ceil((systemInstruction.length + userPrompt.length) / 4) + Math.min(50, Math.ceil(text.length / 4))
+    }
+}
+
+async function requestLLMQuery(model: string, messages: any[], temp: number) {
+    const isMistral = model.includes('mistral')
+    const url = isMistral ? 'https://api.mistral.ai/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions'
+    const apiKey = isMistral ? process.env.MISTRAL_API_KEY : process.env.OPENAI_API_KEY
+    if (!apiKey) throw new Error(`${isMistral ? 'MISTRAL' : 'OPENAI'}_API_KEY missing`)
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({ model, messages, temperature: temp, max_tokens: 20 })
+    })
+    return await response.json()
+}
+
+async function generateExternalQuery(model: string, userPrompt: string, temp: number, systemInstruction: string) {
+    const messages = [{ role: 'system' as const, content: systemInstruction }, { role: 'user' as const, content: userPrompt }]
+    const data = await requestLLMQuery(model, messages, temp)
+    const text = data.choices[0].message.content.trim()
+    const jsonMatch = text.match(/\{[^}]+\}/)
+
+    if (!jsonMatch) {
+        return {
+            query: text.replace(/^["']|["']$/g, '').split('\n')[0].substring(0, 100).trim(),
+            tokensUsed: data.usage?.total_tokens || 40,
+            dominant_vector: 'physical' as const
         }
+    }
 
-        await pb.collection('embedding_test_runs').update(runId, {
-            status: 'failed',
-            error_message: error.message
-        })
+    const parsed = JSON.parse(jsonMatch[0])
+    return {
+        query: parsed.query || text,
+        dominant_vector: (parsed.dominant_vector || 'physical') as 'identity' | 'physical' | 'context',
+        tokensUsed: data.usage?.total_tokens || 40
     }
 }
 
@@ -593,136 +597,20 @@ async function generateTestQuery(
     temp: number,
     difficulty: string
 ): Promise<{ query: string; tokensUsed: number; dominant_vector: 'identity' | 'physical' | 'context' }> {
-    const systemInstruction = `Jesteś testerem systemu wyszukiwania. Wygeneruj KRÓTKIE zapytanie (1-4 słowa) dla przedmiotu: "${groupName}".
+    const systemInstruction = `Jesteś testerem systemu wyszukiwania. Wygeneruj KRÓTKIE zapytanie (1-4 słowa) dla przedmiotu: "${groupName}".\n\nOkreśl który wektor powinien dominować:\n- "identity" - pytanie o właściciela/rolę/postać (np. "czyja to suknia")\n- "physical" - pytanie o wygląd/materiał/kolor (np. "czerwona suknia")\n- "context" - pytanie o użycie/funkcję/miejsce (np. "do czego służy")\n\nPoziomy trudności:\n- easy: synonim/nazwa\n- medium: opis funkcji\n- hard: kontekst/miejsce\n\nODPOWIEDZ JSON (bez markdown):\n{"query": "...", "dominant_vector": "identity|physical|context"}`
 
-Określ który wektor powinien dominować:
-- "identity" - pytanie o właściciela/rolę/postać (np. "czyja to suknia")
-- "physical" - pytanie o wygląd/materiał/kolor (np. "czerwona suknia")
-- "context" - pytanie o użycie/funkcję/miejsce (np. "do czego służy")
-
-Poziomy trudności:
-- easy: synonim/nazwa
-- medium: opis funkcji
-- hard: kontekst/miejsce
-
-ODPOWIEDZ JSON (bez markdown):
-{"query": "...", "dominant_vector": "identity|physical|context"}`
-
-    let userPrompt = ''
-
-    switch (difficulty) {
-        case 'easy':
-            userPrompt = `Wygeneruj synonim dla: "${groupName}"`
-            break
-        case 'medium':
-            userPrompt = `Opisz funkcję: "${groupName}"`
-            break
-        case 'hard':
-            userPrompt = `Gdzie używany: "${groupName}"?`
-            break
-        default:
-            userPrompt = `Zapytanie dla: "${groupName}"`
+    const prompts = {
+        easy: `Wygeneruj synonim dla: "${groupName}"`,
+        medium: `Opisz funkcję: "${groupName}"`,
+        hard: `Gdzie używany: "${groupName}"?`
     }
+    const userPrompt = prompts[difficulty as keyof typeof prompts] || `Zapytanie dla: "${groupName}"`
 
     if (model.startsWith('gemini')) {
-        const { geminiFlash } = await import('@/utils/gemini')
-        if (!geminiFlash) throw new Error('Gemini not available')
-
-        const result = await geminiFlash.generateContent({
-            contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-            generationConfig: {
-                temperature: temp,
-                maxOutputTokens: 20, // Force short output
-            }
-        })
-
-        const text = result.response.text().trim()
-
-        // Parse JSON response
-        const jsonMatch = text.match(/\{[^}]+\}/)
-        if (!jsonMatch) {
-            // Fallback: treat as plain text
-            const query = text.replace(/^["']|["']$/g, '').split('\n')[0].substring(0, 100).trim()
-            const inputTokens = Math.ceil((systemInstruction.length + userPrompt.length) / 4)
-            const outputTokens = Math.min(20, Math.ceil(query.length / 4))
-            return { query, tokensUsed: inputTokens + outputTokens, dominant_vector: 'physical' }
-        }
-
-        const parsed = JSON.parse(jsonMatch[0])
-        const query = parsed.query || text
-        const dominant_vector = parsed.dominant_vector || 'physical'
-
-        const inputTokens = Math.ceil((systemInstruction.length + userPrompt.length) / 4)
-        const outputTokens = Math.min(50, Math.ceil(text.length / 4))
-        return { query, tokensUsed: inputTokens + outputTokens, dominant_vector }
+        return generateGeminiQuery(userPrompt, temp, systemInstruction)
     }
 
-    // OpenAI & Mistral
-    const messages = [
-        { role: 'system', content: systemInstruction },
-        { role: 'user', content: userPrompt }
-    ]
-
-    if (model.includes('mistral')) {
-        const apiKey = process.env.MISTRAL_API_KEY
-        if (!apiKey) throw new Error('MISTRAL_API_KEY missing')
-        const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body: JSON.stringify({
-                model,
-                messages,
-                temperature: temp,
-                max_tokens: 20
-            })
-        })
-        const data = await response.json()
-        const text = data.choices[0].message.content.trim()
-
-        // Parse JSON response
-        const jsonMatch = text.match(/\{[^}]+\}/)
-        if (!jsonMatch) {
-            const query = text.replace(/^["']|["']$/g, '').split('\n')[0].substring(0, 100).trim()
-            const tokensUsed = data.usage?.total_tokens || 40
-            return { query, tokensUsed, dominant_vector: 'physical' }
-        }
-
-        const parsed = JSON.parse(jsonMatch[0])
-        const query = parsed.query || text
-        const dominant_vector = parsed.dominant_vector || 'physical'
-        const tokensUsed = data.usage?.total_tokens || 40
-        return { query, tokensUsed, dominant_vector }
-    } else {
-        // OpenAI
-        const apiKey = process.env.OPENAI_API_KEY
-        if (!apiKey) throw new Error('OPENAI_API_KEY missing')
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body: JSON.stringify({
-                model,
-                messages,
-                temperature: temp,
-                max_tokens: 20
-            })
-        })
-        const data = await response.json()
-        const text = data.choices[0].message.content.trim()
-
-        // Parse JSON response
-        const jsonMatch = text.match(/\{[^}]+\}/)
-        if (!jsonMatch) {
-            const query = text.replace(/^["']|["']$/g, '').split('\n')[0].substring(0, 100).trim()
-            const tokensUsed = data.usage?.total_tokens || 40
-            return { query, tokensUsed, dominant_vector: 'physical' }
-        }
-
-        const parsed = JSON.parse(jsonMatch[0])
-        const query = parsed.query || text
-        const dominant_vector = parsed.dominant_vector || 'physical'
-        const tokensUsed = data.usage?.total_tokens || 40
-        return { query, tokensUsed, dominant_vector }
-    }
+    return generateExternalQuery(model, userPrompt, temp, systemInstruction)
 }
 
 // Helper to perform multi-vector search directly on groups

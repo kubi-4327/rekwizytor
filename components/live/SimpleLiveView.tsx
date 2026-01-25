@@ -96,7 +96,7 @@ export function SimpleLiveView({
                 },
                 (payload) => {
                     const newTask = payload.new as Task
-                    setTasks(prev => prev.map(task =>
+                    const updateTask = (prev: Task[]) => prev.map(task =>
                         task.id === newTask.id
                             ? {
                                 ...task,
@@ -105,7 +105,8 @@ export function SimpleLiveView({
                                 assigned_to: newTask.assigned_to
                             }
                             : task
-                    ))
+                    )
+                    setTasks(updateTask)
                 }
             )
             .subscribe((status, err) => {

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Save, Calendar, Upload, X, Globe, ArrowDownToLine, ArrowRight, SkipForward } from 'lucide-react'
+import { Save, Calendar, Upload, X, Globe, ArrowRight, SkipForward } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { compressImage, createThumbnail } from '@/utils/image-processing'
 import { extractTopColors } from '@/utils/colors'
@@ -17,6 +17,18 @@ import { scrapePerformance } from '@/app/actions/scrape-performance'
 import { revalidatePerformances } from '@/app/actions/revalidate'
 import { refreshSearchIndex } from '@/app/actions/unified-search'
 import { motion, AnimatePresence } from 'framer-motion'
+
+// Helper for converting base64 to blob
+const base64ToBlob = (dataURI: string) => {
+    const splitDataURI = dataURI.split(',')
+    const byteString = splitDataURI[0].indexOf('base64') >= 0 ? atob(splitDataURI[1]) : decodeURI(splitDataURI[1])
+    const mimeString = splitDataURI[0].split(':')[1].split(';')[0]
+    const ia = new Uint8Array(byteString.length)
+    for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i)
+    }
+    return new Blob([ia], { type: mimeString })
+}
 
 export function CreatePerformanceForm() {
     const t = useTranslations('CreatePerformanceForm')
@@ -40,19 +52,11 @@ export function CreatePerformanceForm() {
 
     const processFile = async (file: File) => {
         try {
-            // Create preview immediately
             const previewUrl = URL.createObjectURL(file)
             setImagePreview(previewUrl)
-
-            // Extract colors from preview
             const colors = await extractTopColors(previewUrl)
             setExtractedColors(colors)
-            if (colors.length > 0) {
-                setSelectedColor(colors[0])
-            } else {
-                setSelectedColor(null)
-            }
-
+            setSelectedColor(colors.length > 0 ? colors[0] : null)
             setImageFile(file)
         } catch (err) {
             console.error('Error processing image:', err)
@@ -65,37 +69,79 @@ export function CreatePerformanceForm() {
         }
     }
 
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault()
-        setIsDragging(true)
-    }
+    const handleUpload = async (file: File | Blob, name: string) => {
+        const fileExt = (file instanceof File ? file.name : name).split('.').pop() || 'jpeg'
+        const fileName = `${Math.random()}.${fileExt}`
+        const thumbnailName = `thumb_${fileName}`
 
-    const handleDragLeave = (e: React.DragEvent) => {
-        e.preventDefault()
-        setIsDragging(false)
-    }
+        const fileToProcess = file instanceof File ? file : new File([file], name, { type: file.type })
 
-    const handleDrop = async (e: React.DragEvent) => {
-        e.preventDefault()
-        setIsDragging(false)
+        // Compress and prepare files
+        const mainBlob = await compressImage(fileToProcess)
+        const mainFile = new File([mainBlob], fileName, { type: 'image/jpeg' })
+        const thumbBlob = await createThumbnail(fileToProcess, 300, false)
+        const thumbFile = new File([thumbBlob], thumbnailName, { type: 'image/jpeg' })
 
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            const file = e.dataTransfer.files[0]
-            if (file.type.startsWith('image/')) {
-                await processFile(file)
-            }
+        // Parallel upload
+        const [mainUpload, thumbUpload] = await Promise.all([
+            supabase.storage.from('posters').upload(fileName, mainFile),
+            supabase.storage.from('posters').upload(thumbnailName, thumbFile)
+        ])
+
+        if (mainUpload.error) throw mainUpload.error
+        if (thumbUpload.error) throw thumbUpload.error
+
+        return {
+            imageUrl: supabase.storage.from('posters').getPublicUrl(fileName).data.publicUrl,
+            thumbnailUrl: supabase.storage.from('posters').getPublicUrl(thumbnailName).data.publicUrl
         }
     }
 
-    const base64ToBlob = (dataURI: string) => {
-        const splitDataURI = dataURI.split(',')
-        const byteString = splitDataURI[0].indexOf('base64') >= 0 ? atob(splitDataURI[1]) : decodeURI(splitDataURI[1])
-        const mimeString = splitDataURI[0].split(':')[1].split(';')[0]
-        const ia = new Uint8Array(byteString.length)
-        for (let i = 0; i < byteString.length; i++) {
-            ia[i] = byteString.charCodeAt(i)
+    const handleFinalize = async (performanceId: string, performanceTitle: string, selectedColor: string | null, performanceNotes: string) => {
+        // 1. Create Group
+        const { data: groupData } = await supabase
+            .from('groups')
+            .insert({
+                name: performanceTitle,
+                color: selectedColor,
+                performance_id: performanceId
+            })
+            .select('id')
+            .single()
+
+        if (groupData) {
+            import('@/app/actions/generate-group-embeddings').then(({ generateGroupEmbedding }) => {
+                generateGroupEmbedding(groupData.id).catch(e => console.error('Embedding error:', e))
+            })
         }
-        return new Blob([ia], { type: mimeString })
+
+        // 2. Create Master Note
+        await supabase.from('notes').insert({
+            title: `${performanceTitle} - Master Note`,
+            performance_id: performanceId,
+            content: {
+                type: 'doc',
+                content: [
+                    { type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: `${performanceTitle} - Master Note` }] },
+                    { type: 'paragraph', content: [{ type: 'text', text: performanceNotes || 'General information.' }] }
+                ]
+            },
+            is_master: true
+        })
+
+        // 3. Handle Dates
+        if (upcomingDates.length > 0) {
+            await supabase.from('scenes').insert({ performance_id: performanceId, act_number: 1, scene_number: 1, name: 'Scene 1' })
+            const checklists = upcomingDates.map(date => ({
+                performance_id: performanceId,
+                show_date: date,
+                scene_number: '1',
+                scene_name: 'Scene 1',
+                type: 'show' as const,
+                is_active: false
+            }))
+            await supabase.from('scene_checklists').insert(checklists)
+        }
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -104,115 +150,30 @@ export function CreatePerformanceForm() {
         setError(null)
 
         try {
-
             let imageUrl = null
             let thumbnailUrl = null
 
             if (imageFile) {
-                const fileExt = imageFile.name.split('.').pop()
-                // ... (existing upload logic)
-                const fileName = `${Math.random()}.${fileExt}`
-                const thumbnailName = `thumb_${fileName}`
-
-                // Compress main image
-                const compressedBlob = await compressImage(imageFile)
-                const compressedFile = new File([compressedBlob], fileName, { type: 'image/jpeg' })
-
-                // Create thumbnail (No crop for posters, just resize)
-                const thumbnailBlob = await createThumbnail(imageFile, 300, false)
-                const thumbnailFile = new File([thumbnailBlob], thumbnailName, { type: 'image/jpeg' })
-
-                // Upload main image
-                const { error: uploadError } = await supabase.storage
-                    .from('posters')
-                    .upload(fileName, compressedFile)
-
-                if (uploadError) throw uploadError
-
-                // Upload thumbnail
-                const { error: thumbError } = await supabase.storage
-                    .from('posters')
-                    .upload(thumbnailName, thumbnailFile)
-
-                if (thumbError) throw thumbError
-
-                // Get public URLs
-                const { data: { publicUrl: publicImgUrl } } = supabase.storage
-                    .from('posters')
-                    .getPublicUrl(fileName)
-
-                const { data: { publicUrl: publicThumbUrl } } = supabase.storage
-                    .from('posters')
-                    .getPublicUrl(thumbnailName)
-
-                imageUrl = publicImgUrl
-                thumbnailUrl = publicThumbUrl
-                thumbnailUrl = publicThumbUrl
-            } else if (imagePreview && imagePreview.startsWith('data:')) {
-                // Handle Base64 image from scraper
-                try {
-                    // Convert base64 to blob using manual helper
-                    const blob = base64ToBlob(imagePreview)
-                    const fileExt = blob.type.split('/')[1] || 'jpeg'
-                    const fileName = `${Math.random()}.${fileExt}`
-                    const thumbnailName = `thumb_${fileName}`
-
-                    // Create file from blob
-                    const file = new File([blob], fileName, { type: blob.type })
-
-                    // Compress main image (re-use existing compression logic if possible, or upload directly)
-                    // For safety, let's treat it like a user upload
-                    const compressedBlob = await compressImage(file)
-                    const compressedFile = new File([compressedBlob], fileName, { type: 'image/jpeg' })
-
-                    // Create thumbnail (No crop for posters)
-                    const thumbnailBlob = await createThumbnail(file, 300, false)
-                    const thumbnailFile = new File([thumbnailBlob], thumbnailName, { type: 'image/jpeg' })
-
-                    // Upload main image
-                    const { error: uploadError } = await supabase.storage
-                        .from('posters')
-                        .upload(fileName, compressedFile)
-
-                    if (uploadError) throw uploadError
-
-                    // Upload thumbnail
-                    const { error: thumbError } = await supabase.storage
-                        .from('posters')
-                        .upload(thumbnailName, thumbnailFile)
-
-                    if (thumbError) throw thumbError
-
-                    // Get public URLs
-                    const { data: { publicUrl: publicImgUrl } } = supabase.storage
-                        .from('posters')
-                        .getPublicUrl(fileName)
-
-                    const { data: { publicUrl: publicThumbUrl } } = supabase.storage
-                        .from('posters')
-                        .getPublicUrl(thumbnailName)
-
-                    imageUrl = publicImgUrl
-                    thumbnailUrl = publicThumbUrl
-
-                } catch (e) {
-                    console.error('Error uploading scraped image:', e)
-                    // Fallback?? If upload fail, we might just not save image or save base64 (bad idea for DB)
-                    // Let's just log error.
-                }
-            } else if (imagePreview && imagePreview.startsWith('http')) {
-                // Use scraped image URL directly if it's a remote URL
+                const results = await handleUpload(imageFile, imageFile.name)
+                imageUrl = results.imageUrl
+                thumbnailUrl = results.thumbnailUrl
+            } else if (imagePreview?.startsWith('data:')) {
+                const blob = base64ToBlob(imagePreview)
+                const results = await handleUpload(blob, 'scraped.jpeg')
+                imageUrl = results.imageUrl
+                thumbnailUrl = results.thumbnailUrl
+            } else if (imagePreview?.startsWith('http')) {
                 imageUrl = imagePreview
-                thumbnailUrl = imagePreview // Or leave null if we don't have a specific thumb
+                thumbnailUrl = imagePreview
             }
 
-            const { data: performanceData, error: insertError } = await supabase
+            const { data: perf, error: perfErr } = await supabase
                 .from('performances')
                 .insert({
                     title,
                     premiere_date: premiereDate || null,
                     notes: notes || null,
-                    status: ((premiereDate && new Date(premiereDate) > new Date()) ? 'upcoming' : 'active') as Database["public"]["Enums"]["performance_status_enum"],
+                    status: (premiereDate && new Date(premiereDate) > new Date() ? 'upcoming' : 'active') as Database["public"]["Enums"]["performance_status_enum"],
                     image_url: imageUrl,
                     thumbnail_url: thumbnailUrl,
                     color: selectedColor,
@@ -221,106 +182,13 @@ export function CreatePerformanceForm() {
                 .select()
                 .single()
 
-            if (insertError) throw insertError
+            if (perfErr) throw perfErr
+            if (perf) await handleFinalize(perf.id, title, selectedColor, notes)
 
-            // Create Group for the performance
-            const { data: groupData, error: groupError } = await supabase
-                .from('groups')
-                .insert({
-                    name: title,
-                    color: selectedColor,
-                    performance_id: performanceData.id
-                })
-                .select('id')
-                .single()
-
-            if (groupError) {
-                console.error('Error creating group:', groupError)
-            } else if (groupData) {
-                // Generate embedding in background
-                import('@/app/actions/generate-group-embeddings').then(({ generateGroupEmbedding }) => {
-                    generateGroupEmbedding(groupData.id).catch(err =>
-                        console.error('Failed to generate embedding:', err)
-                    )
-                })
-            }
-
-            // Create Master Note
-            if (performanceData) {
-                await supabase.from('notes').insert({
-                    title: `${title} - Master Note`,
-                    performance_id: performanceData.id,
-                    content: {
-                        type: 'doc',
-                        content: [
-                            {
-                                type: 'heading',
-                                attrs: { level: 1 },
-                                content: [{ type: 'text', text: `${title} - Master Note` }]
-                            },
-                            {
-                                type: 'paragraph',
-                                content: [{ type: 'text', text: notes || 'General information about the performance.' }]
-                            }
-                        ]
-                    },
-                    is_master: true
-                })
-            }
-
-            if (insertError) throw insertError
-
-            // Add scheduled shows if any
-            // Add scheduled shows if any
-            if (upcomingDates.length > 0 && performanceData) {
-                // 1. Create a default scene first (required for checklists)
-                const { error: sceneError } = await supabase
-                    .from('scenes')
-                    .insert({
-                        performance_id: performanceData.id,
-                        act_number: 1,
-                        scene_number: 1,
-                        name: 'Scene 1'
-                    })
-
-                if (sceneError) {
-                    console.error('Error creating default scene:', sceneError)
-                } else {
-                    // 2. Create scene_checklists for each date
-                    const checklistsToInsert = upcomingDates.map(dateStr => ({
-                        performance_id: performanceData.id,
-                        show_date: dateStr,
-                        scene_number: '1',
-                        scene_name: 'Scene 1',
-                        type: 'show',
-                        is_active: false
-                    }))
-
-                    const { error: showsError } = await supabase
-                        .from('scene_checklists')
-                        .insert(checklistsToInsert)
-
-                    if (showsError) console.error('Error adding scheduled shows:', showsError)
-                }
-            }
-
-            // Refresh search index
-            try {
-                await refreshSearchIndex()
-            } catch (e) {
-                console.error('Failed to refresh search index:', e)
-            }
-
-            // Revalidate the list page so we get fresh data
-            await revalidatePerformances()
-
+            await Promise.allSettled([refreshSearchIndex(), revalidatePerformances()])
             router.push('/performances')
-        } catch (err: unknown) {
-            if (err instanceof Error) {
-                setError(err.message)
-            } else {
-                setError(t('unknownError'))
-            }
+        } catch (err: any) {
+            setError(err.message || t('unknownError'))
         } finally {
             setLoading(false)
         }
@@ -334,50 +202,27 @@ export function CreatePerformanceForm() {
 
         try {
             const result = await scrapePerformance(scrapeUrl)
-
             if (result.success && result.data) {
-                const data = result.data
-
-                if (data.title) setTitle(data.title)
-
-                const scrapedDesc = data.description || ''
-                if (scrapedDesc) setNotes(scrapedDesc)
-
-                if (data.premiereDate) {
-                    setPremiereDate(data.premiereDate)
-                }
-
-                if (data.imageUrl) {
-                    console.log('[Client] Received image URL from scraper:', data.imageUrl.substring(0, 50) + '...')
-                    setImagePreview(data.imageUrl)
-                    setImageFile(null) // Clear any local file
-
-                    try {
-                        console.log('[Client] Attempting to extract colors...')
-                        const colors = await extractTopColors(data.imageUrl)
-                        console.log('[Client] Extracted colors:', colors)
+                const d = result.data
+                if (d.title) setTitle(d.title)
+                if (d.description) setNotes(d.description)
+                if (d.premiereDate) setPremiereDate(d.premiereDate)
+                if (d.imageUrl) {
+                    setImagePreview(d.imageUrl)
+                    setImageFile(null)
+                    extractTopColors(d.imageUrl).then(colors => {
                         if (colors.length > 0) {
                             setExtractedColors(colors)
                             setSelectedColor(colors[0])
                         }
-                    } catch (e) {
-                        console.warn('[Client] Could not extract colors from remote image', e)
-                    }
-                } else {
-                    console.log('[Client] No image URL returned from scraper.')
+                    }).catch(() => { })
                 }
-
-                if (data.dates && data.dates.length > 0) {
-                    setUpcomingDates(data.dates)
-                }
-
-                // Move to next step on success
+                if (d.dates) setUpcomingDates(d.dates)
                 setStep('edit')
             } else {
-                setError(result.error || 'Failed to scrape data')
+                setError(result.error || 'Failed to scrape')
             }
         } catch (err) {
-            console.error(err)
             setError('Error scraping data')
         } finally {
             setIsScraping(false)
@@ -507,9 +352,16 @@ export function CreatePerformanceForm() {
                                     </label>
                                     <div
                                         className={`flex flex-col items-center gap-4 p-4 rounded-lg border-2 border-dashed transition-colors ${isDragging ? 'border-neutral-500 bg-neutral-800/50' : 'border-transparent bg-neutral-900/30'}`}
-                                        onDragOver={handleDragOver}
-                                        onDragLeave={handleDragLeave}
-                                        onDrop={handleDrop}
+                                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                        onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                                        onDrop={async (e) => {
+                                            e.preventDefault();
+                                            setIsDragging(false);
+                                            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                                const file = e.dataTransfer.files[0];
+                                                if (file.type.startsWith('image/')) await processFile(file);
+                                            }
+                                        }}
                                     >
                                         <div
                                             className="relative w-full aspect-2/3 bg-neutral-950 rounded-lg border border-neutral-800 overflow-hidden flex items-center justify-center shrink-0 shadow-lg"
@@ -523,7 +375,6 @@ export function CreatePerformanceForm() {
                                                         fill
                                                         className="object-cover"
                                                         unoptimized
-                                                        onError={(e) => console.error('[Client] Image preview failed to load:', e)}
                                                     />
                                                     <button
                                                         type="button"
@@ -633,11 +484,7 @@ export function CreatePerformanceForm() {
                                             <DatePicker
                                                 selected={premiereDate ? new Date(premiereDate) : null}
                                                 onChange={(date) => {
-                                                    if (date) {
-                                                        setPremiereDate(date.toISOString())
-                                                    } else {
-                                                        setPremiereDate('')
-                                                    }
+                                                    setPremiereDate(date ? date.toISOString() : '')
                                                 }}
                                                 dateFormat="dd.MM.yyyy"
                                                 locale={pl}

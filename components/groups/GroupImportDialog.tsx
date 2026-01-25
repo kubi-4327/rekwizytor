@@ -196,13 +196,13 @@ export function GroupImportDialog({ isOpen, onClose, parentId, locations = [] }:
             if (error) throw error
 
             if (data && data.length > 0) {
-                import('@/app/actions/generate-group-embeddings').then(({ generateGroupEmbedding }) => {
-                    data.forEach(group => {
-                        generateGroupEmbedding(group.id).catch(err =>
-                            console.error('Failed to generate embedding:', err)
-                        )
-                    })
-                })
+                const { generateGroupEmbedding } = await import('@/app/actions/generate-group-embeddings')
+                // Generate embeddings in background using separate calls
+                for (const group of data) {
+                    generateGroupEmbedding(group.id).catch(err =>
+                        console.error('Failed to generate embedding:', err)
+                    )
+                }
             }
 
             notify.success(`Utworzono ${items.length} grup`)

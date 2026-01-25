@@ -5,13 +5,12 @@ import { createClient } from '@/utils/supabase/client'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
-import { CheckCircle2, Circle, ArrowRight, Menu, X, Clock, Calendar, PauseCircle, User, AlertTriangle, Box } from 'lucide-react'
-import NextImage from 'next/image'
-// ItemIcon removed - using Box from lucide-react instead
+import { CheckCircle2, Menu, X, Clock, Calendar, PauseCircle, AlertTriangle, ArrowRight } from 'lucide-react'
 import { format } from 'date-fns'
 import { pl, enUS } from 'date-fns/locale'
 import { useLocale } from 'next-intl'
 import { Database } from '@/types/supabase'
+import { LiveChecklistItem } from './LiveChecklistItem'
 
 type ChecklistItem = {
     id: string
@@ -637,7 +636,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
 
     if (showCancelConfirmation) {
         return (
-            <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black z-100 flex flex-col items-center justify-center p-4">
                 <div className="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center space-y-6">
                     <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
                         <X className="w-8 h-8 text-red-500" />
@@ -674,7 +673,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         const durationFormatted = formatDuration(duration)
 
         return (
-            <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black z-100 flex flex-col items-center justify-center p-4">
                 <div className="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center space-y-6">
                     <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
                         <CheckCircle2 className="w-8 h-8 text-green-500" />
@@ -705,7 +704,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
 
     if (!isConfirmed) {
         return (
-            <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black z-100 flex flex-col items-center justify-center p-4">
                 <div className="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center space-y-6">
                     <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
                         <CheckCircle2 className="w-8 h-8 text-green-500" />
@@ -771,7 +770,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         const currentBreakDuration = breakStartTime ? now - breakStartTime : 0
 
         return (
-            <div className="fixed inset-0 z-[100] bg-neutral-900 flex flex-col items-center justify-center p-8 text-center space-y-8">
+            <div className="fixed inset-0 z-100 bg-neutral-900 flex flex-col items-center justify-center p-8 text-center space-y-8">
                 <div className="w-24 h-24 bg-yellow-500/10 rounded-full flex items-center justify-center animate-pulse">
                     <Clock className="w-12 h-12 text-yellow-500" />
                 </div>
@@ -822,10 +821,10 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
     }
 
     return (
-        <div className="fixed inset-0 z-[100] md:static md:z-0 md:inset-auto flex h-[100dvh] md:h-[calc(100vh-4rem)] bg-black text-white overflow-hidden">
+        <div className="fixed inset-0 z-100 md:static md:z-0 md:inset-auto flex h-dvh md:h-[calc(100vh-4rem)] bg-black text-white overflow-hidden">
             {/* Connection Error Overlay */}
             {connectionError && (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-md">
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-200 w-[90%] max-w-md">
                     <div className="bg-red-500/90 backdrop-blur-sm text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-in slide-in-from-top-2">
                         <AlertTriangle className="w-5 h-5 shrink-0" />
                         <p className="text-sm font-medium flex-1">{connectionError}</p>
@@ -1009,120 +1008,16 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                         </div>
                     ) : (
                         currentSceneItems.map((item) => (
-                            <div
+                            <LiveChecklistItem
                                 key={item.id}
-                                id={`item-${item.id}`}
-                                className={clsx(
-                                    "flex items-center justify-between p-4 rounded-xl border transition-all duration-200",
-                                    forceStageAllId === localActiveSceneId && !item.is_prepared ? "border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse" : "",
-                                    item.is_on_stage
-                                        ? "bg-green-900/20 border-green-900/50"
-                                        : item.is_prepared
-                                            ? "bg-burgundy-main/20 border-burgundy-main/50"
-                                            : "bg-neutral-900/50 border-neutral-800"
-                                )}
-                            >
-                                <div className="flex items-center flex-1 min-w-0 mr-3">
-                                    {/* Item Image/Icon */}
-                                    <div className="h-12 w-12 flex-shrink-0 relative bg-neutral-800 rounded-lg overflow-hidden flex items-center justify-center mr-4">
-                                        {item.item_image_url_snapshot ? (
-                                            <NextImage
-                                                src={item.item_image_url_snapshot}
-                                                alt={item.item_name_snapshot || ''}
-                                                fill
-                                                className="object-cover"
-                                                sizes="48px"
-                                            />
-                                        ) : (
-                                            <Box className="h-6 w-6 text-neutral-600" />
-                                        )}
-                                    </div>
-
-                                    {/* Item Details */}
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className={clsx(
-                                            "text-base font-medium break-words whitespace-normal leading-tight",
-                                            item.is_on_stage ? "text-green-400" : item.is_prepared ? "text-burgundy-light" : "text-white"
-                                        )}>
-                                            {item.item_name_snapshot || t('unknownItem')}
-                                        </h4>
-                                        {item.live_notes && (
-                                            <p className="text-xs text-yellow-500 mt-1 break-words whitespace-normal">
-                                                {t('note', { note: item.live_notes })}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Assignee Avatar */}
-                                <div className="relative mr-4 shrink-0">
-                                    <select
-                                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-                                        value={item.assigned_to || ''}
-                                        onChange={(e) => handleAssign(item.id, e.target.value)}
-                                    >
-                                        <option value="">{t('unassigned')}</option>
-                                        {profiles.map(p => (
-                                            <option key={p.id} value={p.id}>{p.full_name || 'User'}</option>
-                                        ))}
-                                    </select>
-                                    <div className={clsx(
-                                        "h-8 w-8 rounded-full flex items-center justify-center border transition-colors overflow-hidden",
-                                        item.assigned_to ? "border-neutral-600 bg-neutral-800" : "border-dashed border-neutral-700 bg-transparent text-neutral-600"
-                                    )}>
-                                        {item.assigned_to ? (
-                                            (() => {
-                                                const profile = profiles.find(p => p.id === item.assigned_to)
-                                                if (profile?.avatar_url) {
-                                                    return <img src={profile.avatar_url} alt={profile.full_name || ''} className="h-full w-full object-cover" />
-                                                }
-                                                return <span className="text-xs font-bold text-white">{profile?.full_name?.[0] || '?'}</span>
-                                            })()
-                                        ) : (
-                                            <User className="h-4 w-4" />
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Actions */}
-                                <div className="flex items-center gap-2 shrink-0">
-                                    {/* Prepared Toggle */}
-                                    <button
-                                        onClick={() => {
-                                            safeVibrate()
-                                            togglePrepared(item.id, item.is_prepared)
-                                        }}
-                                        className={clsx(
-                                            "flex flex-col items-center justify-center h-14 w-14 sm:h-16 sm:w-16 rounded-xl border-2 transition-all active:scale-95 touch-manipulation",
-                                            item.is_prepared
-                                                ? "bg-burgundy-main/20 border-burgundy-main text-burgundy-light shadow-[0_0_15px_rgba(160,35,47,0.3)]"
-                                                : "bg-neutral-950 border-neutral-700 text-neutral-600 hover:border-neutral-500"
-                                        )}
-                                    >
-                                        {item.is_prepared ? <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8" /> : <Circle className="h-6 w-6 sm:h-8 sm:w-8" />}
-                                        <span className="text-[9px] sm:text-[10px] font-bold mt-1 uppercase tracking-wider">{t('ready')}</span>
-                                    </button>
-
-                                    {/* On Stage Toggle */}
-                                    <button
-                                        onClick={() => {
-                                            safeVibrate()
-                                            toggleOnStage(item.id, item.is_on_stage)
-                                        }}
-                                        disabled={!item.is_prepared}
-                                        className={clsx(
-                                            "flex flex-col items-center justify-center h-14 w-14 sm:h-16 sm:w-16 rounded-xl border-2 transition-all active:scale-95 touch-manipulation",
-                                            !item.is_prepared ? "opacity-30 cursor-not-allowed border-neutral-800 bg-neutral-900" :
-                                                item.is_on_stage
-                                                    ? "bg-green-500/20 border-green-500 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]"
-                                                    : "bg-neutral-950 border-neutral-700 text-neutral-600 hover:border-neutral-500"
-                                        )}
-                                    >
-                                        <ArrowRight className="h-6 w-6 sm:h-8 sm:w-8" />
-                                        <span className="text-[9px] sm:text-[10px] font-bold mt-1 uppercase tracking-wider">{t('stage')}</span>
-                                    </button>
-                                </div>
-                            </div>
+                                item={item}
+                                profiles={profiles}
+                                forceStageAll={forceStageAllId === localActiveSceneId}
+                                onTogglePrepared={togglePrepared}
+                                onToggleOnStage={toggleOnStage}
+                                onAssign={handleAssign}
+                                onSafeVibrate={safeVibrate}
+                            />
                         ))
                     )}
                 </div>

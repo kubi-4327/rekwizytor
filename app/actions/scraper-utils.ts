@@ -27,7 +27,7 @@ function parsePolishDate(text: string): Date | null {
         return new Date(`${year}-${month}-${day}`)
     }
 
-    const numericMatch = text.match(/(\d{1,2})[\.\-\/](\d{1,2})[\.\-\/](\d{4})/)
+    const numericMatch = text.match(/(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})/)
     if (numericMatch) {
         const day = numericMatch[1].padStart(2, '0')
         const month = numericMatch[2].padStart(2, '0')
