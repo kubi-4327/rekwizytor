@@ -909,7 +909,7 @@ export async function getExistingEmbeddingKeys(): Promise<string[]> {
             }
         })
 
-        return Array.from(keysSet).sort()
+        return Array.from(keysSet).sort((a, b) => a.localeCompare(b, 'pl'))
     } catch (error) {
         console.error('Error fetching embeddings:', error)
         return []

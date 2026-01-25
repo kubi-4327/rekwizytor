@@ -118,7 +118,7 @@ const PerformancePdfDocument = ({ production, items, scenes, notes, user, qrCode
             uniqueItemsMap.set(pi.item_name, pi.item_name)
         }
     });
-    const masterItems = Array.from(uniqueItemsMap.values()).sort();
+    const masterItems = Array.from(uniqueItemsMap.values()).sort((a, b) => a.localeCompare(b, 'pl'));
 
     // 2. Process Scenes
     const sortedScenes = scenes?.sort((a, b) => {
