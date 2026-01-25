@@ -45,6 +45,7 @@ next-env.d.ts
 
 # learning & notes
 LEARNING.md
+EMBEDDING_TESTS_SETUP.md
 
 # admin tools (local only)
 /components/admin/

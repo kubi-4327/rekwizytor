@@ -67,10 +67,10 @@ This project uses SonarCloud for continuous code quality and security analysis.
 
 ## 📚 Documentation
 
-- [Quick Start Guide](./QUICKSTART.md)
 - [Project Summary](./PROJECT_SUMMARY.md)
-- [Testing Guide](./TESTING.md)
-- [Migration Guide](./MIGRATION.md)
+- [PocketBase Migration Guide](./docs/POCKETBASE_MIGRATION.md)
+- [Embedding Testing Guide](./docs/EMBEDDING_TESTING.md)
+- [Environment Variables](./docs/ENV_VARIABLES.md)
 
 ## 🤝 Contributing
 

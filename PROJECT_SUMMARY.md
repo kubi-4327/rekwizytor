@@ -14,17 +14,20 @@ Poniżej znajduje się szczegółowa lista funkcjonalności, rozwiązań i zabez
 *   **Wielojęzyczność (i18n)**: Pełne wsparcie dla języka polskiego i angielskiego, z automatycznym wykrywaniem preferencji użytkownika.
 
 ## 2. Funkcjonalności Systemowe
-*   **Zarządzanie Rekwizytami (Items)**:
-    *   Pełna ewidencja przedmiotów z możliwością dodawania zdjęć i opisów.
-    *   Automatyczne generowanie miniaturek dla optymalizacji ładowania.
-    *   Śledzenie statusu przedmiotów (dostępny, w użyciu, naprawa itp.).
-*   **Zarządzanie Spektaklami (Performances)**:
-    *   Tworzenie harmonogramów i list rekwizytów dla konkretnych przedstawień.
-    *   Obsługa plakatów i materiałów wizualnych spektakli.
-*   **Grupy i Magazynowanie**:
+*   **Grupy - Centrum Systemu**:
     *   Hierarchiczna struktura grup (możliwość tworzenia podgrup).
+    *   Pełna ewidencja z możliwością dodawania zdjęć, opisów i lokalizacji.
+    *   Automatyczne generowanie miniaturek dla optymalizacji ładowania.
     *   **Generator Etykiet PDF**: Funkcja tworzenia gotowych do druku etykiet na magazynowe pojemniki. Etykiety zawierają nazwę grupy, lokalizację oraz unikalny kod QR.
     *   Obsługa polskich znaków w PDF dzięki osadzeniu czcionki Roboto.
+*   **Listy Kontrolne (Items)**:
+    *   Interaktywne checklisty do weryfikacji stanu rekwizytów przed/po spektaklu.
+    *   Przypisanie do konkretnych spektakli i scen.
+    *   Śledzenie statusu (zaznaczone/niezaznaczone).
+*   **Zarządzanie Spektaklami (Performances)**:
+    *   Tworzenie harmonogramów i przypisywanie grup rekwizytów.
+    *   Obsługa plakatów i materiałów wizualnych spektakli.
+    *   Integracja z listami kontrolnymi.
 *   **Notatki i Listy Kontrolne**:
     *   Zaawansowany edytor tekstu (Rich Text Editor oparty o Tiptap) do tworzenia notatek rekwizytorskich.
     *   Interaktywne listy kontrolne (Checklists) do weryfikacji stanu rekwizytów przed/po spektaklu.
