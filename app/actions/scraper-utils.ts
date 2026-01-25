@@ -45,39 +45,39 @@ export function cleanHtmlContent(html: string): string {
         .replace(/\s+/g, " ")
 }
 
-export function extractTitle(html: string, cleanHtml: string): string {
-    let title = ''
+// --- Title Helpers ---
 
-    // Priority 1: OG Title
-    const ogTitleMatch = html.match(/<meta\s+property=["']og:title["']\s+content=["'](.*?)["']\s*\/?>/i)
-    if (ogTitleMatch && ogTitleMatch[1]) {
-        title = ogTitleMatch[1].trim()
+function getOgTitle(html: string): string | null {
+    const match = html.match(/<meta\s+property=["']og:title["']\s+content=["'](.*?)["']\s*\/?>/i)
+    return match && match[1] ? match[1].trim() : null
+}
+
+function getH1Title(html: string): string | null {
+    const match = html.match(/<h1[^>]*>(.*?)<\/h1>/i)
+    return match && match[1] ? match[1].replace(/<[^>]+>/g, '').trim() : null
+}
+
+function getTitleTag(html: string): string | null {
+    const match = html.match(/<title>(.*?)<\/title>/i)
+    return match && match[1] ? match[1].trim() : null
+}
+
+export function extractTitle(html: string, cleanHtml: string): string {
+    let title = getOgTitle(html) || ''
+    if (title) {
         title = title.split(' - ')[0].split(' | ')[0].trim()
     }
 
-    // Priority 2: H1 tag
+    if (!title) title = getH1Title(html) || ''
     if (!title) {
-        const h1Match = html.match(/<h1[^>]*>(.*?)<\/h1>/i)
-        if (h1Match && h1Match[1]) {
-            title = h1Match[1].replace(/<[^>]+>/g, '').trim()
-        }
-    }
-
-    // Priority 3: Title tag
-    if (!title) {
-        const titleMatch = html.match(/<title>(.*?)<\/title>/i)
-        if (titleMatch && titleMatch[1]) {
-            title = titleMatch[1].split('-')[0].split('|')[0].trim()
-        }
-    }
-
-    // Handle "Na Afiszu" case
-    if (title.toUpperCase() === 'NA AFISZU' || title.toUpperCase().includes('NA AFISZU')) {
-        // Fallback logic could be improved here, but kept simple for now
+        const t = getTitleTag(html) || ''
+        title = t.split('-')[0].split('|')[0].trim()
     }
 
     return title
 }
+
+// --- Date Helpers ---
 
 export function extractPremiereDate(cleanHtml: string): string {
     let premiereDate: string = new Date().toISOString()
@@ -128,38 +128,33 @@ export function extractShowDates(html: string): string[] {
     return dates
 }
 
-export function extractDescription(html: string): string {
-    let description = ''
+// --- Description Helpers ---
 
-    // Priority 1: OG Description
-    const ogDescMatch = html.match(/<meta\s+property=["']og:description["']\s+content=["'](.*?)["']\s*\/?>/i)
-    if (ogDescMatch && ogDescMatch[1]) {
-        description = ogDescMatch[1].trim()
-    }
+function getOgDescription(html: string): string | null {
+    const match = html.match(/<meta\s+property=["']og:description["']\s+content=["'](.*?)["']\s*\/?>/i)
+    return match && match[1] ? match[1].trim() : null
+}
 
-    // Priority 2: Meta Description
-    if (!description) {
-        const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["'](.*?)["']\s*\/?>/i)
-        if (metaDescMatch && metaDescMatch[1]) {
-            description = metaDescMatch[1].trim()
+function getMetaDescription(html: string): string | null {
+    const match = html.match(/<meta\s+name=["']description["']\s+content=["'](.*?)["']\s*\/?>/i)
+    return match && match[1] ? match[1].trim() : null
+}
+
+function findBodyDescription(html: string): string | null {
+    const pMatches = html.match(/<p[^>]*>(.*?)<\/p>/gi)
+    if (!pMatches) return null
+
+    for (const p of pMatches) {
+        const cleanP = p.replace(/<[^>]+>/g, '').trim()
+        if (cleanP.length > 50 && !cleanP.toUpperCase().includes('NA AFISZU') && !cleanP.toUpperCase().includes('BILETY')) {
+            return cleanP
         }
     }
+    return null
+}
 
-    // Priority 3: Body Content Heuristic
-    if (!description || description.length < 20 || description.toUpperCase().includes('KONTAKT')) {
-        const pMatches = html.match(/<p[^>]*>(.*?)<\/p>/gi)
-        if (pMatches) {
-            for (const p of pMatches) {
-                const cleanP = p.replace(/<[^>]+>/g, '').trim()
-                if (cleanP.length > 50 && !cleanP.toUpperCase().includes('NA AFISZU') && !cleanP.toUpperCase().includes('BILETY')) {
-                    description = cleanP
-                    break
-                }
-            }
-        }
-    }
-
-    description = description
+function cleanDescriptionText(desc: string): string {
+    let d = desc
         .replace(/&nbsp;/g, ' ')
         .replace(/&amp;/g, '&')
         .replace(/&quot;/g, '"')
@@ -167,46 +162,57 @@ export function extractDescription(html: string): string {
         .trim()
 
     const cleanupRegex = /^(?:.*?)(?:w wieku|od lat|dla widzów powyżej|dla widzów od|lat)\s*\d+(?:\s*lat|\+)?(?:[\.]|[\s]*musical w \d+ aktach[\.]?)?\s*/i
-
-    const match = description.match(cleanupRegex)
+    const match = d.match(cleanupRegex)
     if (match && match[0].length < 250) {
-        description = description.replace(cleanupRegex, '')
+        d = d.replace(cleanupRegex, '')
     }
 
-    const sentenceMatches = description.match(/[^\.!\?]+[\.!\?]+/g)
+    const sentenceMatches = d.match(/[^\.!\?]+[\.!\?]+/g)
     if (sentenceMatches) {
-        description = sentenceMatches.slice(0, 3).join(' ').trim()
-    } else if (description.length > 300) {
-        description = description.slice(0, 300) + '...'
+        return sentenceMatches.slice(0, 3).join(' ').trim()
+    } else if (d.length > 300) {
+        return d.slice(0, 300) + '...'
     }
-
-    return description
+    return d
 }
 
-export async function extractImage(html: string, url: string): Promise<string> {
-    let imageUrl = ''
-    const imageCandidates: string[] = []
+export function extractDescription(html: string): string {
+    let description = getOgDescription(html)
+        || getMetaDescription(html)
+        || ''
 
-    // Priority 1: OG Image
-    const ogImageMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["'](.*?)["']\s*\/?>/i)
-    if (ogImageMatch && ogImageMatch[1]) {
-        imageCandidates.push(ogImageMatch[1].trim())
+    if (!description || description.length < 20 || description.toUpperCase().includes('KONTAKT')) {
+        const bodyDesc = findBodyDescription(html)
+        if (bodyDesc) description = bodyDesc
     }
 
-    // Priority 2: JSON-LD Image
-    const jsonLdMatch = html.match(/<script\s+type=["']application\/ld\+json["']>(.*?)<\/script>/i)
-    if (jsonLdMatch && jsonLdMatch[1]) {
+    return cleanDescriptionText(description)
+}
+
+// --- Image Helpers ---
+
+function getOgImage(html: string): string | null {
+    const match = html.match(/<meta\s+property=["']og:image["']\s+content=["'](.*?)["']\s*\/?>/i)
+    return match && match[1] ? match[1].trim() : null
+}
+
+function getJsonLdImage(html: string): string | null {
+    const match = html.match(/<script\s+type=["']application\/ld\+json["']>(.*?)<\/script>/i)
+    if (match && match[1]) {
         try {
-            const json = JSON.parse(jsonLdMatch[1])
+            const json = JSON.parse(match[1])
             if (json.image) {
-                const img = Array.isArray(json.image) ? json.image[0] : json.image
-                if (img) imageCandidates.push(img)
+                return Array.isArray(json.image) ? json.image[0] : json.image
             }
         } catch (e) { }
     }
+    return null
+}
 
-    // Priority 3: Prominent body images
+function getBodyImages(html: string): string[] {
+    const candidates: string[] = []
     const imgMatches = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi)
+
     if (imgMatches) {
         let foundCount = 0
         for (const imgTag of imgMatches) {
@@ -216,63 +222,81 @@ export async function extractImage(html: string, url: string): Promise<string> {
             if (srcMatch && srcMatch[1]) {
                 const potentialUrl = srcMatch[1]
                 if (potentialUrl.endsWith('.svg') || potentialUrl.includes('pixel') || potentialUrl.includes('blank')) continue
-                imageCandidates.push(potentialUrl)
+                candidates.push(potentialUrl)
                 foundCount++
             }
         }
     }
+    return candidates
+}
 
-    console.log(`[Scraper] Found ${imageCandidates.length} image candidates.`)
-
-    for (let candidate of imageCandidates) {
-        if (candidate.startsWith('/')) {
-            try {
-                const urlObj = new URL(url)
-                candidate = `${urlObj.origin}${candidate}`
-            } catch (e) { continue }
-        } else if (!candidate.startsWith('http')) {
-            continue
-        }
-
+function resolveUrl(candidate: string, baseUrl: string): string | null {
+    if (candidate.startsWith('/')) {
         try {
-            console.log(`[Scraper] Trying candidate: ${candidate.substring(0, 50)}...`)
-            const imageResponse = await fetch(candidate, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                    'Referer': url,
-                    'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
-                }
-            })
+            const urlObj = new URL(baseUrl)
+            return `${urlObj.origin}${candidate}`
+        } catch (e) { return null }
+    }
 
-            if (imageResponse.ok) {
+    if (candidate.startsWith('http')) return candidate
+    return null
+}
+
+async function validateAndFetchImage(candidate: string, baseUrl: string): Promise<string | null> {
+    const fullUrl = resolveUrl(candidate, baseUrl)
+    if (!fullUrl) return null
+
+    try {
+        console.log(`[Scraper] Trying candidate: ${fullUrl.substring(0, 50)}...`)
+        const imageResponse = await fetch(fullUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Referer': baseUrl,
+                'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+            }
+        })
+
+        if (imageResponse.ok) {
+            const rawContentType = imageResponse.headers.get('content-type')
+            const contentType = rawContentType ? rawContentType.split(';')[0].trim() : 'image/jpeg'
+
+            if (contentType.startsWith('image/')) {
                 const arrayBuffer = await imageResponse.arrayBuffer()
                 const buffer = Buffer.from(arrayBuffer)
-                const rawContentType = imageResponse.headers.get('content-type')
-                const contentType = rawContentType ? rawContentType.split(';')[0].trim() : 'image/jpeg'
-
-                if (contentType.startsWith('image/')) {
-                    const base64 = buffer.toString('base64')
-                    console.log(`[Scraper] valid image found: ${contentType}, size: ${base64.length}`)
-                    imageUrl = `data:${contentType};base64,${base64}`
-                    break
-                }
+                const base64 = buffer.toString('base64')
+                console.log(`[Scraper] valid image found: ${contentType}, size: ${base64.length}`)
+                return `data:${contentType};base64,${base64}`
             }
-        } catch (e) {
-            console.warn(`[Scraper] Error fetching candidate: ${e}`)
         }
+    } catch (e) {
+        console.warn(`[Scraper] Error fetching candidate: ${e}`)
+    }
+    return null
+}
+
+export async function extractImage(html: string, url: string): Promise<string> {
+    const candidates: string[] = []
+
+    const og = getOgImage(html)
+    if (og) candidates.push(og)
+
+    const json = getJsonLdImage(html)
+    if (json) candidates.push(json)
+
+    const bodyImgs = getBodyImages(html)
+    candidates.push(...bodyImgs)
+
+    console.log(`[Scraper] Found ${candidates.length} image candidates.`)
+
+    for (const candidate of candidates) {
+        const valid = await validateAndFetchImage(candidate, url)
+        if (valid) return valid
     }
 
-    if (!imageUrl && imageCandidates.length > 0) {
+    if (candidates.length > 0) {
         console.log('[Scraper] Could not fetch any valid image as base64. Returning first candidate as URL fallback.')
-        let fallback = imageCandidates[0]
-        if (fallback.startsWith('/')) {
-            try {
-                const urlObj = new URL(url)
-                fallback = `${urlObj.origin}${fallback}`
-            } catch (e) { }
-        }
-        imageUrl = fallback
+        return resolveUrl(candidates[0], url) || candidates[0]
     }
 
-    return imageUrl
+    return ''
 }
