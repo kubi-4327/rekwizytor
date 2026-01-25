@@ -209,22 +209,28 @@ function getJsonLdImage(html: string): string | null {
     return null
 }
 
-function getBodyImages(html: string): string[] {
-    const candidates: string[] = []
-    const imgMatches = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi)
+function isValidImageSrc(src: string): boolean {
+    const s = src.toLowerCase()
+    const isSpecial = s.includes('logo') || s.includes('icon')
+    const isPixel = s.endsWith('.svg') || s.includes('pixel') || s.includes('blank')
+    return !isSpecial && !isPixel
+}
 
-    if (imgMatches) {
-        let foundCount = 0
-        for (const imgTag of imgMatches) {
-            if (foundCount >= 3) break
-            if (imgTag.toLowerCase().includes('logo') || imgTag.toLowerCase().includes('icon')) continue
-            const srcMatch = imgTag.match(/src=["']([^"']+)["']/i)
-            if (srcMatch && srcMatch[1]) {
-                const potentialUrl = srcMatch[1]
-                if (potentialUrl.endsWith('.svg') || potentialUrl.includes('pixel') || potentialUrl.includes('blank')) continue
-                candidates.push(potentialUrl)
-                foundCount++
-            }
+function getBodyImages(html: string): string[] {
+    const imgMatches = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi)
+    if (!imgMatches) return []
+
+    const candidates: string[] = []
+    let count = 0
+
+    for (const tag of imgMatches) {
+        if (count >= 3) break
+        const srcMatch = tag.match(/src=["']([^"']+)["']/i)
+        const src = srcMatch ? srcMatch[1] : ''
+
+        if (src && isValidImageSrc(src)) {
+            candidates.push(src)
+            count++
         }
     }
     return candidates

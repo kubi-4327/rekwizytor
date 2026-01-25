@@ -382,36 +382,28 @@ const NoteEditor = forwardRef<NoteEditorRef, {
 
         const handleClick = (e: MouseEvent) => {
             const target = e.target as HTMLElement
-            // Handle different types of mentions (class names might vary based on how they are rendered)
-            // The renderer uses mergeAttributes which adds the class to the span
             const mention = target.closest('.mention') as HTMLElement
 
-            if (mention) {
-                const id = mention.dataset.id
-                const type = mention.dataset.type
+            if (!mention) return
 
-                console.log('Clicked mention:', type, id)
+            const { id, type } = mention.dataset
+            if (!id || !type) return
 
-                if (id && type) {
-                    e.preventDefault()
-                    e.stopPropagation()
+            e.preventDefault()
+            e.stopPropagation()
 
-                    if (type === 'item') router.push(`/items/${id}`)
-                    // TODO: Add routes for other types when they exist
-                    if (type === 'category') console.log('Navigate to category', id)
-                    if (type === 'location') console.log('Navigate to location', id)
-                    if (type === 'user') console.log('Navigate to user', id)
-                }
+            console.log('Clicked mention:', type, id)
+
+            if (type === 'item') {
+                router.push(`/items/${id}`)
+            } else {
+                // TODO: Add routes for other types (category, location, user) when they exist
+                console.log(`Navigate to ${type}`, id)
             }
         }
 
-        // We need to attach to the editor's DOM element
         const dom = editor.view.dom
         dom.addEventListener('click', handleClick)
-
-        // Also attach to the parent container just in case Tiptap captures clicks weirdly
-        // specifically for read-only mode where contentEditable is false
-        // But editor.view.dom is the contentEditable div usually.
 
         return () => {
             dom.removeEventListener('click', handleClick)
