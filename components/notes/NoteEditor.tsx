@@ -448,7 +448,7 @@ const NoteEditor = forwardRef<NoteEditorRef, {
             <div className="relative h-full">
                 <EditorContent editor={editor} className="h-full" />
                 {/* Gradient fade at bottom for nice effect */}
-                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-neutral-950 to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-neutral-950 to-transparent pointer-events-none" />
             </div>
         </div>
     )
