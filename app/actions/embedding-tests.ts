@@ -322,6 +322,107 @@ export async function updateTestRunStatus(
 }
 
 
+
+// Helper to process a single query iteration
+async function processSingleTestQuery(
+    pb: any,
+    runId: string,
+    run: any,
+    targetGroup: any,
+    embeddingKey: string
+): Promise<{ success: boolean; searchTokens: number; testerTokens: number }> {
+    try {
+        console.log(`🤖 [TEST] Generating query with ${run.tester_model}...`)
+
+        // a. Generate test query
+        const { query: testQuery, tokensUsed: testerTokens, dominant_vector } = await generateTestQuery(
+            targetGroup.name,
+            run.tester_model,
+            run.tester_temperature ?? 0.7,
+            run.difficulty_mode ?? 'medium'
+        )
+        console.log(`✅ [TEST] Generated query: "${testQuery}"`)
+
+        // b. Classify query intent using Intent Classifier
+        let intentClassification: any = null
+        try {
+            const { intentClassifier } = await import('@/utils/intent-classifier')
+            intentClassification = await intentClassifier.classify(testQuery)
+        } catch (error) {
+            console.warn(`⚠️ [TEST] Intent classification failed:`, error)
+        }
+
+        // c. Determine weights
+        const queryIntent = classifyQueryIntent(testQuery)
+        let appliedWeights = {
+            identity: run.mvs_weight_identity,
+            physical: run.mvs_weight_physical,
+            context: run.mvs_weight_context
+        }
+
+        if (run.use_dynamic_weights) {
+            appliedWeights = getWeightsForIntent(queryIntent)
+        }
+
+        // d. Perform search
+        const { results: searchResults, tokensUsed: searchTokens } = await performTestSearch(
+            testQuery,
+            embeddingKey,
+            appliedWeights
+        )
+
+        // e. Analytics
+        const top1 = searchResults[0]
+        const top2 = searchResults[1]
+        const similarityMargin = top1 && top2 ? top1.similarity - top2.similarity : null
+
+        const rank = searchResults.findIndex((r: any) => r.id === targetGroup.id) + 1
+
+        // f. Save Result
+        const testResult = await pb.collection('embedding_test_results').create({
+            run_id: runId,
+            generated_query: testQuery,
+            source_group_id: targetGroup.id,
+            source_group_name: targetGroup.name,
+            correct_rank: rank > 0 ? rank : null,
+            top_results: searchResults.slice(0, 5),
+            search_tokens: searchTokens,
+            tester_tokens: testerTokens,
+            query_intent: queryIntent,
+            similarity_margin: similarityMargin,
+            applied_weights: appliedWeights
+        })
+
+        // g. Save intent classification data
+        if (intentClassification) {
+            try {
+                const detected_dominant = intentClassification.identity > intentClassification.physical
+                    ? 'identity'
+                    : 'physical'
+
+                await pb.collection('intent_test_data').create({
+                    test_result_id: testResult.id,
+                    expected_dominant_vector: dominant_vector,
+                    detected_dominant_vector: detected_dominant,
+                    intent_identity_weight: intentClassification.identity,
+                    intent_physical_weight: intentClassification.physical,
+                    vector_match: dominant_vector === detected_dominant,
+                    classifier_source: intentClassification.source,
+                    classifier_confidence: intentClassification.confidence || null,
+                    classifier_latency_ms: intentClassification.latencyMs || null
+                })
+            } catch (error) {
+                console.warn(`⚠️ [TEST] Failed to save intent data:`, error)
+            }
+        }
+
+        return { success: true, searchTokens, testerTokens }
+    } catch (queryError: any) {
+        console.error(`❌ [TEST] Error processing query:`, queryError)
+        return { success: false, searchTokens: 0, testerTokens: 0 }
+    }
+}
+
 // Background test execution process
 async function runTestQueriesInBackground(runId: string) {
     console.log('🚀 [TEST] Starting background test execution for run:', runId)
@@ -410,109 +511,13 @@ async function runTestQueriesInBackground(runId: string) {
             const targetGroup = finalGroups[Math.floor(Math.random() * finalGroups.length)]
             console.log(`🎯 [TEST] Target group: "${targetGroup.name}" (${targetGroup.id})`)
 
-            try {
-                // a. Generate test query using Tester Model
-                console.log(`🤖 [TEST] Generating query with ${run.tester_model}...`)
-                const { query: testQuery, tokensUsed: testerTokens, dominant_vector } = await generateTestQuery(
-                    targetGroup.name,
-                    run.tester_model,
-                    run.tester_temperature ?? 0.7,
-                    run.difficulty_mode ?? 'medium'
-                )
-                totalTesterTokens += testerTokens
-                console.log(`✅ [TEST] Generated query: "${testQuery}" (${testerTokens} tokens, vector: ${dominant_vector})`)
+            const result = await processSingleTestQuery(pb, runId, run, targetGroup, embeddingKey)
 
-                // b. Classify query intent using Intent Classifier
-                console.log(`🎯 [TEST] Classifying intent...`)
-                let intentClassification: any = null
-                try {
-                    const { intentClassifier } = await import('@/utils/intent-classifier')
-                    intentClassification = await intentClassifier.classify(testQuery)
-                    console.log(`✅ [TEST] Intent classified:`, {
-                        identity: intentClassification.identity.toFixed(2),
-                        physical: intentClassification.physical.toFixed(2),
-                        source: intentClassification.source
-                    })
-                } catch (error) {
-                    console.warn(`⚠️ [TEST] Intent classification failed:`, error)
-                }
-
-                // c. Classify query intent and determine weights (legacy)
-                const queryIntent = classifyQueryIntent(testQuery)
-                let appliedWeights = {
-                    identity: run.mvs_weight_identity,
-                    physical: run.mvs_weight_physical,
-                    context: run.mvs_weight_context
-                }
-
-                if (run.use_dynamic_weights) {
-                    appliedWeights = getWeightsForIntent(queryIntent)
-                    console.log(`🧠 [TEST] Smart Search Intent: [${queryIntent.toUpperCase()}]`, appliedWeights)
-                }
-
-                // c. Perform search (generates query embedding)
-                console.log(`🔍 [TEST] Performing search...`)
-                const { results: searchResults, tokensUsed: searchTokens } = await performTestSearch(
-                    testQuery,
-                    embeddingKey,
-                    appliedWeights
-                )
-                totalSearchTokens += searchTokens
-                console.log(`✅ [TEST] Search completed (${searchTokens} tokens), ${searchResults.length} results`)
-
-                // d. Extract analytics data
-                const top1 = searchResults[0]
-                const top2 = searchResults[1]
-                const similarityMargin = top1 && top2 ? top1.similarity - top2.similarity : null
-
-                // e. Determine Rank of target group
-                const rank = searchResults.findIndex((r: any) => r.id === targetGroup.id) + 1
-                const isMatch = rank > 0 && rank <= 10
-                console.log(`📊 [TEST] Target rank: ${rank > 0 ? rank : 'not found'} ${isMatch ? '✅' : '❌'} (margin: ${similarityMargin?.toFixed(4) || 'N/A'})`)
-
-                // f. Record Result with analytics
-                console.log(`💾 [TEST] Saving result to database...`)
-                const testResult = await pb.collection('embedding_test_results').create({
-                    run_id: runId,
-                    generated_query: testQuery,
-                    source_group_id: targetGroup.id,
-                    source_group_name: targetGroup.name,
-                    correct_rank: rank > 0 ? rank : null,
-                    top_results: searchResults.slice(0, 5),
-                    search_tokens: searchTokens,
-                    tester_tokens: testerTokens,
-                    // New analytics columns
-                    query_intent: queryIntent,
-                    similarity_margin: similarityMargin,
-                    applied_weights: appliedWeights
-                    // top1_group_id, top1_group_name - REMOVED (use top_results[0] instead)
-                })
-
-                // g. Save intent classification data
-                if (intentClassification) {
-                    try {
-                        const detected_dominant = intentClassification.identity > intentClassification.physical
-                            ? 'identity'
-                            : 'physical'
-
-                        await pb.collection('intent_test_data').create({
-                            test_result_id: testResult.id,
-                            expected_dominant_vector: dominant_vector,
-                            detected_dominant_vector: detected_dominant,
-                            intent_identity_weight: intentClassification.identity,
-                            intent_physical_weight: intentClassification.physical,
-                            vector_match: dominant_vector === detected_dominant,
-                            classifier_source: intentClassification.source,
-                            classifier_confidence: intentClassification.confidence || null,
-                            classifier_latency_ms: intentClassification.latencyMs || null
-                        })
-                        console.log(`✅ [TEST] Intent data saved (match: ${dominant_vector === detected_dominant})`)
-                    } catch (error) {
-                        console.warn(`⚠️ [TEST] Failed to save intent data:`, error)
-                    }
-                }
-
+            if (result.success) {
+                totalSearchTokens += result.searchTokens
+                totalTesterTokens += result.testerTokens
                 completed++
+
                 console.log(`✅ [TEST] Result saved. Completed: ${completed}/${run.target_query_count}`)
 
                 // Update run progress
@@ -537,17 +542,13 @@ async function runTestQueriesInBackground(runId: string) {
                         })
                     }
                 }
+            }
 
-                // Delay
-                const delay = run.delay_between_queries_ms || 500
-                if (i < run.target_query_count - 1) {
-                    console.log(`⏳ [TEST] Waiting ${delay}ms before next query...`)
-                    await new Promise(resolve => setTimeout(resolve, delay))
-                }
-
-            } catch (queryError: any) {
-                console.error(`❌ [TEST] Error processing query ${i + 1}:`, queryError)
-                // Continue with next query even if this one fails
+            // Delay
+            const delay = run.delay_between_queries_ms || 500
+            if (i < run.target_query_count - 1) {
+                console.log(`⏳ [TEST] Waiting ${delay}ms before next query...`)
+                await new Promise(resolve => setTimeout(resolve, delay))
             }
         }
 
