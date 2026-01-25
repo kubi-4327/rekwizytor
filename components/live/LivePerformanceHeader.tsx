@@ -1,0 +1,47 @@
+'use client'
+
+import React from 'react'
+
+type Props = {
+    currentChecklist?: {
+        scene_number: number
+        scene_name: string | null
+    }
+    now: number
+    startTime: number | null
+    totalBreakTime: number
+    isBreak: boolean
+    breakStartTime: number | null
+    formatDuration: (ms: number) => string
+    t: (key: string, params?: any) => string
+}
+
+export function LivePerformanceHeader({
+    currentChecklist,
+    now,
+    startTime,
+    totalBreakTime,
+    isBreak,
+    breakStartTime,
+    formatDuration,
+    t
+}: Props) {
+    const elapsed = now - (startTime || 0) - totalBreakTime - (isBreak && breakStartTime ? now - breakStartTime : 0)
+
+    return (
+        <div className="h-20 border-b border-neutral-900/50 flex items-center justify-between px-6 bg-black/40 backdrop-blur-md shrink-0 z-30">
+            <div className="flex items-center gap-4 flex-1 overflow-hidden">
+                <div className="flex flex-col">
+                    <span className="text-[10px] uppercase font-black tracking-widest text-burgundy-light leading-none mb-1">{t('currentScene')}</span>
+                    <h1 className="text-xl font-black text-white uppercase tracking-tighter truncate">
+                        {t('scene', { number: currentChecklist?.scene_number || '?' })} {currentChecklist?.scene_name}
+                    </h1>
+                </div>
+            </div>
+            <div className="flex flex-col items-end">
+                <span className="text-[10px] uppercase font-black tracking-widest text-neutral-500 leading-none mb-1">{t('showTime')}</span>
+                <div className="text-2xl font-mono text-white font-black">{formatDuration(elapsed)}</div>
+            </div>
+        </div>
+    )
+}

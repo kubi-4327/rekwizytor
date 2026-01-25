@@ -29,6 +29,99 @@ type Props = {
     onSafeVibrate: () => void
 }
 
+function ChecklistAvatar({
+    assignedTo,
+    profiles,
+    onAssign,
+    t
+}: {
+    assignedTo: string | null
+    profiles: Props['profiles']
+    onAssign: Props['onAssign']
+    t: any
+}) {
+    const profile = profiles.find(p => p.id === assignedTo)
+
+    return (
+        <div className="relative mr-4 shrink-0">
+            <select
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                value={assignedTo || ''}
+                onChange={(e) => onAssign(e.target.value, e.target.value)} // Note: itemId is handled in parent closure usually, but here onToggle is passed
+            >
+                <option value="">{t('unassigned')}</option>
+                {profiles.map(p => (
+                    <option key={p.id} value={p.id}>{p.full_name || 'User'}</option>
+                ))}
+            </select>
+            <div className={clsx(
+                "h-8 w-8 rounded-full flex items-center justify-center border transition-colors overflow-hidden",
+                assignedTo ? "border-neutral-600 bg-neutral-800" : "border-dashed border-neutral-700 bg-transparent text-neutral-600"
+            )}>
+                {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt={profile.full_name || ''} className="h-full w-full object-cover" />
+                ) : assignedTo ? (
+                    <span className="text-xs font-bold text-white">{profile?.full_name?.[0] || '?'}</span>
+                ) : (
+                    <User className="h-4 w-4" />
+                )}
+            </div>
+        </div>
+    )
+}
+
+function ChecklistActionButtons({
+    item,
+    onTogglePrepared,
+    onToggleOnStage,
+    onSafeVibrate,
+    t
+}: {
+    item: ChecklistItem
+    onTogglePrepared: Props['onTogglePrepared']
+    onToggleOnStage: Props['onToggleOnStage']
+    onSafeVibrate: Props['onSafeVibrate']
+    t: any
+}) {
+    return (
+        <div className="flex items-center gap-2 shrink-0">
+            <button
+                onClick={() => {
+                    onSafeVibrate()
+                    onTogglePrepared(item.id, item.is_prepared)
+                }}
+                className={clsx(
+                    "flex flex-col items-center justify-center h-14 w-14 sm:h-16 sm:w-16 rounded-xl border-2 transition-all active:scale-95 touch-manipulation",
+                    item.is_prepared
+                        ? "bg-burgundy-main/20 border-burgundy-main text-burgundy-light shadow-[0_0_15px_rgba(160,35,47,0.3)]"
+                        : "bg-neutral-950 border-neutral-700 text-neutral-600 hover:border-neutral-500"
+                )}
+            >
+                {item.is_prepared ? <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8" /> : <Circle className="h-6 w-6 sm:h-8 sm:w-8" />}
+                <span className="text-[9px] sm:text-[10px] font-bold mt-1 uppercase tracking-wider">{t('ready')}</span>
+            </button>
+
+            <button
+                onClick={() => {
+                    onSafeVibrate()
+                    onToggleOnStage(item.id, item.is_on_stage)
+                }}
+                disabled={!item.is_prepared}
+                className={clsx(
+                    "flex flex-col items-center justify-center h-14 w-14 sm:h-16 sm:w-16 rounded-xl border-2 transition-all active:scale-95 touch-manipulation",
+                    !item.is_prepared ? "opacity-30 cursor-not-allowed border-neutral-800 bg-neutral-900" :
+                        item.is_on_stage
+                            ? "bg-green-500/20 border-green-500 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+                            : "bg-neutral-950 border-neutral-700 text-neutral-600 hover:border-neutral-500"
+                )}
+            >
+                <ArrowRight className="h-6 w-6 sm:h-8 sm:w-8" />
+                <span className="text-[9px] sm:text-[10px] font-bold mt-1 uppercase tracking-wider">{t('stage')}</span>
+            </button>
+        </div>
+    )
+}
+
 export function LiveChecklistItem({
     item,
     profiles,
@@ -40,21 +133,19 @@ export function LiveChecklistItem({
 }: Props) {
     const t = useTranslations('LivePerformance')
 
+    const containerClasses = clsx(
+        "flex items-center justify-between p-4 rounded-xl border transition-all duration-200",
+        forceStageAll && !item.is_prepared ? "border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse" : "",
+        item.is_on_stage
+            ? "bg-green-900/20 border-green-900/50"
+            : item.is_prepared
+                ? "bg-burgundy-main/20 border-burgundy-main/50"
+                : "bg-neutral-900/50 border-neutral-800"
+    )
+
     return (
-        <div
-            id={`item-${item.id}`}
-            className={clsx(
-                "flex items-center justify-between p-4 rounded-xl border transition-all duration-200",
-                forceStageAll && !item.is_prepared ? "border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse" : "",
-                item.is_on_stage
-                    ? "bg-green-900/20 border-green-900/50"
-                    : item.is_prepared
-                        ? "bg-burgundy-main/20 border-burgundy-main/50"
-                        : "bg-neutral-900/50 border-neutral-800"
-            )}
-        >
+        <div id={`item-${item.id}`} className={containerClasses}>
             <div className="flex items-center flex-1 min-w-0 mr-3">
-                {/* Item Image/Icon */}
                 <div className="h-12 w-12 shrink-0 relative bg-neutral-800 rounded-lg overflow-hidden flex items-center justify-center mr-4">
                     {item.item_image_url_snapshot ? (
                         <NextImage
@@ -69,7 +160,6 @@ export function LiveChecklistItem({
                     )}
                 </div>
 
-                {/* Item Details */}
                 <div className="flex-1 min-w-0">
                     <h4 className={clsx(
                         "text-base font-medium wrap-break-word whitespace-normal leading-tight",
@@ -85,74 +175,20 @@ export function LiveChecklistItem({
                 </div>
             </div>
 
-            {/* Assignee Avatar */}
-            <div className="relative mr-4 shrink-0">
-                <select
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-                    value={item.assigned_to || ''}
-                    onChange={(e) => onAssign(item.id, e.target.value)}
-                >
-                    <option value="">{t('unassigned')}</option>
-                    {profiles.map(p => (
-                        <option key={p.id} value={p.id}>{p.full_name || 'User'}</option>
-                    ))}
-                </select>
-                <div className={clsx(
-                    "h-8 w-8 rounded-full flex items-center justify-center border transition-colors overflow-hidden",
-                    item.assigned_to ? "border-neutral-600 bg-neutral-800" : "border-dashed border-neutral-700 bg-transparent text-neutral-600"
-                )}>
-                    {item.assigned_to ? (
-                        (() => {
-                            const profile = profiles.find(p => p.id === item.assigned_to)
-                            if (profile?.avatar_url) {
-                                return <img src={profile.avatar_url} alt={profile.full_name || ''} className="h-full w-full object-cover" />
-                            }
-                            return <span className="text-xs font-bold text-white">{profile?.full_name?.[0] || '?'}</span>
-                        })()
-                    ) : (
-                        <User className="h-4 w-4" />
-                    )}
-                </div>
-            </div>
+            <ChecklistAvatar
+                assignedTo={item.assigned_to}
+                profiles={profiles}
+                onAssign={(val) => onAssign(item.id, val)}
+                t={t}
+            />
 
-            {/* Actions */}
-            <div className="flex items-center gap-2 shrink-0">
-                {/* Prepared Toggle */}
-                <button
-                    onClick={() => {
-                        onSafeVibrate()
-                        onTogglePrepared(item.id, item.is_prepared)
-                    }}
-                    className={clsx(
-                        "flex flex-col items-center justify-center h-14 w-14 sm:h-16 sm:w-16 rounded-xl border-2 transition-all active:scale-95 touch-manipulation",
-                        item.is_prepared
-                            ? "bg-burgundy-main/20 border-burgundy-main text-burgundy-light shadow-[0_0_15px_rgba(160,35,47,0.3)]"
-                            : "bg-neutral-950 border-neutral-700 text-neutral-600 hover:border-neutral-500"
-                    )}
-                >
-                    {item.is_prepared ? <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8" /> : <Circle className="h-6 w-6 sm:h-8 sm:w-8" />}
-                    <span className="text-[9px] sm:text-[10px] font-bold mt-1 uppercase tracking-wider">{t('ready')}</span>
-                </button>
-
-                {/* On Stage Toggle */}
-                <button
-                    onClick={() => {
-                        onSafeVibrate()
-                        onToggleOnStage(item.id, item.is_on_stage)
-                    }}
-                    disabled={!item.is_prepared}
-                    className={clsx(
-                        "flex flex-col items-center justify-center h-14 w-14 sm:h-16 sm:w-16 rounded-xl border-2 transition-all active:scale-95 touch-manipulation",
-                        !item.is_prepared ? "opacity-30 cursor-not-allowed border-neutral-800 bg-neutral-900" :
-                            item.is_on_stage
-                                ? "bg-green-500/20 border-green-500 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]"
-                                : "bg-neutral-950 border-neutral-700 text-neutral-600 hover:border-neutral-500"
-                    )}
-                >
-                    <ArrowRight className="h-6 w-6 sm:h-8 sm:w-8" />
-                    <span className="text-[9px] sm:text-[10px] font-bold mt-1 uppercase tracking-wider">{t('stage')}</span>
-                </button>
-            </div>
+            <ChecklistActionButtons
+                item={item}
+                onTogglePrepared={onTogglePrepared}
+                onToggleOnStage={onToggleOnStage}
+                onSafeVibrate={onSafeVibrate}
+                t={t}
+            />
         </div>
     )
 }
