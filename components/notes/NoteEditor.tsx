@@ -387,8 +387,8 @@ const NoteEditor = forwardRef<NoteEditorRef, {
             const mention = target.closest('.mention') as HTMLElement
 
             if (mention) {
-                const id = mention.getAttribute('data-id')
-                const type = mention.getAttribute('data-type')
+                const id = mention.dataset.id
+                const type = mention.dataset.type
 
                 console.log('Clicked mention:', type, id)
 
