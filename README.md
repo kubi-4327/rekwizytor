@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rekwizytor 🎭
 
-## Getting Started
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=kubi-4327_rekwizytor&metric=alert_status)](https://sonarcloud.io/dashboard?id=kubi-4327_rekwizytor)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=kubi-4327_rekwizytor&metric=security_rating)](https://sonarcloud.io/dashboard?id=kubi-4327_rekwizytor)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=kubi-4327_rekwizytor&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=kubi-4327_rekwizytor)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=kubi-4327_rekwizytor&metric=code_smells)](https://sonarcloud.io/dashboard?id=kubi-4327_rekwizytor)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=kubi-4327_rekwizytor&metric=ncloc)](https://sonarcloud.io/dashboard?id=kubi-4327_rekwizytor)
 
-First, run the development server:
+Aplikacja do zarządzania rekwizytami teatralnymi z AI-powered search.
+
+## ✨ Features
+
+- 🎨 **Modern UI** - Dark mode, animacje (Framer Motion), responsywny design
+- 🤖 **AI Search** - Inteligentne wyszukiwanie z Google Gemini embeddings
+- 🔐 **Security** - Row Level Security, user approval system, prompt injection protection
+- 📦 **Inventory Management** - Pełna ewidencja rekwizytów, grup, spektakli
+- 🏷️ **QR Labels** - Generator etykiet PDF z kodami QR
+- 📝 **Rich Notes** - Edytor notatek (Tiptap) z interaktywnymi checklistami
+- 🌍 **i18n** - Wsparcie dla języka polskiego i angielskiego
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 20+
+- npm lub yarn
+- Konto Supabase
+
+### Installation
 
 ```bash
+# Clone repository
+git clone https://github.com/kubi-4327/rekwizytor.git
+cd rekwizytor
+
+# Install dependencies
+npm install
+
+# Setup environment variables
+cp .env.example .env.local
+# Edit .env.local with your Supabase credentials
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Framework:** Next.js 16 (App Router)
+- **Language:** TypeScript (strict mode)
+- **Database:** Supabase (PostgreSQL)
+- **AI:** Google Gemini (embeddings, generation)
+- **Styling:** Tailwind CSS
+- **Animations:** Framer Motion
+- **Forms:** React Hook Form + Zod
+- **Rich Text:** Tiptap
 
-## Learn More
+## 📊 Code Quality
 
-To learn more about Next.js, take a look at the following resources:
+This project uses SonarCloud for continuous code quality and security analysis.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Quality Gate:** Enforced on all pull requests
+- **Security:** OWASP Top 10 coverage
+- **Maintainability:** Tracked and improved continuously
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📚 Documentation
 
-## Deploy on Vercel
+- [Quick Start Guide](./QUICKSTART.md)
+- [Project Summary](./PROJECT_SUMMARY.md)
+- [Testing Guide](./TESTING.md)
+- [Migration Guide](./MIGRATION.md)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🤝 Contributing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+**Note:** All PRs must pass SonarCloud Quality Gate before merging.
+
+## 📝 License
+
+This project is private and not licensed for public use.
+
+## 👨‍💻 Author
+
+**Jakub Pelka** - [GitHub](https://github.com/kubi-4327)
+
+---
+
+Built with ❤️ using Next.js and AI

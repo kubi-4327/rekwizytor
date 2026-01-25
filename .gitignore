@@ -51,3 +51,19 @@ app/*/admin/
 # Docker & PocketBase test data
 pocketbase_data/
 pocketbase_public/
+
+# Test data (may contain sensitive information)
+test_data_export*.json
+*_backup.sql
+*_dump.sql
+
+# Wandb experiments (may contain test data)
+wandb/
+
+# Ollama data
+ollama_data/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store

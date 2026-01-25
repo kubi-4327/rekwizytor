@@ -627,6 +627,42 @@ Wprowadzenie dedykowanego typu konta ("Gość/Projektant") z uprawnieniami "Read
 
 ---
 
+## 📱 Szybkie Dodawanie Zdjęć (Mobile Upload via QR)
+
+**Data dodania:** 2026-01-23  
+**Priorytet:** Średni  
+**Złożoność:** Średnia  
+
+### Problem
+Dodawanie zdjęć przedmiotów lub dokumentacji wymaga często zrobienia zdjęcia telefonem, przesłania go na komputer (przez chmurę, maila, kabel) i dopiero wtedy dodania do systemu. Proces ten jest uciążliwy i zniechęca do dodawania zdjęć "na bieżąco", co może skutokwać brakami w dokumentacji wizualnej.
+
+### Proponowane rozwiązanie
+Wprowadzenie mechanizmu Hybrid Upload we wszystkich miejscach, gdzie system prosi o dodanie zdjęcia (dodawanie rekwizytu, edycja, gallery upload).
+
+**Workflow:**
+1. **Desktop:** Użytkownik klika "Dodaj zdjęcie".
+2. **Popup:** Oprócz standardowego "Wybierz z dysku", wyświetla się unikalny **Kod QR** (ważny np. 5-10 minut).
+3. **Mobile:** Użytkownik skanuje kod QR telefonem (nie wymaga instalacji aplikacji, otwiera się lekka strona webowa PWA lub dedykowany upload page).
+4. **Mobile:** Strona pozwala na natychmiastowe zrobienie zdjęcia aparatem lub wybór z galerii telefonu i kliknięcie "Wyślij".
+5. **Desktop:** Dzięki połączeniu WebSocket/Realtime, zdjęcie natychmiast pojawia się w otwartym popupie na komputerze.
+6. **Desktop:** Dalsza edycja (kadrowanie, opisywanie, przypisywanie do kategorii) odbywa się już wygodnie na dużym ekranie.
+
+**Zalety:**
+- Wykorzystuje najlepsze cechy obu urządzeń: mobilność aparatu w telefonie i wygodę edycji na komputerze.
+- Brak konieczności instalowania dedykowanej aplikacji mobilnej (wystarczy przeglądarka).
+- Znaczne przyspieszenie procesu digitalizacji zasobów.
+
+### Oszacowanie czasu
+- Backend (tymczasowy storage, auth tokeny dla QR, WebSocket do synchronizacji): **4-6h**
+- Frontend Mobile (lekki uploader RWD): **3-4h**
+- Integracja Frontend Desktop (wyświetlanie QR, nasłuchiwanie na upload): **2-3h**
+- Testy i obsługa błędów: **2h**
+
+**Łącznie: ~11-15 godzin pracy**
+
+---
+
+
 ## 📋 Szablon dla kolejnych pomysłów
 
 ```markdown
