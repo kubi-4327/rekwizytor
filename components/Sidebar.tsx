@@ -1,9 +1,8 @@
 
 'use client'
 
-import { useRouter } from '@/i18n/routing'
+import { Link, useRouter } from '@/i18n/routing'
 import { usePathname } from 'next/navigation'
-import Link from 'next/link'
 import { Theater, Box, Layers, ClipboardList, Settings, LogOut, Sparkles, Notebook, Tag, CheckCircle2, Search } from 'lucide-react'
 import { clsx } from 'clsx'
 import { createClient } from '@/utils/supabase/client'
@@ -45,9 +44,9 @@ export function Sidebar() {
         <div className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
             <div className="flex min-h-0 flex-1 flex-col bg-[#1a1a1a] border-r border-neutral-800">
                 <div className="flex flex-col gap-5 p-4 border-b border-neutral-800/50">
-                    <div className="flex items-center justify-center mt-2.5 mb-2">
+                    <Link href="/" className="flex items-center justify-center mt-2.5 mb-2 hover:opacity-80 transition-opacity">
                         <h1 className="font-bold text-white text-xl tracking-tight leading-none">Rekwizytor</h1>
-                    </div>
+                    </Link>
 
 
                 </div>

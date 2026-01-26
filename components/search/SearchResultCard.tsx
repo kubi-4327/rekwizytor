@@ -21,7 +21,8 @@ import {
     Pencil,
     Share2,
     Sparkles,
-    MoreHorizontal
+    MoreHorizontal,
+    FolderTree
 } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import type { SearchResult } from '@/app/actions/unified-search'
@@ -58,12 +59,12 @@ export const getEntityConfig = (item: SearchResult | { entity_type: string }) =>
             }
         case 'group':
             return {
-                icon: Tag,
+                icon: FolderTree,
                 label: 'Groups',
-                colorClass: 'text-cyan-400',
-                bgClass: 'bg-cyan-400/10',
-                borderClass: 'border-cyan-400/20',
-                hoverBorder: 'group-hover:border-cyan-400/50'
+                colorClass: 'text-white',
+                bgClass: 'bg-white/10',
+                borderClass: 'border-white/20',
+                hoverBorder: 'group-hover:border-white/50'
             }
         case 'location':
             return {
@@ -102,7 +103,7 @@ const getEntityUrl = (item: SearchResult): string => {
         case 'group':
             return `/groups?viewGroup=${item.id}`
         case 'location':
-            return `/groups/manage?location=${item.id}` // Navigate to groups management with location filter
+            return `/groups?jumpToLocation=${encodeURIComponent(item.name)}` // Navigate to groups list and scroll to location
         case 'note':
             return `/notes/${item.id}`
         default:
@@ -203,7 +204,7 @@ const getEntityActions = (item: SearchResult, t: any, onOpenSchedule?: (performa
                     shortLabel: 'Nowa karta',
                     icon: ExternalLink,
                     handler: (i) => {
-                        window.open(`/groups/manage?location=${i.id}`, '_blank')
+                        window.open(`/groups?jumpToLocation=${encodeURIComponent(i.name)}`, '_blank')
                     }
                 },
                 {
@@ -432,7 +433,7 @@ export function SearchResultCard({ item, aiMode, onClose }: SearchResultCardProp
                 {/* Content */}
                 <div className="ml-4 flex-1 min-w-0 flex flex-col justify-center">
                     <div className="flex items-center gap-2 mb-0.5">
-                        <h3 className="text-sm font-bold text-neutral-200 truncate leading-none">
+                        <h3 className="text-sm font-bold text-neutral-200 truncate leading-none font-sans!">
                             {item.name}
                         </h3>
 

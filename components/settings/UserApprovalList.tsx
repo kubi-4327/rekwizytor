@@ -86,7 +86,7 @@ export function UserApprovalList() {
         <div className="space-y-4">
             <div className="flex items-center gap-2 text-yellow-500">
                 <AlertCircle className="h-5 w-5" />
-                <h2 className="text-lg font-medium text-white">{t('title')}</h2>
+                <div className="text-lg font-medium text-white font-sans!">{t('title')}</div>
             </div>
 
             <div className="rounded-xl border border-neutral-800 bg-neutral-900 overflow-hidden">
@@ -94,7 +94,7 @@ export function UserApprovalList() {
                     {pendingUsers.map((user) => (
                         <div key={user.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-neutral-800/50 transition-colors">
                             <div className="flex items-start gap-3">
-                                <div className="h-10 w-10 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 flex-shrink-0">
+                                <div className="h-10 w-10 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 shrink-0">
                                     <User className="h-5 w-5" />
                                 </div>
                                 <div className="space-y-1">
@@ -143,7 +143,7 @@ export function UserApprovalList() {
                     <div className="bg-neutral-950 border border-neutral-800 rounded-2xl p-8 max-w-lg w-full space-y-6 shadow-2xl relative overflow-hidden">
                         {/* Red glow for approval to signify risk */}
                         {confirmAction.type === 'approve' && (
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-orange-500 to-red-500" />
+                            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-red-500 via-orange-500 to-red-500" />
                         )}
 
                         <div>
@@ -162,7 +162,7 @@ export function UserApprovalList() {
                             <div className="space-y-4">
                                 <div className="bg-red-950/30 border border-red-900/50 p-4 rounded-xl">
                                     <div className="flex gap-3">
-                                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                                         <div className="space-y-1">
                                             <p className="font-bold text-red-400 text-sm uppercase tracking-wide">{t('securityWarningTitle')}</p>
                                             <p className="text-red-300/80 text-sm leading-relaxed">
@@ -194,7 +194,7 @@ export function UserApprovalList() {
 
                         {confirmAction.type === 'reject' && (
                             <div className="bg-red-900/20 border border-red-900/50 p-4 rounded-xl text-sm text-red-300 flex gap-3 items-start">
-                                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
                                 <p className="leading-relaxed">{t('rejectWarning')}</p>
                             </div>
                         )}

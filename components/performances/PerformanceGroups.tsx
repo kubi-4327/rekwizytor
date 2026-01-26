@@ -8,7 +8,12 @@ import { Button } from '@/components/ui/Button'
 import { Plus } from 'lucide-react'
 import { notify } from '@/utils/notify'
 import { GroupDetailsDialog } from '@/components/groups/GroupDetailsDialog'
+import { EditGroupDialog } from '@/components/groups/EditGroupDialog'
 import { Database } from '@/types/supabase'
+import { DropdownAction } from '@/components/ui/DropdownAction'
+import { Modal } from '@/components/ui/Modal'
+import { SearchableSelect } from '@/components/ui/SearchableSelect'
+import { Link2 } from 'lucide-react'
 
 type Group = Database['public']['Tables']['groups']['Row'] & {
     locations: { name: string } | null
@@ -27,6 +32,10 @@ export function PerformanceGroups({ performanceId, performanceTitle, groups, per
     const [isLoading, setIsLoading] = useState(false)
     const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
     const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+    const [editingGroup, setEditingGroup] = useState<Group | null>(null)
+    const [isLinkModalOpen, setIsLinkModalOpen] = useState(false)
+    const [availableGroups, setAvailableGroups] = useState<{ id: string, name: string }[]>([])
+    const [selectedGroupId, setSelectedGroupId] = useState('')
 
     const handleAddGroup = async () => {
         setIsLoading(true)
@@ -92,6 +101,71 @@ export function PerformanceGroups({ performanceId, performanceTitle, groups, per
         }
     }
 
+    const openLinkModal = async () => {
+        setIsLoading(true)
+        try {
+            const { data, error } = await supabase
+                .from('groups')
+                .select('id, name')
+                .is('performance_id', null)
+                .order('name')
+
+            if (error) throw error
+            setAvailableGroups(data || [])
+            setIsLinkModalOpen(true)
+        } catch (error) {
+            console.error(error)
+            notify.error('Nie udało się pobrać dostępnych grup')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleLinkGroup = async () => {
+        if (!selectedGroupId) return
+        setIsLoading(true)
+        try {
+            const { error } = await supabase
+                .from('groups')
+                .update({ performance_id: performanceId })
+                .eq('id', selectedGroupId)
+
+            if (error) throw error
+
+            notify.success('Grupa została przypisana')
+            setIsLinkModalOpen(false)
+            setSelectedGroupId('')
+            router.refresh()
+        } catch (error) {
+            console.error(error)
+            notify.error('Nie udało się przypisać grupy')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleEdit = (group: Group) => {
+        setIsDetailsOpen(false)
+        setEditingGroup(group)
+    }
+
+    const handleDelete = async (group: Group) => {
+        if (!confirm(`Czy na pewno usunąć grupę "${group.name}"?`)) return
+
+        try {
+            const { error } = await supabase.from('groups').delete().eq('id', group.id)
+            if (error) throw error
+
+            notify.success('Grupa usunięta')
+            setIsDetailsOpen(false)
+            setSelectedGroup(null)
+            router.refresh()
+        } catch (error) {
+            console.error('Delete error:', error)
+            notify.error('Nie udało się usunąć grupy')
+        }
+    }
+
     const openGroupDetails = (group: Group) => {
         setSelectedGroup(group)
         setIsDetailsOpen(true)
@@ -104,15 +178,26 @@ export function PerformanceGroups({ performanceId, performanceTitle, groups, per
                     {/* <Box className="w-4 h-4 text-neutral-400" /> */}
                     Grupy
                 </h3>
-                <Button
-                    onClick={handleAddGroup}
-                    isLoading={isLoading}
+                <DropdownAction
+                    label="Dodaj grupę"
                     variant="secondary"
                     className="h-7 text-xs px-2.5 bg-neutral-800 border border-neutral-700 hover:bg-neutral-700 hover:text-white"
-                    leftIcon={<Plus className="w-3 h-3" />}
-                >
-                    Dodaj grupę
-                </Button>
+                    icon={<Plus className="w-3 h-3" />}
+                    items={[
+                        {
+                            label: 'Utwórz nową grupę',
+                            icon: <Plus className="w-4 h-4" />,
+                            onClick: handleAddGroup,
+                            isLoading: isLoading && !isLinkModalOpen
+                        },
+                        {
+                            label: 'Dodaj istniejącą grupę',
+                            icon: <Link2 className="w-4 h-4" />,
+                            onClick: openLinkModal,
+                            isLoading: isLoading && isLinkModalOpen
+                        }
+                    ]}
+                />
             </div>
 
             <div className="p-4">
@@ -152,9 +237,49 @@ export function PerformanceGroups({ performanceId, performanceTitle, groups, per
                 group={selectedGroup}
                 open={isDetailsOpen}
                 onOpenChange={setIsDetailsOpen}
-                onEdit={() => { }}
-                onDelete={() => { }}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
             />
+
+            <EditGroupDialog
+                group={editingGroup}
+                isOpen={!!editingGroup}
+                onClose={() => setEditingGroup(null)}
+            />
+
+            <Modal
+                isOpen={isLinkModalOpen}
+                onClose={() => setIsLinkModalOpen(false)}
+                title="Dodaj istniejącą grupę"
+                description="Wybierz grupę z magazynu, aby przypisać ją do tego spektaklu."
+            >
+                <div className="space-y-6 pt-2">
+                    <SearchableSelect
+                        label="Wybierz grupę"
+                        options={availableGroups}
+                        value={selectedGroupId}
+                        onChange={setSelectedGroupId}
+                        placeholder="Szukaj grupy..."
+                    />
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800">
+                        <Button
+                            variant="ghost"
+                            onClick={() => setIsLinkModalOpen(false)}
+                        >
+                            Anuluj
+                        </Button>
+                        <Button
+                            onClick={handleLinkGroup}
+                            isLoading={isLoading}
+                            disabled={!selectedGroupId}
+                            variant="primary"
+                        >
+                            Dodaj do spektaklu
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     )
 }

@@ -9,6 +9,8 @@
         "statsTitle": "AI Statistics",
         "statsDescription": "Monitor token usage and costs",
         "viewStats": "View Stats",
+        "manage": "Manage",
+        "browse": "Browse",
         "adminZone": "Admin Zone",
         "UserApproval": {
             "title": "Pending Users",

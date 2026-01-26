@@ -56,10 +56,10 @@ export function SettingsForm({ user }: { user: UserData }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14">
             {/* Profile Section */}
             <div className="space-y-4">
-                <h2 className="text-base font-bold text-white flex items-center pl-1">
+                <div className="text-base font-bold text-white flex items-center pl-1 font-sans! uppercase tracking-wider opacity-90">
                     <User className="mr-2 h-4 w-4 text-burgundy-light" />
                     {t('account')}
-                </h2>
+                </div>
                 <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6 h-full transition-colors hover:border-neutral-700">
                     <div className="grid gap-6">
                         <div>
@@ -103,10 +103,10 @@ export function SettingsForm({ user }: { user: UserData }) {
 
             {/* Preferences Section */}
             <div className="space-y-4">
-                <h2 className="text-base font-bold text-white flex items-center pl-1">
+                <div className="text-base font-bold text-white flex items-center pl-1 font-sans! uppercase tracking-wider opacity-90">
                     <Globe className="mr-2 h-4 w-4 text-blue-400" />
                     {t('appearance')}
-                </h2>
+                </div>
                 <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6 h-full transition-colors hover:border-neutral-700 space-y-6">
                     {/* Language */}
                     <div className="flex items-center justify-between">
@@ -150,10 +150,10 @@ export function SettingsForm({ user }: { user: UserData }) {
 
             {/* Workspace Management Section */}
             <div className="space-y-4">
-                <h2 className="text-base font-bold text-white flex items-center pl-1">
+                <div className="text-base font-bold text-white flex items-center pl-1 font-sans! uppercase tracking-wider opacity-90">
                     <LayoutGrid className="mr-2 h-4 w-4 text-purple-400" />
                     Management
-                </h2>
+                </div>
                 <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6 h-full transition-colors hover:border-neutral-700 space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
@@ -207,10 +207,10 @@ export function SettingsForm({ user }: { user: UserData }) {
 
             {/* Security Section */}
             <div className="space-y-4">
-                <h2 className="text-base font-bold text-white flex items-center pl-1">
+                <div className="text-base font-bold text-white flex items-center pl-1 font-sans! uppercase tracking-wider opacity-90">
                     <Shield className="mr-2 h-4 w-4 text-red-400" />
                     {t('security')}
-                </h2>
+                </div>
                 <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6 h-full transition-colors hover:border-neutral-700 space-y-4">
                     <div className="flex items-center justify-between">
                         <div>

@@ -167,7 +167,7 @@ END:VCALENDAR`
     return (
         <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl overflow-hidden flex flex-col h-full">
             <div className="p-4 border-b border-neutral-800 flex items-center justify-between bg-neutral-900/80">
-                <h3 className="font-bold text-neutral-200 flex items-center gap-2 font-sans text-base">
+                <h3 className="font-bold text-white flex items-center gap-2 font-sans text-base uppercase tracking-wider opacity-90 pl-1">
                     <Clock className="w-4 h-4 text-neutral-400" />
                     {t('title')}
                 </h3>
@@ -191,7 +191,7 @@ END:VCALENDAR`
                 </div>
             </div>
 
-            <div className="flex-1 p-4 space-y-4 overflow-y-auto max-h-[500px]">
+            <div className="flex-1 p-4 space-y-4 overflow-y-auto max-h-[500px] custom-scrollbar">
                 {/* Past Shows Section */}
                 {pastDates.length > 0 && (
                     <div className="space-y-4">

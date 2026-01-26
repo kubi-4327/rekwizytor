@@ -37,12 +37,12 @@ export default async function PerformancesPage() {
     const allScheduledShows = scheduledShowsResult.data
 
     return (
-        <div className="p-4 md:p-10 space-y-6 max-w-7xl mx-auto">
+        <div className="p-4 md:p-10 space-y-6 max-w-7xl mx-auto text-white">
             <PageHeader
                 title={t('title')}
                 subtitle={t('subtitle')}
                 icon={<Layers className="h-6 w-6" />}
-                iconColor="text-purple-400 bg-purple-400/10 border-purple-400/20"
+                iconColor="text-purple-400"
             >
                 <div className="grid grid-cols-2 w-full md:flex md:w-auto gap-2 md:gap-2 justify-end">
                     <PerformancesListActions scheduledShows={allScheduledShows || []} performances={performances || []} />

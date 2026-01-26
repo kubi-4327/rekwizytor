@@ -26,7 +26,7 @@ export default async function GroupsPage({ searchParams }: Props) {
 
 
     return (
-        <div className="p-4 md:p-10 space-y-6 max-w-7xl mx-auto">
+        <div className="p-4 md:p-10 space-y-6 max-w-7xl mx-auto text-white">
             <PageHeader
                 title={t('title')}
                 subtitle={t('subtitle')}

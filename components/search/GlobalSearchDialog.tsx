@@ -250,7 +250,7 @@ export function GlobalSearchDialog({ isOpen, onClose, initialContext }: GlobalSe
             isOpen={isOpen}
             onClose={onClose}
             maxWidth="4xl"
-            className="md:!p-0 bg-neutral-900 border-neutral-800"
+            className="md:p-0! bg-neutral-900 border-neutral-800"
         >
             <div className="flex flex-col h-[80vh] md:h-[70vh]">
                 {/* Header / Search Bar Area */}
@@ -401,7 +401,7 @@ export function GlobalSearchDialog({ isOpen, onClose, initialContext }: GlobalSe
                                                 <div className={`p-1.5 rounded-md bg-white/5 ${config.colorClass}`}>
                                                     <Icon className="h-4 w-4" />
                                                 </div>
-                                                <h2 className="text-xs font-bold text-neutral-500 uppercase tracking-widest">
+                                                <h2 className="text-xs font-bold text-neutral-500 uppercase tracking-widest font-sans!">
                                                     {config.label}
                                                 </h2>
                                                 <div className="h-px flex-1 bg-neutral-800"></div>

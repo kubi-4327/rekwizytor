@@ -74,15 +74,15 @@ export function MorphingSearchBar({
                 onClick={handleTriggerClick}
             >
                 <div className="flex items-center w-full h-10 px-3 rounded-xl border border-white/5 bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-neutral-200 transition-colors overflow-hidden cursor-pointer">
-                    <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center mr-2 opacity-50">
+                    <div className="shrink-0 w-5 h-5 flex items-center justify-center mr-2 opacity-50">
                         <Search className="h-4 w-4" />
                     </div>
 
-                    <span className="text-sm leading-none truncate select-none transform translate-y-[1px]">
+                    <span className="text-sm leading-none truncate select-none transform translate-y-px font-sans!">
                         {placeholder || t('searchPlaceholder')}
                     </span>
 
-                    <div className="ml-auto hidden sm:flex gap-1 flex-shrink-0">
+                    <div className="ml-auto hidden sm:flex gap-1 shrink-0">
                         <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-white/10 bg-black/20 px-1.5 font-mono text-[10px] font-medium text-neutral-400 opacity-100">
                             <span className="text-xs">⌘</span>K
                         </kbd>
@@ -121,7 +121,7 @@ export function MorphingSearchBar({
                 className={clsx(
                     "block w-full rounded-xl border text-base md:text-sm placeholder-neutral-500 transition-all font-medium shadow-lg backdrop-blur-xl relative z-10",
                     "pl-10 pr-10 py-2.5 focus:outline-none focus:ring-1", // focus:outline-none to remove browser default
-                    "bg-neutral-900/40 border-white/5 text-white focus:ring-white/10 focus:border-white/10 focus:bg-neutral-900/60"
+                    "bg-neutral-900/40 border-white/5 text-white focus:ring-white/10 focus:border-white/10 focus:bg-neutral-900/60 font-sans!"
                 )}
                 autoFocus={autoFocus}
             />
@@ -152,7 +152,7 @@ export function MorphingSearchBar({
             </div>
 
             {/* Standard Focused Glow Effect */}
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition duration-500 pointer-events-none" />
+            <div className="absolute -inset-0.5 bg-linear-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition duration-500 pointer-events-none" />
         </motion.div>
     )
 }

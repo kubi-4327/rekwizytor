@@ -37,6 +37,8 @@ interface GroupDetailsDialogProps {
     onDelete: (group: any) => void
 }
 
+const qrCache = new Map<string, string>()
+
 export function GroupDetailsDialog({
     group,
     open,
@@ -50,6 +52,12 @@ export function GroupDetailsDialog({
 
     useEffect(() => {
         if (group && open) {
+            // Check cache first
+            if (qrCache.has(group.id)) {
+                setQrUrl(qrCache.get(group.id)!)
+                return
+            }
+
             // Get or create unique QR Code and generate image
             import('@/app/actions/qr-codes').then(({ getOrCreateGroupQrCode }) => {
                 getOrCreateGroupQrCode(group.id, group.name).then(qrData => {
@@ -63,7 +71,10 @@ export function GroupDetailsDialog({
                                     dark: '#000000',
                                     light: '#ffffff'
                                 }
-                            }).then(setQrUrl).catch(console.error)
+                            }).then(url => {
+                                qrCache.set(group.id, url)
+                                setQrUrl(url)
+                            }).catch(console.error)
                         })
                     }
                 })

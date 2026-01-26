@@ -9,6 +9,8 @@
         "statsTitle": "Statystyki AI",
         "statsDescription": "Monitoruj zużycie tokenów i koszty",
         "viewStats": "Zobacz statystyki",
+        "manage": "Zarządzaj",
+        "browse": "Przeglądaj",
         "adminZone": "Strefa Administratora",
         "UserApproval": {
             "confirmApproveTitle": "Zatwierdź Użytkownika",

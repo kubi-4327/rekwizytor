@@ -177,6 +177,17 @@ export function GroupsList({ groups, currentParentId }: GroupsListProps) {
         }
     }, [highlightId, groups])
 
+    // Handle jumpToLocation param
+    const jumpToLocation = searchParams.get('jumpToLocation')
+    useEffect(() => {
+        if (jumpToLocation) {
+            // Small delay to ensure rendering
+            setTimeout(() => {
+                handleJumpToLocation(jumpToLocation)
+            }, 500)
+        }
+    }, [jumpToLocation])
+
     if (currentLevelGroups.length === 0) {
         return (
             <div className="text-center py-12">
