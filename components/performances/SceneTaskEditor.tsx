@@ -184,7 +184,7 @@ export function SceneTaskEditor({ performanceId, scenes }: Props) {
     // Group scenes by act
     const scenesByAct: Record<number, Scene[]> = {}
     scenes.forEach(scene => {
-        const act = scene.act_number || 1
+        const act = scene.act_number ?? 1
         if (!scenesByAct[act]) scenesByAct[act] = []
         scenesByAct[act].push(scene)
     })
@@ -241,6 +241,7 @@ export function SceneTaskEditor({ performanceId, scenes }: Props) {
                                 )}
                                 renderItem={(task, isOverlay) => (
                                     <SceneTaskItem
+                                        key={task.id}
                                         task={task}
                                         isOverlay={isOverlay}
                                         onUpdate={updateLocalTask}

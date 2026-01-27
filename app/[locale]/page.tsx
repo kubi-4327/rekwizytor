@@ -9,6 +9,32 @@ import { UserMentionsList } from '@/components/dashboard/UserMentionsList'
 import { QuickNav } from '@/components/dashboard/QuickNav'
 import { InventoryStats } from '@/components/dashboard/InventoryStats'
 import { UpcomingPerformances } from '@/components/dashboard/UpcomingPerformances'
+import { Database } from '@/types/supabase'
+
+type PerformanceRow = Database['public']['Tables']['performances']['Row']
+type ChecklistRow = Database['public']['Tables']['scene_checklists']['Row']
+type ProfileRow = Database['public']['Tables']['profiles']['Row']
+
+interface DashboardPerformance {
+  id: string
+  title: string
+  premiere_date: string | null
+  next_show_date?: string | null
+  image_url: string | null
+  status: string
+  progress?: {
+    completed: number
+    total: number
+  }
+}
+
+interface UpcomingPerformance {
+  id: string
+  title: string
+  date: string
+  status: string
+  color?: string | null
+}
 
 export default async function Home() {
   const supabase = await createClient()
@@ -16,16 +42,20 @@ export default async function Home() {
 
   let displayName = 'User'
   if (user) {
-    const { data: profile } = await supabase
+    const result = await supabase
       .from('profiles')
       .select('full_name, username')
       .eq('id', user.id)
       .single()
 
+    const profile = result.data as Pick<ProfileRow, 'full_name' | 'username'> | null
+
     displayName = profile?.full_name || profile?.username || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User'
   }
 
   const t = await getTranslations('Dashboard')
+
+  const lastWeekDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
   // Execute all independent queries in parallel
   const [
@@ -37,6 +67,9 @@ export default async function Home() {
     notesCountResult,
     upcomingThisWeekResult,
     mentionsResult,
+    newGroupsCountResult,
+    newPerformancesCountResult,
+    newNotesCountResult,
   ] = await Promise.allSettled([
     // Fetch Nearest Upcoming Performance
     supabase
@@ -131,6 +164,27 @@ export default async function Home() {
         .order('created_at', { ascending: false })
         .limit(5)
       : Promise.resolve({ data: null, error: null }),
+
+    // New groups (last 7 days)
+    supabase
+      .from('groups')
+      .select('*', { count: 'exact', head: true })
+      .is('deleted_at', null)
+      .gte('created_at', lastWeekDate),
+
+    // New performances (last 7 days)
+    supabase
+      .from('performances')
+      .select('*', { count: 'exact', head: true })
+      .is('deleted_at', null)
+      .gte('created_at', lastWeekDate),
+
+    // New notes (last 7 days)
+    supabase
+      .from('notes')
+      .select('*', { count: 'exact', head: true })
+      .is('deleted_at', null)
+      .gte('created_at', lastWeekDate),
   ])
 
   // Extract nearest checklist
@@ -154,8 +208,12 @@ export default async function Home() {
     }
   }
 
-  const nearestPerformance = nearestChecklist?.performance && !Array.isArray(nearestChecklist.performance) ? {
-    ...nearestChecklist.performance,
+  const nearestPerformance: DashboardPerformance | null = nearestChecklist?.performance && !Array.isArray(nearestChecklist.performance) ? {
+    id: nearestChecklist.performance.id,
+    title: nearestChecklist.performance.title,
+    premiere_date: nearestChecklist.performance.premiere_date,
+    image_url: nearestChecklist.performance.image_url,
+    status: nearestChecklist.performance.status,
     next_show_date: nearestChecklist.show_date,
     progress: todayProgress
   } : null
@@ -169,11 +227,11 @@ export default async function Home() {
     ? upcomingPremieresResult.value.data || []
     : []
 
-  const combinedPerformances = [
+  const combinedPerformances: UpcomingPerformance[] = [
     ...scheduledShows
       .filter(item => item.performance)
       .map(item => {
-        const perf = item.performance as any
+        const perf = item.performance as PerformanceRow
         return {
           id: perf.id,
           title: perf.title,
@@ -215,6 +273,10 @@ export default async function Home() {
     ? (mentionsResult.value.data || [])
     : []
 
+  const newGroupsCount = newGroupsCountResult.status === 'fulfilled' ? newGroupsCountResult.value.count || 0 : 0
+  const newPerformancesCount = newPerformancesCountResult.status === 'fulfilled' ? newPerformancesCountResult.value.count || 0 : 0
+  const newNotesCount = newNotesCountResult.status === 'fulfilled' ? newNotesCountResult.value.count || 0 : 0
+
   return (
     <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
       <PendingUsersAlert />
@@ -225,7 +287,7 @@ export default async function Home() {
         {/* Main Column */}
         <div className="lg:col-span-8 space-y-8">
           <section>
-            <NearestPerformanceCard performance={nearestPerformance as any} />
+            <NearestPerformanceCard performance={nearestPerformance} />
           </section>
 
           <div className="grid gap-8">
@@ -238,7 +300,7 @@ export default async function Home() {
             </section>
 
             <section>
-              <UpcomingPerformances performances={upcomingPerformances as any} />
+              <UpcomingPerformances performances={upcomingPerformances} />
             </section>
           </div>
         </div>
@@ -251,6 +313,9 @@ export default async function Home() {
               performancesCount={performancesCount}
               notesCount={notesCount}
               upcomingThisWeekCount={upcomingThisWeekCount}
+              newGroupsCount={newGroupsCount}
+              newPerformancesCount={newPerformancesCount}
+              newNotesCount={newNotesCount}
             />
           </section>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
@@ -70,8 +70,7 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
 
     const handleQuickAdd = async (act: number, name: string) => {
         const actScenes = scenes.filter(s => s.act_number === act)
-        const maxNum = Math.max(0, ...actScenes.map(s => s.scene_number))
-        const nextNum = maxNum + 1
+        const nextNum = act === 0 && actScenes.length === 0 ? 0 : Math.max(0, ...actScenes.map(s => s.scene_number)) + 1
         const tempId = crypto.randomUUID()
         const newScene: Scene = { id: tempId, act_number: act, scene_number: nextNum, name: name, performance_id: performanceId }
 
@@ -106,12 +105,63 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
         }
     }
 
+    // Sync state with server/prop data when router refreshes
+    useEffect(() => {
+        setScenes(initialScenes)
+    }, [initialScenes])
+
+    const renumberScenesInAct = async (actNumber: number, currentScenes: Scene[]) => {
+        const actScenes = currentScenes.filter(s => s.act_number === actNumber)
+            .sort((a, b) => a.scene_number - b.scene_number)
+
+        const updates = actScenes.map((s, index) => {
+            const expectedNumber = actNumber === 0 ? index : index + 1
+            if (s.scene_number !== expectedNumber) {
+                return { ...s, scene_number: expectedNumber }
+            }
+            return null
+        }).filter(Boolean) as Scene[]
+
+        if (updates.length > 0) {
+            // Apply optimistic updates to full state
+            setScenes(prev => prev.map(s => {
+                const update = updates.find(u => u.id === s.id)
+                return update ? update : s
+            }))
+
+            try {
+                const dbUpdates = updates.map(s => ({
+                    id: s.id,
+                    scene_number: s.scene_number
+                }))
+
+                // Process individually to avoid conflicts or complex upserts, or just use upsert
+                for (const update of dbUpdates) {
+                    await supabase.from('scenes').update({ scene_number: update.scene_number }).eq('id', update.id)
+                }
+            } catch (err) {
+                console.error("Failed to renumber", err)
+            }
+        }
+    }
+
     const handleDelete = async (id: string) => {
         if (!confirm(t('deleteConfirm'))) return
-        setScenes(scenes.filter(s => s.id !== id))
+
+        const sceneToDelete = scenes.find(s => s.id === id)
+        if (!sceneToDelete) return
+
+        // Optimistic delete
+        const newScenes = scenes.filter(s => s.id !== id)
+        setScenes(newScenes)
+
         try {
             const { error } = await supabase.from('scenes').delete().eq('id', id)
             if (error) throw error
+
+            // Renumber remaining scenes in that act
+            await renumberScenesInAct(sceneToDelete.act_number, newScenes)
+
             router.refresh()
         } catch (error) {
             console.error('Error deleting scene:', error)

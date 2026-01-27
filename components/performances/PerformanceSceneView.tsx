@@ -82,7 +82,7 @@ export function PerformanceSceneView({
         .sort((a, b) => a - b)
 
     // Ensure we have at least Acts that have scenes, even if no props
-    const actsFromScenes = new Set(scenes?.map(s => s.act_number || 1) || [])
+    const actsFromScenes = new Set(scenes?.map(s => s.act_number ?? 1) || [])
     const allActs = Array.from(new Set([...sortedActs, ...Array.from(actsFromScenes)])).sort((a, b) => a - b)
 
     // Group scenes by Act for easier rendering
@@ -113,7 +113,7 @@ export function PerformanceSceneView({
                                     {/* Act Header */}
                                     <tr className="bg-neutral-900/80">
                                         <td colSpan={2} className="px-6 py-4 text-xs font-bold text-neutral-500 uppercase tracking-wider border-y border-neutral-800 text-center">
-                                            {t('act', { actNum })}
+                                            {actNum === 0 ? t('preparation') : t('act', { actNum })}
                                         </td>
                                     </tr>
                                     {scenesByAct[actNum]
@@ -131,8 +131,12 @@ export function PerformanceSceneView({
                                                     className="hover:bg-neutral-800/50 cursor-pointer"
                                                 >
                                                     <td className="px-6 py-4 text-sm text-neutral-300 align-top border-r border-neutral-800/50">
-                                                        <div className="font-medium">{scene.scene_number}</div>
-                                                        {scene.name && <div className="text-xs text-neutral-500">{scene.name}</div>}
+                                                        <div className="font-medium">{scene.scene_number === 0 ? 'P' : scene.scene_number}</div>
+                                                        {scene.name && (
+                                                            <div className={scene.scene_number === 0 ? "text-xs text-burgundy-light font-bold" : "text-xs text-neutral-500"}>
+                                                                {scene.scene_number === 0 ? t('preparation') : scene.name}
+                                                            </div>
+                                                        )}
                                                     </td>
                                                     <td className="px-6 py-4 text-sm text-white align-top">
                                                         {allTasks.length > 0 && (
@@ -173,7 +177,7 @@ export function PerformanceSceneView({
                         <div className="flex items-center gap-2 px-2">
                             <div className="h-px flex-1 bg-neutral-800" />
                             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                                {t('act', { actNum })}
+                                {actNum === 0 ? t('preparation') : t('act', { actNum })}
                             </span>
                             <div className="h-px flex-1 bg-neutral-800" />
                         </div>

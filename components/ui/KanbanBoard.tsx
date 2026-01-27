@@ -44,6 +44,7 @@ interface KanbanBoardProps<T extends KanbanItem> {
     renderColumnFooter?: (column: KanbanColumn, items: T[]) => React.ReactNode
     onItemReorder: (newItems: T[]) => void
     extraActions?: React.ReactNode
+    onValidateMove?: (item: T, targetColumnId: ColumnId) => boolean
 }
 
 // --- Component ---
@@ -55,7 +56,8 @@ export function KanbanBoard<T extends KanbanItem>({
     renderColumnHeader,
     renderColumnFooter,
     onItemReorder,
-    extraActions
+    extraActions,
+    onValidateMove
 }: KanbanBoardProps<T>) {
     const [activeId, setActiveId] = useState<ItemId | null>(null)
 
@@ -94,6 +96,11 @@ export function KanbanBoard<T extends KanbanItem>({
         if (isOverColumn) {
             const overColumnId = overId as ColumnId
             if (activeItem.columnId !== overColumnId) {
+                // VALIDATION CHECK
+                if (onValidateMove && !onValidateMove(activeItem, overColumnId)) {
+                    return
+                }
+
                 const newItems = items.map(item => {
                     if (item.id === activeItem.id) {
                         return { ...item, columnId: overColumnId }
@@ -105,6 +112,11 @@ export function KanbanBoard<T extends KanbanItem>({
         }
         // 2. Dropping over another Item in a different column
         else if (overItem && activeItem.columnId !== overItem.columnId) {
+            // VALIDATION CHECK
+            if (onValidateMove && !onValidateMove(activeItem, overItem.columnId)) {
+                return
+            }
+
             const newItems = items.map(item => {
                 if (item.id === activeItem.id) {
                     return { ...item, columnId: overItem.columnId }
@@ -134,6 +146,11 @@ export function KanbanBoard<T extends KanbanItem>({
         if (isOverColumn) {
             const colId = overId as ColumnId
             if (activeItem.columnId !== colId) {
+                // VALIDATION CHECK
+                if (onValidateMove && !onValidateMove(activeItem, colId)) {
+                    return
+                }
+
                 newItems = newItems.map(i => i.id === activeId ? { ...i, columnId: colId } : i)
             }
         } else {
@@ -143,6 +160,10 @@ export function KanbanBoard<T extends KanbanItem>({
                 const newIndex = newItems.findIndex(i => i.id === overId)
 
                 if (newItems[oldIndex].columnId !== overItem.columnId) {
+                    // VALIDATION CHECK
+                    if (onValidateMove && !onValidateMove(activeItem, overItem.columnId)) {
+                        return
+                    }
                     newItems[oldIndex] = { ...newItems[oldIndex], columnId: overItem.columnId }
                 }
 

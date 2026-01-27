@@ -9,9 +9,20 @@ interface InventoryStatsProps {
     performancesCount: number
     notesCount: number
     upcomingThisWeekCount: number
+    newGroupsCount: number
+    newPerformancesCount: number
+    newNotesCount: number
 }
 
-export function InventoryStats({ groupsCount, performancesCount, notesCount, upcomingThisWeekCount }: InventoryStatsProps) {
+export function InventoryStats({
+    groupsCount,
+    performancesCount,
+    notesCount,
+    upcomingThisWeekCount,
+    newGroupsCount,
+    newPerformancesCount,
+    newNotesCount
+}: InventoryStatsProps) {
     const t = useTranslations('Dashboard')
 
     // Determine week status message
@@ -24,6 +35,7 @@ export function InventoryStats({ groupsCount, performancesCount, notesCount, upc
         {
             label: t('stats.groups'),
             value: groupsCount,
+            newValue: newGroupsCount,
             icon: LayoutGrid,
             color: 'text-neutral-200',
             bg: 'bg-white/5',
@@ -33,6 +45,7 @@ export function InventoryStats({ groupsCount, performancesCount, notesCount, upc
         {
             label: t('stats.performances'),
             value: performancesCount,
+            newValue: newPerformancesCount,
             icon: Layers,
             color: 'text-purple-400',
             bg: 'bg-purple-400/10',
@@ -42,6 +55,7 @@ export function InventoryStats({ groupsCount, performancesCount, notesCount, upc
         {
             label: t('stats.notes'),
             value: notesCount,
+            newValue: newNotesCount,
             icon: StickyNote,
             color: 'text-amber-400',
             bg: 'bg-amber-400/10',
@@ -70,7 +84,14 @@ export function InventoryStats({ groupsCount, performancesCount, notesCount, upc
                                 <div className={`p-2 rounded-lg bg-black/20 ${stat.color} group-hover:scale-110 transition-transform`}>
                                     <Icon className="h-5 w-5" />
                                 </div>
-                                <span className="text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{stat.label}</span>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{stat.label}</span>
+                                    {stat.newValue > 0 && (
+                                        <span className="text-[10px] font-bold text-green-400/80">
+                                            +{stat.newValue} w tym tyg.
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                             <span className="text-xl font-bold text-white">{stat.value}</span>
                         </Link>

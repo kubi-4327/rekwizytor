@@ -80,8 +80,9 @@ export function SceneKanbanBoard({ scenes, onReorder, onUpdate, onRemove, onRemo
             // Re-assign scene numbers
             actScenes.forEach((scene, index) => {
                 const globalIndex = result.findIndex(s => s.id === scene.id)
-                if (result[globalIndex].scene_number !== index + 1) {
-                    result[globalIndex] = { ...result[globalIndex], scene_number: index + 1 }
+                const newNum = act === 0 ? index : index + 1
+                if (result[globalIndex].scene_number !== newNum) {
+                    result[globalIndex] = { ...result[globalIndex], scene_number: newNum }
                 }
             })
         })
@@ -112,7 +113,7 @@ export function SceneKanbanBoard({ scenes, onReorder, onUpdate, onRemove, onRemo
         return (
             <div className="p-4 border-b border-neutral-800 bg-neutral-900/80 rounded-t-xl flex justify-between items-center backdrop-blur-sm">
                 <div className="flex items-center gap-2">
-                    <span className="font-bold text-white text-lg">Akt {actNumber}</span>
+                    <span className="font-bold text-white text-lg">{actNumber === 0 ? 'Przygotowanie' : `Akt ${actNumber}`}</span>
                     <span className="text-xs text-neutral-500 font-mono bg-neutral-800 px-2.5 py-1 rounded-full border border-neutral-700">
                         {items.length}
                     </span>
@@ -205,6 +206,19 @@ export function SceneKanbanBoard({ scenes, onReorder, onUpdate, onRemove, onRemo
         </button>
     )
 
+    const handleValidateMove = (item: KanbanSceneItem, targetColumnId: string | number): boolean => {
+        const sourceAct = Number(item.columnId)
+        const targetAct = Number(targetColumnId)
+
+        // Prevent moving scenes FROM Preparation (Act 0) to other acts
+        if (sourceAct === 0 && targetAct !== 0) {
+            // Optional: You could show a toast here if you wanted specific feedback
+            return false
+        }
+
+        return true
+    }
+
     return (
         <div className="wrapper-class-if-needed">
             <KanbanBoard
@@ -215,6 +229,7 @@ export function SceneKanbanBoard({ scenes, onReorder, onUpdate, onRemove, onRemo
                 renderColumnFooter={renderColumnFooter}
                 onItemReorder={handleItemReorder}
                 extraActions={renderExtraActions}
+                onValidateMove={handleValidateMove}
             />
         </div>
     )
@@ -250,7 +265,7 @@ function SortableScene({ scene, onUpdate, onRemove, isOverlay }: { scene: SceneI
         return (
             <div className="p-4 bg-neutral-800 border border-neutral-600 rounded-lg shadow-2xl opacity-90 text-white font-medium w-[300px] flex items-center gap-3">
                 <div className="w-8 h-8 shrink-0 bg-neutral-900 border border-neutral-800 rounded flex items-center justify-center text-white font-mono font-bold text-sm">
-                    {scene.scene_number}
+                    {scene.scene_number === 0 ? 'P' : scene.scene_number}
                 </div>
                 <span>{scene.name}</span>
             </div>
@@ -269,7 +284,7 @@ function SortableScene({ scene, onUpdate, onRemove, isOverlay }: { scene: SceneI
 
             {/* Scene Number Badge */}
             <div className="w-8 h-8 shrink-0 bg-neutral-900 border border-neutral-800 rounded flex items-center justify-center text-white font-mono font-bold text-sm">
-                {scene.scene_number}
+                {scene.scene_number === 0 ? 'P' : scene.scene_number}
             </div>
 
             {/* Name Input/Text */}

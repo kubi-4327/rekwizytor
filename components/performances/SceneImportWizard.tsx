@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Upload, X, Wand2, Loader2, Save } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { ImageCropper } from '@/components/ui/ImageCropper'
+import { Button } from '@/components/ui/Button'
 import { scanSceneImage, ScannedScene } from '@/app/actions/scan-scenes'
 import { StagingTable } from './StagingTable'
 import { createClient } from '@/utils/supabase/client'
@@ -89,6 +90,9 @@ export function SceneImportWizard({ performanceId, existingScenes, onClose }: Pr
                 formData.append('file', blob, 'crop.webp')
 
                 const result = await scanSceneImage(formData)
+                if (result.error) {
+                    alert(`Error scanning image ${i + 1}: ${result.error}`)
+                }
                 if (result.scenes) {
                     const mappedScenes = result.scenes.map(s => ({ ...s, source_index: i }))
 
@@ -259,20 +263,20 @@ export function SceneImportWizard({ performanceId, existingScenes, onClose }: Pr
                     </div>
 
                     <div className="flex gap-3">
-                        <button
+                        <Button
                             onClick={onClose}
-                            className="px-4 py-2 text-sm text-neutral-400 hover:text-white"
+                            variant="ghost"
                         >
                             Cancel
-                        </button>
+                        </Button>
                         {step === 'staging' && (
-                            <button
+                            <Button
                                 onClick={handleSave}
-                                className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-md font-medium text-sm flex items-center gap-2 transition-colors"
+                                variant="primary"
+                                leftIcon={<Save className="w-4 h-4" />}
                             >
-                                <Save className="w-4 h-4" />
                                 Save to Performance
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </div>

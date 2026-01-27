@@ -1,7 +1,8 @@
 'use server'
 
-import { geminiFlash, isGeminiAvailable } from '@/utils/gemini'
+import { geminiFlash, geminiFlashLite, isGeminiAvailable } from '@/utils/gemini'
 import { createClient } from '@/utils/supabase/server'
+import { randomUUID } from 'crypto'
 
 export type ScannedScene = {
     _id: string // Temp ID for UI handling (DnD)
@@ -32,31 +33,50 @@ export async function scanSceneImage(formData: FormData): Promise<{ scenes: Scan
 
         const prompt = `
         You are a theatrical assistant. Analyze this image of a performance breakdown (scene list).
-        Extract all scenes in order.
-        For each row, identify:
-        1. Scene Number (integer). CAUTION: Numbering might restart for each Act. If you see "9a", "9b", etc., convert them to the base integer (e.g. 9).
-        2. Act Number (integer). If not explicitly written, look for headers like "Act II", "Akt 2". If unclear, return null.
-        3. Name (string). The scene title, location, or song name. If unreadable, use "???".
+        Extract ALL scenes from the list in their original order.
+        
+        For each row, provide:
+        - "scene_number" (integer): The number of the scene. Numbering usually restarts at 1 for each new Act.
+        - "act_number" (integer): The number of the Act. If not explicitly specified on the page, infer it from headers like "ACT I", "AKT II" or use the last known/inferred Act number.
+        - "name" (string): The title, description, or location of the scene.
 
-        Return ONLY valid JSON in this format:
+        Return a JSON object with this exact structure:
         {
             "scenes": [
-                { "scene_number": 1, "act_number": 1, "name": "Opening" },
+                { "scene_number": 1, "act_number": 1, "name": "Opening Scene" },
                 ...
             ]
         }
-        Do not include markdown formatting like \`\`\`json.
+        
+        IMPORTANT:
+        - If the list is long, ensure you extract EVERY single scene. Do not truncate.
+        - Use ONLY valid JSON.
         `
 
-        const result = await geminiFlash.generateContent([
-            prompt,
-            {
-                inlineData: {
-                    mimeType: file.type || 'image/jpeg',
-                    data: base64Image
-                }
+        const model = geminiFlashLite || geminiFlash
+        if (!model) {
+            return { scenes: [], error: 'AI service not available' }
+        }
+
+        const result = await model.generateContent({
+            contents: [{
+                role: 'user',
+                parts: [
+                    { text: prompt },
+                    {
+                        inlineData: {
+                            mimeType: file.type || 'image/jpeg',
+                            data: base64Image
+                        }
+                    }
+                ]
+            }],
+            generationConfig: {
+                responseMimeType: "application/json",
+                maxOutputTokens: 2048,
+                temperature: 0.1
             }
-        ])
+        })
 
         const response = result.response
         const usage = response.usageMetadata
@@ -66,22 +86,24 @@ export async function scanSceneImage(formData: FormData): Promise<{ scenes: Scan
                 tokens_input: usage.promptTokenCount,
                 tokens_output: usage.candidatesTokenCount,
                 total_tokens: usage.totalTokenCount,
-                model_name: 'gemini-1.5-flash',
+                model_name: geminiFlashLite ? 'gemini-2.5-flash-lite' : 'gemini-2.0-flash',
                 operation_type: 'scan_scenes'
             })
         }
 
         const text = response.text()
-
-        // Clean markdown if present
-        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim()
+        console.log('Gemini raw response:', text)
 
         try {
-            const data = JSON.parse(jsonStr)
+            const data = JSON.parse(text)
+
+            if (!data.scenes || !Array.isArray(data.scenes)) {
+                return { scenes: [], error: 'Invalid AI response structure' }
+            }
 
             // Post-process to fit ScannedScene type
             const scenes: ScannedScene[] = data.scenes.map((s: any) => ({
-                _id: crypto.randomUUID(),
+                _id: randomUUID(),
                 original_number: s.scene_number,
                 scene_number: s.scene_number, // Default to read number, client will re-calc if needed
                 act_number: s.act_number,

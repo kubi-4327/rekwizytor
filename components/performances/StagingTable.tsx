@@ -45,7 +45,7 @@ export function StagingTable({ scannedScenes, existingScenes, imageUrls, onUpdat
     // Using IDs is safer for reordering.
 
     const acts = useMemo(() => {
-        const uniqueActs = Array.from(new Set(scannedScenes.map(s => s.act_number || 1))).sort((a, b) => a - b)
+        const uniqueActs = Array.from(new Set(scannedScenes.map(s => s.act_number ?? 1))).sort((a, b) => a - b)
         if (uniqueActs.length === 0) return [1]
         return uniqueActs
     }, [scannedScenes])
@@ -102,14 +102,13 @@ export function StagingTable({ scannedScenes, existingScenes, imageUrls, onUpdat
         const newScenes = [...scannedScenes]
         let hasChanges = false
 
-        const uniqueActs = Array.from(new Set(newScenes.map(s => s.act_number || 1)))
+        const uniqueActs = Array.from(new Set(newScenes.map(s => s.act_number ?? 1)))
 
         uniqueActs.forEach(act => {
             const startOffset = actOffsets[act] || 0
-            const actScenes = newScenes.filter(s => (s.act_number || 1) === act)
-
-            actScenes.forEach((scene, index) => {
-                const expectedNumber = startOffset + index + 1
+            const actScenes = newScenes.filter(s => (s.act_number ?? 1) === act)
+            actScenes.forEach((scene: any, index: number) => {
+                const expectedNumber = act === 0 ? index : startOffset + index + 1
                 if (scene.scene_number !== expectedNumber) {
                     const realIndex = newScenes.findIndex(s => s._id === scene._id)
                     if (realIndex !== -1) {
@@ -172,13 +171,14 @@ export function StagingTable({ scannedScenes, existingScenes, imageUrls, onUpdat
         uniqueActsInNewScenes.forEach((act: number) => {
             const startOffset = actOffsets[act] || 0
             // Get all scenes for this act, preserving their relative order in the newScenes array
-            const actScenes = newScenes.filter((s: ScannedScene) => (s.act_number || 1) === act)
+            const actScenes = newScenes.filter((s: ScannedScene) => (s.act_number ?? 1) === act)
 
             // Update their scene numbers sequentially
             actScenes.forEach((scene: ScannedScene, index: number) => {
                 const realIndex = newScenes.findIndex((s: ScannedScene) => s._id === scene._id)
                 if (realIndex !== -1) {
-                    newScenes[realIndex] = { ...newScenes[realIndex], scene_number: startOffset + index + 1 }
+                    const expectedNumber = act === 0 ? index : startOffset + index + 1
+                    newScenes[realIndex] = { ...newScenes[realIndex], scene_number: expectedNumber }
                 }
             })
         })
@@ -205,7 +205,7 @@ export function StagingTable({ scannedScenes, existingScenes, imageUrls, onUpdat
                         onDragEnd={handleDragEnd}
                     >
                         {acts.map(act => {
-                            const scenesInAct = scannedScenes.filter(s => (s.act_number || 1) === act)
+                            const scenesInAct = scannedScenes.filter(s => (s.act_number ?? 1) === act)
 
                             return (
                                 <div key={act} className="border border-neutral-800 rounded-xl bg-neutral-950 overflow-hidden">
@@ -219,7 +219,7 @@ export function StagingTable({ scannedScenes, existingScenes, imageUrls, onUpdat
                                             className="p-3 bg-neutral-800 border-b border-neutral-700 font-bold text-white flex justify-between items-center"
                                         // Optional: make header a drop zone too?
                                         >
-                                            <span>Act {act}</span>
+                                            <span>{act === 0 ? 'Przygotowanie' : `Act ${act}`}</span>
                                             <span className="text-xs text-neutral-400 font-normal">{scenesInAct.length} scenes</span>
                                         </div>
                                         <div className="divide-y divide-neutral-800 min-h-[50px]" id={`act-${act}`}>
@@ -269,7 +269,7 @@ export function StagingTable({ scannedScenes, existingScenes, imageUrls, onUpdat
             </div>
 
             {/* Right: Image Viewer */}
-            <div className="lg:w-[40%] xl:w-[45%] flex flex-col border border-neutral-800 rounded-lg bg-neutral-950 flex-shrink-0 h-[400px] lg:h-auto overflow-hidden">
+            <div className="lg:w-[40%] xl:w-[45%] flex flex-col border border-neutral-800 rounded-lg bg-neutral-950 shrink-0 h-[400px] lg:h-auto overflow-hidden">
                 <div className="p-3 border-b border-neutral-800 flex justify-between items-center bg-neutral-900">
                     <div className="flex items-center gap-2">
                         <Eye className="w-4 h-4 text-purple-400" />
@@ -313,7 +313,7 @@ export function StagingTable({ scannedScenes, existingScenes, imageUrls, onUpdat
                             <button
                                 key={idx}
                                 onClick={() => setActiveImageIndex(idx)}
-                                className={`w-12 h-12 border rounded-md overflow-hidden flex-shrink-0 transition-all ${activeImageIndex === idx ? 'border-purple-500 opacity-100 scale-105' : 'border-neutral-700 opacity-40 hover:opacity-80'}`}
+                                className={`w-12 h-12 border rounded-md overflow-hidden shrink-0 transition-all ${activeImageIndex === idx ? 'border-purple-500 opacity-100 scale-105' : 'border-neutral-700 opacity-40 hover:opacity-80'}`}
                             >
                                 <img src={url} className="w-full h-full object-cover" />
                             </button>
@@ -356,8 +356,8 @@ function SortableRow({ id, scene, index, conflict, onUpdate, onRemove, onFocus }
             <div className="flex gap-3 items-center flex-1 min-w-0">
                 {/* Scene Number (Auto-generated) */}
                 <div className="relative group/number">
-                    <div className={`w-12 h-10 flex-shrink-0 bg-neutral-950 border rounded-lg flex items-center justify-center text-white font-mono font-bold text-lg select-none ${conflict ? 'border-red-500 bg-red-900/10 text-red-100' : 'border-neutral-800'}`}>
-                        {scene.scene_number}
+                    <div className={`w-12 h-10 shrink-0 bg-neutral-950 border rounded-lg flex items-center justify-center text-white font-mono font-bold text-lg select-none ${conflict ? 'border-red-500 bg-red-900/10 text-red-100' : 'border-neutral-800'}`}>
+                        {scene.scene_number === 0 ? 'P' : scene.scene_number}
                     </div>
                     {scene.original_number != scene.scene_number && (
                         <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-neutral-800 text-[10px] text-neutral-400 flex items-center justify-center border border-neutral-700 shadow-sm z-10" title={`Original: ${scene.original_number}`}>

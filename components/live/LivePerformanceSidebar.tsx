@@ -42,13 +42,13 @@ export function LivePerformanceSidebar({
                 const sceneItems = items.filter(item => item.scene_checklist_id === c.id)
                 const isDone = sceneItems.length > 0 && sceneItems.every(item => item.is_on_stage)
                 const prevC = sortedChecklists[i - 1]
-                const isActChange = prevC && prevC.act_number !== c.act_number
+                const isActChange = i === 0 || (prevC && prevC.act_number !== c.act_number)
 
                 return (
                     <React.Fragment key={c.id}>
                         {isActChange && (
                             <div className="px-6 py-4 text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em]">
-                                {t('act', { number: c.act_number })}
+                                {Number(c.act_number) === 0 ? t('preparation') : t('act', { number: c.act_number })}
                             </div>
                         )}
                         <button
@@ -61,7 +61,9 @@ export function LivePerformanceSidebar({
                             )}
                         >
                             <div className="flex justify-between items-center">
-                                <span className="truncate">{t('scene', { number: c.scene_number })} {c.scene_name}</span>
+                                <span className="truncate">
+                                    {Number(c.scene_number) === 0 ? t('preparation') : `${t('scene', { number: c.scene_number })} ${c.scene_name || ''}`}
+                                </span>
                                 {isDone && <CheckCircle2 className="w-4 h-4 text-green-500" />}
                             </div>
                         </button>

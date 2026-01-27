@@ -186,11 +186,11 @@ function SceneSidebar({
                             >
                                 <div className="flex justify-between items-center relative z-10">
                                     <span className="font-medium">
-                                        {t('scene', { number: scene.scene_number })}
+                                        {scene.scene_number === 0 ? t('preparation') : t('scene', { number: scene.scene_number })}
                                     </span>
                                     {isComplete && <CheckCircle2 className="w-4 h-4 text-green-500" />}
                                 </div>
-                                {scene.name && (
+                                {(scene.name && scene.scene_number !== 0) && (
                                     <div className="text-xs opacity-70 truncate relative z-10 mt-0.5">
                                         {scene.name}
                                     </div>
@@ -259,8 +259,10 @@ function LiveHeader({
                 </button>
 
                 <div className="font-bold text-white">
-                    {t('scene', { number: currentScene?.scene_number || '?' })}
-                    {currentScene?.name && (
+                    {currentScene?.scene_number === 0
+                        ? t('preparation')
+                        : t('scene', { number: currentScene?.scene_number ?? '?' })}
+                    {(currentScene?.name && currentScene?.scene_number !== 0) && (
                         <span className="text-sm text-neutral-400 ml-2 font-normal">
                             {currentScene.name}
                         </span>

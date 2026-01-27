@@ -318,6 +318,7 @@
         "noPropsInScene": "Brak rekwizytów w tej scenie",
         "noTasksInScene": "Brak zadań w tej scenie",
         "noScenes": "Brak zdefiniowanych scen dla tego spektaklu.",
+        "preparation": "Przygotowanie",
         "deleteProp": "Usuń rekwizyt",
         "sceneBreakdown": "Rozpiska Scen",
         "editButton": "Edytuj",
@@ -385,6 +386,7 @@
         "noActiveShows": "Brak aktywnych przedstawień",
         "allFinished": "Wszystkie zaplanowane na dzisiaj Spektakli już się zakończyły.",
         "scenes": "Sceny",
+        "preparation": "Przygotowanie",
         "scene": "Scena {number}",
         "noItemsInScene": "Brak przedmiotów w tej scenie.",
         "note": "Notatka: {note}",
@@ -588,7 +590,8 @@
         "syncSceneNoteDescription": "Czy chcesz zsynchronizować zmiany (zmiany nazw, kolejności) z notatką sceniczną? Twój tekst zostanie przeniesiony zgodnie z nową strukturą scen.",
         "syncAndSave": "Tak, synchronizuj i zapisz",
         "saveOnly": "Nie, zapisz tylko sceny",
-        "cancel": "Anuluj"
+        "cancel": "Anuluj",
+        "done": "Gotowe"
     },
     "ManagePropsForm": {
         "unassignedItems": "Nieprzypisane Przedmioty",
@@ -703,6 +706,7 @@
     "SceneDetailModal": {
         "title": "Szczegóły sceny",
         "sceneNumber": "Scena",
+        "preparation": "Przygotowanie",
         "noContent": "Brak notatek dla tej sceny",
         "edit": "Edytuj"
     },

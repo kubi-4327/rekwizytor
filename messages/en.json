@@ -307,6 +307,7 @@
         "noPropsInScene": "No props in this scene",
         "noTasksInScene": "No tasks in this scene",
         "noScenes": "No scenes defined for this production.",
+        "preparation": "Preparation",
         "deleteProp": "Delete prop",
         "sceneBreakdown": "Scene Breakdown",
         "editButton": "Edit",
@@ -374,6 +375,7 @@
         "noActiveShows": "No active shows",
         "allFinished": "All scheduled shows for today have finished.",
         "scenes": "Scenes",
+        "preparation": "Preparation",
         "scene": "Scene {number}",
         "noItemsInScene": "No items in this scene.",
         "note": "Note: {note}",
@@ -573,7 +575,8 @@
         "syncSceneNoteDescription": "Do you want to synchronize changes (name changes, order) with the scene note? Your text will be transferred according to the new scene structure.",
         "syncAndSave": "Yes, sync and save",
         "saveOnly": "No, save scenes only",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "done": "Done"
     },
     "ManagePropsForm": {
         "unassignedItems": "Unassigned Items",
@@ -687,6 +690,7 @@
     "SceneDetailModal": {
         "title": "Scene Details",
         "sceneNumber": "Scene",
+        "preparation": "Preparation",
         "noContent": "No notes for this scene",
         "edit": "Edit"
     },

@@ -109,7 +109,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
     const getActNumber = (sceneNum: string | null) => {
         if (!sceneNum) return 1
         const scene = scenes?.find((s: Scene) => s.scene_number.toString() === sceneNum)
-        return scene?.act_number || 1
+        return scene?.act_number ?? 1
     }
 
     // Group props by Act (using performance_props now)

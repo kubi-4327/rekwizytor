@@ -34,7 +34,9 @@ export function LivePerformanceHeader({
                 <div className="flex flex-col">
                     <span className="text-[10px] uppercase font-black tracking-widest text-burgundy-light leading-none mb-1">{t('currentScene')}</span>
                     <h1 className="text-xl font-black text-white uppercase tracking-tighter truncate">
-                        {t('scene', { number: currentChecklist?.scene_number || '?' })} {currentChecklist?.scene_name}
+                        {Number(currentChecklist?.scene_number) === 0
+                            ? t('preparation')
+                            : `${t('scene', { number: currentChecklist?.scene_number || '?' })} ${currentChecklist?.scene_name || ''}`}
                     </h1>
                 </div>
             </div>
