@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { getTranslations } from 'next-intl/server'
+import { isToday } from 'date-fns'
 
 import { Greeting } from '@/components/dashboard/Greeting'
 import { PendingUsersAlert } from '@/components/dashboard/PendingUsersAlert'
@@ -8,7 +9,6 @@ import { UserMentionsList } from '@/components/dashboard/UserMentionsList'
 import { QuickNav } from '@/components/dashboard/QuickNav'
 import { InventoryStats } from '@/components/dashboard/InventoryStats'
 import { UpcomingPerformances } from '@/components/dashboard/UpcomingPerformances'
-import { ActiveChecklistsStatus } from '@/components/dashboard/ActiveChecklistsStatus'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -27,21 +27,22 @@ export default async function Home() {
 
   const t = await getTranslations('Dashboard')
 
-  // Execute all independent queries in parallel for 5x performance improvement
+  // Execute all independent queries in parallel
   const [
     nearestPerformanceResult,
     upcomingChecklistsResult,
     upcomingPremieresResult,
-    totalItemsResult,
-    inMaintenanceResult,
-    unassignedResult,
-    activeChecklistsResult,
+    groupsCountResult,
+    performancesCountResult,
+    notesCountResult,
+    upcomingThisWeekResult,
     mentionsResult,
   ] = await Promise.allSettled([
-    // Fetch Nearest Upcoming Performance (based on scheduled checklists)
+    // Fetch Nearest Upcoming Performance
     supabase
       .from('scene_checklists')
       .select(`
+        id,
         show_date,
         performance:performances (
           id,
@@ -56,7 +57,7 @@ export default async function Home() {
       .limit(1)
       .single(),
 
-    // Fetch Upcoming Scheduled Shows (from checklists)
+    // Fetch Upcoming Scheduled Shows
     supabase
       .from('scene_checklists')
       .select(`
@@ -71,9 +72,9 @@ export default async function Home() {
       `)
       .gte('show_date', new Date().toISOString())
       .order('show_date', { ascending: true })
-      .limit(10),
+      .limit(5),
 
-    // Fetch Upcoming Premieres (as fallback/addition)
+    // Fetch Upcoming Premieres
     supabase
       .from('performances')
       .select('id, title, premiere_date, status, color')
@@ -83,30 +84,30 @@ export default async function Home() {
       .order('premiere_date', { ascending: true })
       .limit(5),
 
-    // Total props across all performances
+    // Total groups
     supabase
-      .from('performance_props')
-      .select('*', { count: 'exact', head: true }),
+      .from('groups')
+      .select('*', { count: 'exact', head: true })
+      .is('deleted_at', null),
 
-    Promise.resolve({ data: null, error: null, count: 0 }),
-    Promise.resolve({ data: null, error: null, count: 0 }),
+    // Total performances
+    supabase
+      .from('performances')
+      .select('*', { count: 'exact', head: true })
+      .is('deleted_at', null),
 
-    // Fetch Active Checklists
+    // Total notes
+    supabase
+      .from('notes')
+      .select('*', { count: 'exact', head: true })
+      .is('deleted_at', null),
+
+    // Upcoming this week (7 days)
     supabase
       .from('scene_checklists')
-      .select(`
-        id,
-        show_date,
-        is_active,
-        scene_name,
-        performance:performances (
-          id,
-          title
-        )
-      `)
-      .eq('is_active', true)
-      .order('show_date', { ascending: true })
-      .limit(10),
+      .select('id', { count: 'exact', head: true })
+      .gte('show_date', new Date().toISOString())
+      .lt('show_date', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()),
 
     // Fetch User Mentions in Notes (only if user exists)
     user
@@ -132,17 +133,34 @@ export default async function Home() {
       : Promise.resolve({ data: null, error: null }),
   ])
 
-  // Extract data with error handling for each query
+  // Extract nearest checklist
   const nearestChecklist = nearestPerformanceResult.status === 'fulfilled'
     ? nearestPerformanceResult.value.data
     : null
 
+  // Fetch progress if today
+  let todayProgress = undefined
+  if (nearestChecklist && isToday(new Date(nearestChecklist.show_date))) {
+    const { data: items } = await supabase
+      .from('scene_checklist_items')
+      .select('is_prepared')
+      .eq('scene_checklist_id', nearestChecklist.id)
+
+    if (items && items.length > 0) {
+      todayProgress = {
+        completed: items.filter(i => i.is_prepared).length,
+        total: items.length
+      }
+    }
+  }
+
   const nearestPerformance = nearestChecklist?.performance && !Array.isArray(nearestChecklist.performance) ? {
     ...nearestChecklist.performance,
-    next_show_date: nearestChecklist.show_date
+    next_show_date: nearestChecklist.show_date,
+    progress: todayProgress
   } : null
 
-  // Process Upcoming Performances (Merge Checklists and Premieres)
+  // Process Upcoming Performances
   const scheduledShows = upcomingChecklistsResult.status === 'fulfilled'
     ? upcomingChecklistsResult.value.data || []
     : []
@@ -151,13 +169,11 @@ export default async function Home() {
     ? upcomingPremieresResult.value.data || []
     : []
 
-  // Combine and normalize to common interface { id, title, date, status, color }
   const combinedPerformances = [
-    // Add scheduled shows
     ...scheduledShows
       .filter(item => item.performance)
       .map(item => {
-        const perf = item.performance as any // Type assertion for joined data
+        const perf = item.performance as any
         return {
           id: perf.id,
           title: perf.title,
@@ -166,7 +182,6 @@ export default async function Home() {
           color: perf.color
         }
       }),
-    // Add premieres
     ...futurePremieres.map(perf => ({
       id: perf.id,
       title: perf.title,
@@ -176,61 +191,25 @@ export default async function Home() {
     }))
   ]
 
-  // Deduplicate: If same performance ID exists on same DATE, prefer the one from scheduledShows (if any distinction needed).
-  // Actually, simplified deduplication: Just distinct by `${id}-${date}` key.
   const uniquePerformancesMap = new Map()
   combinedPerformances.forEach(p => {
-    // Only add if future or today
     if (new Date(p.date) >= new Date(new Date().setHours(0, 0, 0, 0))) {
-      const key = `${p.id}-${p.date.split('T')[0]}` // Dedupe by ID and Day
+      const key = `${p.id}-${p.date.split('T')[0]}`
       if (!uniquePerformancesMap.has(key)) {
         uniquePerformancesMap.set(key, p)
       }
     }
   })
 
-  // Sort by date ascending and take top 5
+  // Limit to 3 as requested
   const upcomingPerformances = Array.from(uniquePerformancesMap.values())
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 5)
+    .slice(0, 3)
 
-  const totalItems = totalItemsResult.status === 'fulfilled'
-    ? totalItemsResult.value.count
-    : null
-
-  const inMaintenance = inMaintenanceResult.status === 'fulfilled'
-    ? inMaintenanceResult.value.count
-    : null
-
-  const unassigned = unassignedResult.status === 'fulfilled'
-    ? unassignedResult.value.count
-    : null
-
-  const activeChecklists = activeChecklistsResult.status === 'fulfilled'
-    ? activeChecklistsResult.value.data
-    : null
-
-  const activeChecklistsData = activeChecklists?.reduce((acc: Record<string, any>, checklist) => {
-    const perfId = (checklist.performance as any)?.id
-    if (!perfId) return acc
-
-    if (!acc[perfId]) {
-      acc[perfId] = {
-        id: perfId,
-        performance_title: (checklist.performance as any)?.title || 'Unknown',
-        completed: 0,
-        total: 0
-      }
-    }
-
-    acc[perfId].total++
-    // Since we're fetching active checklists, they are "in progress", not completed
-    // Completed logic would need a different column
-
-    return acc
-  }, {} as Record<string, any>) || {}
-
-  const checklistsForDisplay = Object.values(activeChecklistsData)
+  const groupsCount = groupsCountResult.status === 'fulfilled' ? groupsCountResult.value.count || 0 : 0
+  const performancesCount = performancesCountResult.status === 'fulfilled' ? performancesCountResult.value.count || 0 : 0
+  const notesCount = notesCountResult.status === 'fulfilled' ? notesCountResult.value.count || 0 : 0
+  const upcomingThisWeekCount = upcomingThisWeekResult.status === 'fulfilled' ? upcomingThisWeekResult.value.count || 0 : 0
 
   const recentMentions = mentionsResult.status === 'fulfilled'
     ? (mentionsResult.value.data || [])
@@ -240,39 +219,38 @@ export default async function Home() {
     <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
       <PendingUsersAlert />
 
-      <div className="space-y-2">
-        <Greeting name={displayName} />
-      </div>
+      <Greeting name={displayName} />
 
       <div className="grid gap-6 lg:grid-cols-12">
-        {/* Main Column (8/12 width on large screens) */}
-        <div className="lg:col-span-8 space-y-6">
+        {/* Main Column */}
+        <div className="lg:col-span-8 space-y-8">
           <section>
-            <NearestPerformanceCard performance={nearestPerformance} />
+            <NearestPerformanceCard performance={nearestPerformance as any} />
           </section>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-8">
+            <section>
+              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <span className="w-1.5 h-6 bg-blue-500 rounded-full" />
+                {t('quickActions')}
+              </h2>
+              <QuickNav />
+            </section>
+
             <section>
               <UpcomingPerformances performances={upcomingPerformances as any} />
             </section>
-            <section>
-              <ActiveChecklistsStatus checklists={checklistsForDisplay as any} />
-            </section>
           </div>
-
-          <section>
-            <h2 className="text-lg font-medium text-white mb-4">{t('quickActions')}</h2>
-            <QuickNav />
-          </section>
         </div>
 
-        {/* Sidebar Column (4/12 width on large screens) */}
-        <div className="lg:col-span-4 space-y-6">
+        {/* Sidebar Column */}
+        <div className="lg:col-span-4 space-y-8">
           <section>
             <InventoryStats
-              totalItems={totalItems || 0}
-              inMaintenance={inMaintenance || 0}
-              unassigned={unassigned || 0}
+              groupsCount={groupsCount}
+              performancesCount={performancesCount}
+              notesCount={notesCount}
+              upcomingThisWeekCount={upcomingThisWeekCount}
             />
           </section>
 

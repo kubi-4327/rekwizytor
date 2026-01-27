@@ -104,6 +104,17 @@
         "noActiveChecklists": "Brak aktywnych list",
         "checklistProgress": "{completed} z {total} przedmiotów",
         "viewLiveView": "Zobacz Live View",
+        "weekStatus": {
+            "zero": "Brak spektakli w tym tygodniu. Czas na porządki! 🧹",
+            "low": "W tym tygodniu trochę luźniej. Uff! ☕",
+            "medium": "Intensywny tydzień! Powodzenia. 🎭",
+            "high": "Bardzo gorący tydzień! Nie zapomnij o kawie. ☕🔥"
+        },
+        "stats": {
+            "groups": "Grup ogółem",
+            "performances": "Spektakli",
+            "notes": "Notatek"
+        },
         "PendingAlert": {
             "title": "Oczekujący Użytkownicy",
             "message": "{count, plural, one {Jeden użytkownik czeka na zatwierdzenie.} few {# użytkowników czeka na zatwierdzenie.} many {# użytkowników czeka na zatwierdzenie.} other {# użytkowników czeka na zatwierdzenie.}}"

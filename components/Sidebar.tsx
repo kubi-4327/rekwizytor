@@ -3,7 +3,7 @@
 
 import { Link, useRouter } from '@/i18n/routing'
 import { usePathname } from 'next/navigation'
-import { Theater, Box, Layers, ClipboardList, Settings, LogOut, Sparkles, Notebook, Tag, CheckCircle2, Search } from 'lucide-react'
+import { Theater, Box, Layers, ClipboardList, Settings, LogOut, Sparkles, StickyNote, Tag, CheckCircle2, Search } from 'lucide-react'
 import { clsx } from 'clsx'
 import { createClient } from '@/utils/supabase/client'
 import { useTranslations } from 'next-intl'
@@ -27,7 +27,7 @@ export function Sidebar() {
     const navigation = [
         { name: t('productions'), href: '/performances', icon: Layers },
         { name: t('groups'), href: '/groups', icon: Tag },
-        { name: t('notes'), href: '/notes', icon: Notebook },
+        { name: t('notes'), href: '/notes', icon: StickyNote },
         { name: t('checklists'), href: '/checklists', icon: ClipboardList },
         ...(isFeatureEnabled('EXPERIMENTAL_MAPPING') ? [
             { name: "Mapowanie (Experymentalne)", href: '/mapping', icon: Sparkles }

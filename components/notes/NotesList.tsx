@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { Plus, FileText, Trash2, ChevronDown, ChevronRight } from 'lucide-react'
+import { Plus, StickyNote, Trash2, ChevronDown, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -148,7 +148,7 @@ export default function NotesList({ performanceId, initialNotes = [] }: { perfor
             <PageHeader
                 title={t('title')}
                 subtitle={t('subtitle')}
-                icon={<FileText className="h-6 w-6" />}
+                icon={<StickyNote className="h-6 w-6" />}
                 iconColor="text-amber-400 bg-amber-400/10 border-amber-400/20"
             >
                 <div className="flex w-full md:w-auto justify-end">
@@ -179,7 +179,7 @@ export default function NotesList({ performanceId, initialNotes = [] }: { perfor
             ) : notes.length === 0 ? (
                 <div className="text-center py-20 bg-neutral-900/20 rounded-2xl border border-neutral-800/50 border-dashed">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-800/50 mb-4 text-neutral-600">
-                        <FileText className="w-8 h-8" />
+                        <StickyNote className="w-8 h-8" />
                     </div>
                     <p className="text-xl font-bold text-neutral-500">{t('noNotes')}</p>
                     <p className="text-neutral-600 mt-2">Create a new note to get started.</p>
@@ -241,7 +241,7 @@ export default function NotesList({ performanceId, initialNotes = [] }: { perfor
                                                         </h3>
                                                         {isMaster && (
                                                             <div className="shrink-0">
-                                                                <FileText
+                                                                <StickyNote
                                                                     size={18}
                                                                     className="text-amber-500"
                                                                     style={perfColor ? { color: perfColor } : undefined}

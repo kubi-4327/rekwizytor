@@ -125,9 +125,23 @@ export default async function ProductionDetailsPage({ params }: Props) {
 
     return (
         <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
-            <div>
-                {/* Header Container */}
-                <div className="relative z-30 bg-neutral-900/50 backdrop-blur-sm border border-neutral-800 rounded-xl p-4 md:p-6 shadow-xl">
+            <div className="relative group overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900 shadow-2xl">
+                {/* Blurred Background Layer */}
+                {production.image_url ? (
+                    <>
+                        <div
+                            className="absolute inset-0 bg-cover bg-center blur-2xl scale-110 opacity-80"
+                            style={{ backgroundImage: `url(${production.image_url})` }}
+                        />
+                        <div className="absolute inset-0 bg-black/40" />
+                        <div className="absolute inset-0 bg-linear-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
+                    </>
+                ) : (
+                    <div className="absolute inset-0 bg-linear-to-br from-neutral-800 to-neutral-950" />
+                )}
+
+                {/* Header Content Container */}
+                <div className="relative z-10 p-6 md:p-8">
                     <div className="flex flex-col md:flex-row gap-6 items-start">
                         {/* Poster */}
                         <div

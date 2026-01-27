@@ -35,10 +35,13 @@ const PerformanceListItem = ({ show, index }: { show: Performance; index: number
         >
             <Link
                 href={`/performances/${show.id}`}
-                className="flex items-center gap-4 bg-neutral-900/40 backdrop-blur-sm border border-neutral-800 rounded-xl p-3 transition-all duration-300 hover:bg-neutral-900/60 hover:border-purple-500/30 group-hover:scale-[1.01]"
+                className="flex items-center gap-4 bg-neutral-900/40 backdrop-blur-sm border border-neutral-800 rounded-xl p-3 transition-all duration-300 hover:bg-neutral-900/60 hover:border-(--hover-border)! group-hover:scale-[1.01]"
                 style={{
-                    boxShadow: show.color ? `inset 4px 0 0 ${show.color}` : 'none'
-                }}
+                    boxShadow: show.color ? `inset 4px 0 0 ${show.color}` : 'none',
+                    '--hover-border': show.color
+                        ? `color-mix(in srgb, ${show.color}, black 30%)`
+                        : 'rgba(255, 255, 255, 0.1)'
+                } as React.CSSProperties}
             >
                 {/* Thumbnail */}
                 <div className="relative h-24 w-16 shrink-0 rounded-lg overflow-hidden bg-neutral-800 shadow-inner">
@@ -103,7 +106,12 @@ const PerformanceGridItem = ({ show, index }: { show: Performance; index: number
         >
             <Link
                 href={`/performances/${show.id}`}
-                className="block w-full h-full relative overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/40 backdrop-blur-sm transition-all duration-300 group-hover:border-purple-500/30 group-hover:scale-[1.02] shadow-2xl"
+                className="block w-full h-full relative overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/40 backdrop-blur-sm transition-all duration-300 group-hover:border-(--hover-border)! group-hover:scale-[1.02] shadow-2xl"
+                style={{
+                    '--hover-border': show.color
+                        ? `color-mix(in srgb, ${show.color}, black 30%)`
+                        : 'rgba(255, 255, 255, 0.1)'
+                } as React.CSSProperties}
             >
                 {/* Poster Image Background */}
                 <div className="absolute inset-0 z-0 bg-neutral-900">
