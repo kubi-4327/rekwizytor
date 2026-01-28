@@ -11,6 +11,7 @@ import {
     DragStartEvent,
     DragOverlay,
     DragOverEvent,
+    useDroppable,
 } from '@dnd-kit/core'
 import {
     arrayMove,
@@ -45,6 +46,11 @@ interface KanbanBoardProps<T extends KanbanItem> {
     onItemReorder: (newItems: T[]) => void
     extraActions?: React.ReactNode
     onValidateMove?: (item: T, targetColumnId: ColumnId) => boolean
+}
+
+function DroppableColumn({ id, children, className }: { id: ColumnId, children: React.ReactNode, className?: string }) {
+    const { setNodeRef } = useDroppable({ id })
+    return <div ref={setNodeRef} className={className}>{children}</div>
 }
 
 // --- Component ---
@@ -192,7 +198,7 @@ export function KanbanBoard<T extends KanbanItem>({
                         <div key={`col-${col.id}`} className="w-full lg:w-[320px] flex flex-col">
                             {renderColumnHeader(col, colItems)}
 
-                            <div className="flex-1 mt-2 min-h-[100px]">
+                            <DroppableColumn id={col.id} className="flex-1 mt-2 min-h-[100px]">
                                 <SortableContext
                                     id={String(col.id)}
                                     items={colItems.map(i => i.id)}
@@ -207,7 +213,7 @@ export function KanbanBoard<T extends KanbanItem>({
                                         </div>
                                     )}
                                 </SortableContext>
-                            </div>
+                            </DroppableColumn>
 
                             {renderColumnFooter && (
                                 <div className="mt-2">

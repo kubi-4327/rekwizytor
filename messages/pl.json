@@ -426,7 +426,8 @@
         "resetAll": "Reset wszystkich",
         "exit": "Wyjdź",
         "confirmResetAll": "Czy na pewno chcesz zresetować wszystkie oznaczenia? Ta operacja wyczyści status wszystkich zadań.",
-        "unknownItem": "Nieznany przedmiot"
+        "unknownItem": "Nieznany przedmiot",
+        "currentScene": "AKTUALNA SCENA"
     },
     "ChecklistPage": {
         "backToPerformance": "Powrót do Spektakli",

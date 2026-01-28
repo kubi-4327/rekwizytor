@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { KanbanBoard, KanbanColumn } from '@/components/ui/KanbanBoard'
-import { Folder, Trash2, X, ArrowRight, Save, Plus } from 'lucide-react'
+import { useRef } from 'react'
+import { Folder, Trash2, X, ArrowRight, Save, Plus, GripVertical } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { notify } from '@/utils/notify'
@@ -83,9 +84,10 @@ const SortableImportItem = ({
 
     if (isOverlay) {
         return (
-            <div className="flex items-center gap-2 p-3 rounded-lg border border-neutral-800 bg-neutral-900/90 text-sm shadow-xl ring-2 ring-white/20 cursor-grabbing w-[300px]">
-                <DynamicIcon name={item.icon || 'Folder'} className="w-4 h-4 text-neutral-500" />
-                <span className="flex-1 truncate text-neutral-200 font-medium">{item.name}</span>
+            <div className="flex items-center gap-3 p-3 rounded-lg border border-neutral-700 bg-neutral-900 shadow-xl ring-2 ring-white/10 cursor-grabbing w-[300px]">
+                <GripVertical className="w-4 h-4 text-white" />
+                <DynamicIcon name={item.icon || 'Folder'} className="w-4 h-4 text-neutral-400" />
+                <span className="flex-1 truncate text-white font-medium">{item.name}</span>
             </div>
         )
     }
@@ -94,11 +96,13 @@ const SortableImportItem = ({
         <div
             ref={setNodeRef}
             style={style}
-            className="group flex items-center gap-2 p-3 rounded-lg border border-neutral-800 bg-neutral-900/90 text-sm shadow-sm hover:border-neutral-700 touch-none"
+            className="group flex items-center gap-3 p-3 rounded-lg border border-neutral-800 bg-neutral-900/90 text-sm shadow-sm hover:border-neutral-700 touch-none"
         >
-            <div {...attributes} {...listeners} className="cursor-grab hover:text-white transition-colors">
-                <DynamicIcon name={item.icon || 'Folder'} className="w-4 h-4 text-neutral-500" />
+            <div {...attributes} {...listeners} className="cursor-grab hover:text-white transition-colors p-1 -ml-1 text-neutral-600">
+                <GripVertical className="w-4 h-4" />
             </div>
+
+            <DynamicIcon name={item.icon || 'Folder'} className="w-4 h-4 text-neutral-500" />
 
             <div className="flex-1 min-w-0 flex flex-col gap-1">
                 {isEditing ? (
@@ -136,6 +140,8 @@ const SortableImportItem = ({
         </div>
     )
 }
+
+
 
 
 export function GroupImportDialog({ isOpen, onClose, parentId, locations = [] }: GroupImportDialogProps) {
@@ -286,22 +292,24 @@ export function GroupImportDialog({ isOpen, onClose, parentId, locations = [] }:
 
                 {/* STEP 2: KANBAN */}
                 {step === 2 && (
-                    <div className="flex flex-col h-full pt-4">
-                        <div className="flex justify-between items-center mb-4">
+                    <div className="flex flex-col h-full pt-4 overflow-hidden">
+                        <div className="flex justify-between items-center mb-4 shrink-0">
                             <p className="text-sm text-neutral-400">Przeciągnij elementy do odpowiednich kolumn lokalizacji</p>
                         </div>
 
-                        <div className="flex-1 min-h-0 border border-neutral-800 rounded-xl bg-neutral-950/30 p-4">
-                            <KanbanBoard
-                                items={items}
-                                columns={columns}
-                                onItemReorder={setItems}
-                                renderItem={renderItem}
-                                renderColumnHeader={renderColumnHeader}
-                            />
+                        <div className="flex-1 min-h-0 border border-neutral-800 rounded-xl bg-neutral-950/30 overflow-hidden relative">
+                            <div className="absolute inset-0 overflow-auto p-4">
+                                <KanbanBoard
+                                    items={items}
+                                    columns={columns}
+                                    onItemReorder={setItems}
+                                    renderItem={renderItem}
+                                    renderColumnHeader={renderColumnHeader}
+                                />
+                            </div>
                         </div>
 
-                        <div className="flex justify-between items-center pt-4 border-t border-neutral-800 mt-4">
+                        <div className="flex justify-between items-center pt-4 border-t border-neutral-800 mt-4 shrink-0 z-10">
                             <Button variant="ghost" onClick={() => setStep(1)} className="text-neutral-400 hover:text-white">
                                 Wróć do listy
                             </Button>

@@ -14,8 +14,11 @@ import {
     Pause,
     RotateCcw,
     User,
-    AlertTriangle
+    AlertTriangle,
+    ArrowRight,
+    Search
 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Database } from '@/types/supabase'
 
 type Scene = Database['public']['Tables']['scenes']['Row']
@@ -48,71 +51,77 @@ function SimpleLiveTaskItem({
     return (
         <div
             className={clsx(
-                "flex items-center justify-between p-4 rounded-xl border transition-all duration-200",
+                "group flex items-center justify-between py-4 px-4 border-b border-neutral-800 transition-colors",
                 task.is_completed
-                    ? "bg-green-900/20 border-green-900/50"
-                    : "bg-neutral-900/50 border-neutral-800"
+                    ? "bg-neutral-900/10"
+                    : "hover:bg-neutral-900/30"
             )}
         >
-            <div className="flex items-center flex-1 min-w-0 mr-3">
-                <div className="flex-1 min-w-0">
-                    <h4 className={clsx(
-                        "text-base font-medium wrap-break-word whitespace-normal leading-tight",
-                        task.is_completed ? "text-green-400" : "text-white"
-                    )}>
-                        {task.content}
-                    </h4>
-                    {task.live_notes && (
-                        <p className="text-xs text-yellow-500 mt-1 wrap-break-word whitespace-normal">
-                            {task.live_notes}
-                        </p>
-                    )}
-                </div>
-            </div>
-
-            <div className="relative mr-4 shrink-0">
-                <select
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-                    value={task.assigned_to || ''}
-                    onChange={(e) => handleAssign(task.id, e.target.value)}
-                >
-                    <option value="">{t('unassigned')}</option>
-                    {profiles?.map(p => (
-                        <option key={p.id} value={p.id}>{p.full_name || 'User'}</option>
-                    ))}
-                </select>
-                <div className={clsx(
-                    "h-8 w-8 rounded-full flex items-center justify-center border transition-colors overflow-hidden",
-                    task.assigned_to ? "border-neutral-600 bg-neutral-800" : "border-dashed border-neutral-700 bg-transparent text-neutral-600"
+            {/* Left: Content */}
+            <div className="flex-1 min-w-0 mr-6">
+                <h4 className={clsx(
+                    "text-lg font-medium leading-snug transition-colors",
+                    task.is_completed ? "text-neutral-500 line-through decoration-neutral-700" : "text-white"
                 )}>
-                    {profile?.avatar_url ? (
-                        <img src={profile.avatar_url} alt={profile.full_name || ''} className="h-full w-full object-cover" />
-                    ) : task.assigned_to ? (
-                        <span className="text-xs font-bold text-white">{profile?.full_name?.[0] || '?'}</span>
-                    ) : (
-                        <User className="h-4 w-4" />
-                    )}
-                </div>
+                    {task.content}
+                </h4>
+                {task.live_notes && (
+                    <p className="text-sm text-yellow-500/80 mt-1 font-mono">
+                        {task.live_notes}
+                    </p>
+                )}
             </div>
 
-            <button
-                onClick={() => {
-                    safeVibrate()
-                    toggleCompleted(task.id, task.is_completed)
-                }}
-                className={clsx(
-                    "flex items-center justify-center h-12 w-12 rounded-xl border-2 transition-all active:scale-95 touch-manipulation",
-                    task.is_completed
-                        ? "bg-green-500/20 border-green-500 text-green-400"
-                        : "bg-neutral-950 border-neutral-700 text-neutral-600 hover:border-neutral-500"
-                )}
-            >
-                {task.is_completed ? (
-                    <CheckCircle2 className="h-6 w-6" />
-                ) : (
-                    <Circle className="h-6 w-6" />
-                )}
-            </button>
+            {/* Right: Actions */}
+            <div className="flex items-center gap-4 shrink-0">
+                {/* Assignment */}
+                <div className="relative">
+                    <select
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                        value={task.assigned_to || ''}
+                        onChange={(e) => handleAssign(task.id, e.target.value)}
+                    >
+                        <option value="">{t('unassigned')}</option>
+                        {profiles?.map(p => (
+                            <option key={p.id} value={p.id}>{p.full_name || 'User'}</option>
+                        ))}
+                    </select>
+                    <div className={clsx(
+                        "h-8 w-8 rounded-full flex items-center justify-center border transition-colors overflow-hidden",
+                        task.assigned_to
+                            ? "border-neutral-600 bg-neutral-800"
+                            : "border-transparent bg-neutral-900 text-neutral-600 group-hover:border-neutral-700"
+                    )}>
+                        {profile?.avatar_url ? (
+                            <img src={profile.avatar_url} alt={profile.full_name || ''} className="h-full w-full object-cover" />
+                        ) : task.assigned_to ? (
+                            <span className="text-xs font-bold text-white">{profile?.full_name?.[0] || '?'}</span>
+                        ) : (
+                            <User className="h-4 w-4" />
+                        )}
+                    </div>
+                </div>
+
+                {/* Completion Toggle */}
+                <button
+                    onClick={() => {
+                        safeVibrate()
+                        toggleCompleted(task.id, task.is_completed)
+                    }}
+                    className={clsx(
+                        "flex items-center justify-center h-10 w-10 rounded-full border transition-all active:scale-95 touch-manipulation",
+                        task.is_completed
+                            ? "bg-green-500/10 border-green-500/50 text-green-500"
+                            : "bg-transparent border-neutral-700 text-neutral-600 hover:border-neutral-500 hover:text-neutral-400"
+                    )}
+                >
+                    {task.is_completed ? (
+                        <CheckCircle2 className="h-6 w-6" />
+                    ) : (
+                        <Circle className="h-6 w-6" />
+                    )}
+                </button>
+            </div>
         </div>
     )
 }
@@ -140,11 +149,11 @@ function SceneSidebar({
 }) {
     return (
         <div className={clsx(
-            "fixed md:relative z-50 w-64 h-full bg-neutral-900 border-r border-neutral-800 transform transition-transform duration-300 ease-in-out flex flex-col shrink-0",
+            "fixed md:relative z-50 w-72 h-full bg-[#1a1a1a] border-r border-neutral-800 transform transition-transform duration-300 ease-in-out flex flex-col shrink-0",
             isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}>
-            <div className="p-4 border-b border-neutral-800 flex justify-between items-center shrink-0 h-16">
-                <h2 className="font-bold text-white">{t('scenes')}</h2>
+            <div className="p-4 border-b border-neutral-800/50 flex justify-between items-center shrink-0 h-16 bg-[#1a1a1a]">
+                <h2 className="font-bold text-neutral-400 text-sm uppercase tracking-wider pl-2">{t('scenes')}</h2>
                 <button
                     onClick={() => setIsSidebarOpen(false)}
                     className="md:hidden text-neutral-400 hover:text-white"
@@ -153,12 +162,13 @@ function SceneSidebar({
                 </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            <div className="flex-1 overflow-y-auto py-2 px-3 space-y-1 bg-[#1a1a1a]">
                 {scenes.map((scene, index) => {
                     const sceneTasks = tasks.filter(t => t.scene_id === scene.id)
                     const total = sceneTasks.length
                     const completed = sceneTasks.filter(t => t.is_completed).length
                     const isComplete = total > 0 && completed === total
+                    const isActive = activeSceneId === scene.id
 
                     const prevScene = scenes[index - 1]
                     const isNewAct = prevScene && prevScene.act_number !== scene.act_number
@@ -166,61 +176,77 @@ function SceneSidebar({
                     return (
                         <div key={scene.id}>
                             {isNewAct && (
-                                <div className="px-3 py-2 text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-2">
-                                    <div className="h-px bg-neutral-800 flex-1" />
+                                <div className="px-3 py-3 mt-2 text-[10px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-2">
                                     {t('act', { number: scene.act_number ?? 0 })}
-                                    <div className="h-px bg-neutral-800 flex-1" />
+                                    <div className="h-px bg-neutral-800 flex-1 opacity-50" />
                                 </div>
                             )}
-                            <button
-                                onClick={() => {
-                                    setActiveSceneId(scene.id)
-                                    setIsSidebarOpen(false)
-                                }}
-                                className={clsx(
-                                    "w-full text-left p-3 rounded-lg text-sm transition-colors relative overflow-hidden",
-                                    activeSceneId === scene.id
-                                        ? "bg-burgundy-main/20 text-burgundy-light border border-burgundy-main/50"
-                                        : "text-neutral-400 hover:bg-neutral-800 hover:text-white"
-                                )}
-                            >
-                                <div className="flex justify-between items-center relative z-10">
-                                    <span className="font-medium">
-                                        {scene.scene_number === 0 ? t('preparation') : t('scene', { number: scene.scene_number })}
-                                    </span>
-                                    {isComplete && <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                                </div>
-                                {(scene.name && scene.scene_number !== 0) && (
-                                    <div className="text-xs opacity-70 truncate relative z-10 mt-0.5">
-                                        {scene.name}
+                            <div className="relative group">
+                                <button
+                                    onClick={() => {
+                                        setActiveSceneId(scene.id)
+                                        setIsSidebarOpen(false)
+                                    }}
+                                    className={clsx(
+                                        "w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative z-10 flex items-center justify-between group",
+                                        isActive
+                                            ? "bg-neutral-800 text-white"
+                                            : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+                                    )}
+                                >
+                                    <div className="flex flex-col min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className={clsx("truncate", isActive ? "text-white" : "text-neutral-400 group-hover:text-white")}>
+                                                {scene.scene_number === 0 ? t('preparation') : t('scene', { number: scene.scene_number })}
+                                            </span>
+                                            {isComplete && <CheckCircle2 className="w-3.5 h-3.5 text-green-500/70" />}
+                                        </div>
+                                        {(scene.name && scene.scene_number !== 0) && (
+                                            <span className="text-xs truncate opacity-60 font-normal">
+                                                {scene.name}
+                                            </span>
+                                        )}
                                     </div>
-                                )}
-                                {total > 0 && (
-                                    <div
-                                        className="absolute bottom-0 left-0 h-0.5 bg-green-500/50 transition-all duration-500"
-                                        style={{ width: `${(completed / total) * 100}%` }}
+
+                                    {/* Progress Pill */}
+                                    {total > 0 && (
+                                        <div className={clsx(
+                                            "text-[10px] font-mono px-1.5 py-0.5 rounded",
+                                            isActive ? "bg-black/30 text-neutral-300" : "bg-neutral-900 text-neutral-500"
+                                        )}>
+                                            {completed}/{total}
+                                        </div>
+                                    )}
+                                </button>
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="live-sidebar-active-indicator"
+                                        className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-white rounded-r-full pointer-events-none z-20"
+                                        initial={{ opacity: 0, scaleY: 0 }}
+                                        animate={{ opacity: 1, scaleY: 1 }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                     />
                                 )}
-                            </button>
+                            </div>
                         </div>
                     )
                 })}
             </div>
 
-            <div className="p-4 border-t border-neutral-800 space-y-2">
+            <div className="p-4 border-t border-neutral-800 bg-[#1a1a1a] space-y-2">
                 <button
                     onClick={resetAllTasks}
-                    className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-neutral-800 text-neutral-400 hover:bg-yellow-900/20 hover:text-yellow-400 transition-colors text-sm font-medium"
+                    className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-neutral-800 text-neutral-400 hover:bg-yellow-900/10 hover:text-yellow-400 transition-colors text-xs font-medium uppercase tracking-wider"
                 >
-                    <RotateCcw className="w-4 h-4" />
-                    {t('resetAll') || 'Reset wszystkich'}
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    {t('resetAll') || 'Reset'}
                 </button>
                 <button
                     onClick={() => router.push('/')}
-                    className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-neutral-800 text-neutral-400 hover:bg-red-900/20 hover:text-red-400 transition-colors text-sm font-medium"
+                    className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-neutral-800 text-neutral-400 hover:bg-red-900/10 hover:text-red-400 transition-colors text-xs font-medium uppercase tracking-wider"
                 >
-                    <X className="w-4 h-4" />
-                    {t('exit') || 'Wyjdź'}
+                    <X className="w-3.5 h-3.5" />
+                    {t('exit') || 'Exit'}
                 </button>
             </div>
         </div>
@@ -249,55 +275,55 @@ function LiveHeader({
     t: any
 }) {
     return (
-        <div className="h-16 border-b border-neutral-800 flex items-center justify-between px-4 bg-neutral-900 shrink-0 z-30 relative">
-            <div className="flex items-center gap-3 flex-1 overflow-hidden">
+        <div className="h-20 border-b border-neutral-800 flex items-center justify-between px-6 bg-[#0a0a0a] shrink-0 z-30 sticky top-0">
+            <div className="flex items-center gap-4 flex-1 overflow-hidden">
                 <button
                     onClick={() => setIsSidebarOpen(true)}
-                    className="md:hidden p-2 text-neutral-400 hover:text-white rounded-lg hover:bg-neutral-800 shrink-0"
+                    className="md:hidden p-2 -ml-2 text-neutral-400 hover:text-white rounded-lg hover:bg-neutral-800 shrink-0"
                 >
-                    <Menu className="w-5 h-5" />
+                    <Menu className="w-6 h-6" />
                 </button>
 
-                <div className="font-bold text-white">
-                    {currentScene?.scene_number === 0
-                        ? t('preparation')
-                        : t('scene', { number: currentScene?.scene_number ?? '?' })}
-                    {(currentScene?.name && currentScene?.scene_number !== 0) && (
-                        <span className="text-sm text-neutral-400 ml-2 font-normal">
-                            {currentScene.name}
-                        </span>
-                    )}
+                <div className="flex flex-col justify-center min-w-0">
+                    <span className="text-[10px] uppercase font-bold tracking-widest text-[#A0232F] leading-none mb-0.5">
+                        {t('currentScene')}
+                    </span>
+                    <h1 className="text-2xl font-boldonse text-white leading-tight truncate pb-1">
+                        {currentScene?.scene_number === 0
+                            ? t('preparation')
+                            : `${t('scene', { number: currentScene?.scene_number ?? '?' })} ${currentScene?.name || ''}`}
+                    </h1>
                 </div>
             </div>
 
-            <div className="flex items-center gap-3">
-                <div className="font-mono text-lg text-white">
+            <div className="flex items-center gap-6">
+                <div className="font-mono text-3xl font-light text-neutral-200 tracking-wider">
                     {formatDuration(elapsedTime)}
                 </div>
                 <div className="flex gap-2">
                     {!isTimerRunning ? (
                         <button
                             onClick={startTimer}
-                            className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                            className="p-3 bg-green-600/20 text-green-500 rounded-xl hover:bg-green-600/30 transition-colors"
                             title="Start"
                         >
-                            <Play className="w-4 h-4" />
+                            <Play className="w-5 h-5 fill-current" />
                         </button>
                     ) : (
                         <button
                             onClick={pauseTimer}
-                            className="p-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 transition-colors"
+                            className="p-3 bg-yellow-600/20 text-yellow-500 rounded-xl hover:bg-yellow-600/30 transition-colors"
                             title="Pause"
                         >
-                            <Pause className="w-4 h-4" />
+                            <Pause className="w-5 h-5 fill-current" />
                         </button>
                     )}
                     <button
                         onClick={resetTimer}
-                        className="p-2 bg-neutral-700 text-white rounded-lg hover:bg-neutral-600 transition-colors"
+                        className="p-3 bg-neutral-800 text-neutral-400 rounded-xl hover:bg-neutral-700 hover:text-white transition-colors"
                         title="Reset"
                     >
-                        <RotateCcw className="w-4 h-4" />
+                        <RotateCcw className="w-5 h-5" />
                     </button>
                 </div>
             </div>
@@ -494,7 +520,7 @@ export function SimpleLiveView({
     }
 
     return (
-        <div className="fixed inset-0 z-100 md:static md:z-0 md:inset-auto flex h-dvh md:h-[calc(100vh-4rem)] bg-black text-white overflow-hidden">
+        <div className="fixed inset-0 z-100 md:static md:z-0 md:inset-auto flex h-dvh md:h-[calc(100vh)] bg-[#0a0a0a] text-white overflow-hidden font-sans">
             {connectionError && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 z-200 w-[90%] max-w-md">
                     <div className="bg-red-500/90 backdrop-blur-sm text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-in slide-in-from-top-2">
@@ -529,7 +555,7 @@ export function SimpleLiveView({
                 t={t}
             />
 
-            <div className="flex-1 flex flex-col h-full overflow-hidden bg-black relative min-w-0">
+            <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#0a0a0a] relative min-w-0">
                 <LiveHeader
                     currentScene={currentScene}
                     isTimerRunning={isTimerRunning}
@@ -542,7 +568,7 @@ export function SimpleLiveView({
                     t={t}
                 />
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3">
+                <div className="flex-1 overflow-y-auto w-full max-w-5xl mx-auto p-0 md:p-8">
                     {currentSceneTasks.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-neutral-500">
                             <p>{t('noItemsInScene') || 'Brak zadań w tej scenie'}</p>

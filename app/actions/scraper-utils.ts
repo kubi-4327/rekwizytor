@@ -110,7 +110,8 @@ export function extractShowDates(html: string): string[] {
 
     if (termIndex !== -1) {
         const textAfterTerms = html.slice(termIndex, termIndex + 10000)
-        const dateRegex = /\b(\d{1,2})[\.\-\/](\d{1,2})[\.\-\/](\d{4})\b/g
+        // Match date DD.MM.YYYY followed optionally by time HH:MM (with optional "godz." prefix)
+        const dateRegex = /\b(\d{1,2})[\.\-\/](\d{1,2})[\.\-\/](\d{4})(?:\s+(?:godz\.?|o godz\.?)?\s*(\d{1,2})[:\.](\d{2}))?/gi
 
         let match
         const uniqueDates = new Set<string>()
@@ -119,7 +120,17 @@ export function extractShowDates(html: string): string[] {
             const day = match[1].padStart(2, '0')
             const month = match[2].padStart(2, '0')
             const year = match[3]
-            const dateStr = `${year}-${month}-${day}T19:00:00`
+
+            let hour = '19'
+            let minute = '00'
+
+            // If time matched (groups 4 and 5)
+            if (match[4] && match[5]) {
+                hour = match[4].padStart(2, '0')
+                minute = match[5].padStart(2, '0')
+            }
+
+            const dateStr = `${year}-${month}-${day}T${hour}:${minute}:00`
             uniqueDates.add(dateStr)
         }
 
@@ -140,13 +151,56 @@ function getMetaDescription(html: string): string | null {
     return match && match[1] ? match[1].trim() : null
 }
 
+function findTextContentDescription(html: string): string | null {
+    // Look for the specific content section used by this CMS
+    const sectionMatch = html.match(/<section[^>]*class=["'][^"']*text-content[^"']*["'][^>]*>([\s\S]*?)<\/section>/i)
+    if (!sectionMatch) return null
+
+    const content = sectionMatch[1]
+
+    // Extract text from divs and paragraphs within this section
+    // We look for tags that likely contain text blocks
+    const matches = content.match(/<(?:div|p)[^>]*>(.*?)<\/(?:div|p)>/gi)
+    if (!matches) return null
+
+    let bestDescription = ''
+
+    for (const tag of matches) {
+        const cleanText = tag.replace(/<[^>]+>/g, '').trim()
+        // Filter out short lines, headers pretending to be divs, or metadata
+        if (cleanText.length > 50 &&
+            !cleanText.toUpperCase().includes('NA AFISZU') &&
+            !cleanText.toUpperCase().includes('BILETY') &&
+            !cleanText.startsWith('oraz:') && // Explicitly exclude cast list start
+            !cleanText.includes('zespół wokalny w składzie')) {
+
+            // If we already have a good chunk, append this one if it looks like a continuation
+            if (bestDescription) {
+                bestDescription += ' ' + cleanText
+            } else {
+                bestDescription = cleanText
+            }
+
+            // If we have enough text (e.g. > 500 chars), stop to avoid grabbing too much footer info
+            if (bestDescription.length > 800) break
+        }
+    }
+
+    return bestDescription || null
+}
+
 function findBodyDescription(html: string): string | null {
+    // Fallback: look for any paragraph in the whole body
     const pMatches = html.match(/<p[^>]*>(.*?)<\/p>/gi)
     if (!pMatches) return null
 
     for (const p of pMatches) {
         const cleanP = p.replace(/<[^>]+>/g, '').trim()
-        if (cleanP.length > 50 && !cleanP.toUpperCase().includes('NA AFISZU') && !cleanP.toUpperCase().includes('BILETY')) {
+        if (cleanP.length > 50 &&
+            !cleanP.toUpperCase().includes('NA AFISZU') &&
+            !cleanP.toUpperCase().includes('BILETY') &&
+            !cleanP.startsWith('oraz:') &&
+            !cleanP.includes('zespół wokalny w składzie')) {
             return cleanP
         }
     }
@@ -167,9 +221,14 @@ function cleanDescriptionText(desc: string): string {
         d = d.replace(cleanupRegex, '')
     }
 
+    // Remove "Nominacja..." lines if they are at the start
+    d = d.replace(/^(?:Nominacja|Nagroda|Trzecie miejsce)[^.]+\.\s*/gi, '')
+
     const sentenceMatches = d.match(/[^\.!\?]+[\.!\?]+/g)
     if (sentenceMatches) {
-        return sentenceMatches.slice(0, 3).join(' ').trim()
+        // Return up to 5 sentences to get a fuller description if utilizing the section scraper
+        const limit = d.length > 500 ? 5 : 3
+        return sentenceMatches.slice(0, limit).join(' ').trim()
     } else if (d.length > 300) {
         return d.slice(0, 300) + '...'
     }
@@ -181,9 +240,15 @@ export function extractDescription(html: string): string {
         || getMetaDescription(html)
         || ''
 
+    // Prefer text content extraction if specific structure exists, or if meta desc is weak
     if (!description || description.length < 20 || description.toUpperCase().includes('KONTAKT')) {
-        const bodyDesc = findBodyDescription(html)
-        if (bodyDesc) description = bodyDesc
+        const textContentDesc = findTextContentDescription(html)
+        if (textContentDesc) {
+            description = textContentDesc
+        } else {
+            const bodyDesc = findBodyDescription(html)
+            if (bodyDesc) description = bodyDesc
+        }
     }
 
     return cleanDescriptionText(description)

@@ -411,7 +411,8 @@
         "actDuration": "Act Duration",
         "totalDuration": "Total Duration (excl. breaks)",
         "resumeShow": "Resume Show",
-        "goToActive": "Go to Active Scene"
+        "goToActive": "Go to Active Scene",
+        "currentScene": "CURRENT SCENE"
     },
     "ChecklistPage": {
         "backToPerformance": "Back to Performance",
