@@ -10,7 +10,7 @@ import { useTranslations } from 'next-intl'
 
 type Checklist = {
     id: string
-    scene_number: number
+    scene_number: string // Fixed type to match DB
     scene_name: string | null
     show_date: string
     is_active: boolean
@@ -72,8 +72,13 @@ export function ActiveChecklistsList({ initialChecklists }: Props) {
 
         const setupSubscription = async () => {
             try {
-                const { data: { user } } = await supabase.auth.getUser()
-                console.log('Realtime Subscription - Current User:', user?.id || 'ANONYMOUS')
+                const { data: { session } } = await supabase.auth.getSession()
+
+                if (!session) {
+                    console.warn('Realtime Subscription - No active session found. Subscription might fail if RLS is enabled.')
+                } else {
+                    console.log('Realtime Subscription - User:', session.user.id)
+                }
 
                 // Use a unique channel name to avoid potential collisions or stale bindings
                 const channelName = `active-checklists-list-${Date.now()}`
@@ -91,12 +96,18 @@ export function ActiveChecklistsList({ initialChecklists }: Props) {
                         }
                     )
 
-                channel.subscribe((status, err) => {
+                channel.subscribe(async (status, err) => {
                     if (status === 'SUBSCRIBED') {
                         setConnectionError(null)
                     } else if (status === 'CHANNEL_ERROR') {
                         console.error('Error subscribing to active checklists channel:', err)
-                        setConnectionError('Błąd połączenia z serwerem (Realtime). Odśwież stronę.')
+                        // Check if session is still valid
+                        const { data: { session: currentSession } } = await supabase.auth.getSession()
+                        if (!currentSession) {
+                            setConnectionError('Sesja wygasła. Odśwież stronę, aby się zalogować.')
+                        } else {
+                            setConnectionError('Błąd połączenia z serwerem (Realtime). Sprawdź uprawnienia lub odśwież stronę.')
+                        }
                     } else if (status === 'TIMED_OUT') {
                         console.error('Subscription timed out')
                         setConnectionError('Przekroczono limit czasu połączenia. Odśwież stronę.')
@@ -225,7 +236,7 @@ export function ActiveChecklistsList({ initialChecklists }: Props) {
                                 <h3
                                     className="text-xl font-bold text-white mb-2 transition-colors duration-300"
                                 >
-                                    <span className="group-hover:text-[var(--hover-color)]" style={{ '--hover-color': show.performanceColor } as React.CSSProperties}>
+                                    <span className="group-hover:text-(--hover-color)" style={{ '--hover-color': show.performanceColor } as React.CSSProperties}>
                                         {show.performanceTitle}
                                     </span>
                                 </h3>
