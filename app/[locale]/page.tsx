@@ -293,7 +293,7 @@ export default async function Home() {
           <div className="grid gap-8">
             <section>
               <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <span className="w-1.5 h-6 bg-blue-500 rounded-full" />
+                <span className="w-1.5 h-6 bg-red-900 rounded-full" />
                 {t('quickActions')}
               </h2>
               <QuickNav />

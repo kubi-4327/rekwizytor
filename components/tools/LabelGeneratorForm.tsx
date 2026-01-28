@@ -49,7 +49,10 @@ export function LabelGeneratorForm() {
                 })
             })
 
-            if (!response.ok) throw new Error('Generation failed')
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}))
+                throw new Error(data.details || 'Generation failed')
+            }
 
             const blob = await response.blob()
             const url = window.URL.createObjectURL(blob)
@@ -66,7 +69,7 @@ export function LabelGeneratorForm() {
         notify.promise(generatePromise, {
             loading: 'Generowanie etykiet...',
             success: 'Etykiety wygenerowane!',
-            error: 'Błąd generowania etykiet'
+            error: (err: any) => `Błąd: ${err.message}`
         }, 'pdf').finally(() => setLoading(false))
     }
 

@@ -19,28 +19,63 @@ const SCISSORS_ICON = '✂'
 // --- Fonts ---
 async function registerFonts() {
     try {
-        const fontPath = process.cwd() + '/public/fonts/Boldonse-Regular.ttf'
         const fs = await import('fs/promises')
-        const buffer = await fs.readFile(fontPath)
-        const base64 = buffer.toString('base64')
+
+        // Load Boldonse
+        try {
+            const boldonsePath = process.cwd() + '/public/fonts/Boldonse-Regular.ttf'
+            const boldonseBuffer = await fs.readFile(boldonsePath)
+            console.log('Boldonse loaded, size:', boldonseBuffer.length)
+            Font.register({
+                family: 'Boldonse',
+                src: `data:font/truetype;base64,${boldonseBuffer.toString('base64')}`,
+            })
+        } catch (e) {
+            console.error('Error loading Boldonse:', e)
+        }
+
+        // Load Roboto (Regular and Bold)
+        try {
+            const robotoRegularPath = process.cwd() + '/public/fonts/Roboto-Regular.ttf'
+            const robotoRegularBuffer = await fs.readFile(robotoRegularPath)
+            console.log('Roboto Regular loaded, size:', robotoRegularBuffer.length)
+
+            const robotoBoldPath = process.cwd() + '/public/fonts/Roboto-Bold.ttf'
+            const robotoBoldBuffer = await fs.readFile(robotoBoldPath)
+            console.log('Roboto Bold loaded, size:', robotoBoldBuffer.length)
+
+            Font.register({
+                family: 'Roboto',
+                fonts: [
+                    {
+                        src: `data:font/truetype;base64,${robotoRegularBuffer.toString('base64')}`,
+                        fontWeight: 400
+                    },
+                    {
+                        src: `data:font/truetype;base64,${robotoBoldBuffer.toString('base64')}`,
+                        fontWeight: 700
+                    }
+                ]
+            })
+        } catch (e) {
+            console.error('Error loading Roboto:', e)
+            throw new Error(`Failed to load Roboto fonts: ${e instanceof Error ? e.message : String(e)}`)
+        }
+
+    } catch (e) {
+        console.error('Failed to register fonts:', e)
+        throw e // Re-throw to cause API error so we see it
+    }
+
+    // Courier
+    try {
         Font.register({
-            family: 'Boldonse',
-            src: `data:font/truetype;base64,${base64}`,
+            family: 'Courier',
+            src: 'https://fonts.gstatic.com/s/courierprime/v9/u-450q2lgwslOqpF_6gQ8kELWwZjW-_-tvg.ttf'
         })
     } catch (e) {
-        // Fallback or ignore
+        console.error('Failed to register Courier font', e)
     }
-    Font.register({
-        family: 'Roboto',
-        fonts: [
-            { src: 'https://fonts.gstatic.com/s/roboto/v20/KFOmCnqEu92Fr1Mu4mxK.ttf', fontWeight: 400 },
-            { src: 'https://fonts.gstatic.com/s/roboto/v20/KFOlCnqEu92Fr1MmWUlfBBc4.ttf', fontWeight: 700 },
-        ],
-    })
-    Font.register({
-        family: 'Courier',
-        src: 'https://fonts.gstatic.com/s/courierprime/v9/u-450q2lgwslOqpF_6gQ8kELWwZjW-_-tvg.ttf'
-    })
 }
 
 // --- Styles ---
@@ -158,43 +193,43 @@ const StandaloneLabelDocument = ({ title, description, labelSize, copies }: Requ
 
     return (
         <Document>
-        {
-            chunks.map((chunk, pageIndex) => (
-                <Page key= { pageIndex } size = "A4" style = { styles.page } >
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: '100%', height: '100%' }} >
-        {
-            chunk.map((label: any, idx: number) => (
-                <View 
-                                key= { idx } 
-                                style = {
-                    [
-                    styles.label,
-                    { width: labelWidth, height: labelHeight }
-                    ]}
-                >
-                <Text style={ styles.scissors } > { SCISSORS_ICON } </Text>
-            < Text style = { styles.header } > Etykieta </Text>
+            {
+                chunks.map((chunk, pageIndex) => (
+                    <Page key={pageIndex} size="A4" style={styles.page} >
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: '100%', height: '100%' }} >
+                            {
+                                chunk.map((label: any, idx: number) => (
+                                    <View
+                                        key={idx}
+                                        style={
+                                            [
+                                                styles.label,
+                                                { width: labelWidth, height: labelHeight }
+                                            ]}
+                                    >
+                                        <Text style={styles.scissors} > {SCISSORS_ICON} </Text>
+                                        < Text style={styles.header} > Etykieta </Text>
 
-            < Text style = { [styles.title, { fontSize }]} >
-            { label.title }
-            </Text>
-                                
-                                {
-                    label.description && (
-                        <Text style={ styles.description } >
-                        { label.description }
-            </Text>
-            )
-        }
+                                        < Text style={[styles.title, { fontSize }]} >
+                                            {label.title}
+                                        </Text>
 
-        < Text style = { styles.footerRe } > Rekwizytor </Text>
-            < Text style = { styles.footerId } > { new Date().toLocaleDateString() } </Text>
-                </View>
-                        ))}
-</View>
-    </Page>
-            ))}
-</Document>
+                                        {
+                                            label.description && (
+                                                <Text style={styles.description} >
+                                                    {label.description}
+                                                </Text>
+                                            )
+                                        }
+
+                                        < Text style={styles.footerRe} > Rekwizytor </Text>
+                                        < Text style={styles.footerId} > {new Date().toLocaleDateString()} </Text>
+                                    </View>
+                                ))}
+                        </View>
+                    </Page>
+                ))}
+        </Document>
     )
 }
 
@@ -203,7 +238,7 @@ export async function POST(request: NextRequest) {
         const body: RequestBody = await request.json()
         await registerFonts()
 
-        const doc = <StandaloneLabelDocument { ...body } />
+        const doc = <StandaloneLabelDocument {...body} />
         const buffer = await renderToBuffer(doc)
 
         return new NextResponse(new Uint8Array(buffer), {
@@ -214,6 +249,7 @@ export async function POST(request: NextRequest) {
         })
     } catch (error) {
         console.error('Labels Error:', error)
-        return NextResponse.json({ error: 'Failed' }, { status: 500 })
+        const msg = error instanceof Error ? error.message : 'Unknown error'
+        return NextResponse.json({ error: 'Failed', details: msg }, { status: 500 })
     }
 }

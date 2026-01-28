@@ -353,15 +353,6 @@ export function CreatePerformanceForm() {
                         <form onSubmit={handleSubmit} className="space-y-8">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-xl font-semibold text-white">{t('fillDetails', { defaultMessage: 'Uzupełnij szczegóły' })}</h2>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setStep('import')}
-                                    className="text-neutral-400 hover:text-white text-xs"
-                                >
-                                    {t('backToImport', { defaultMessage: 'Wróć do importu' })}
-                                </Button>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-neutral-900/50 p-6 rounded-xl border border-neutral-800">
@@ -552,23 +543,33 @@ export function CreatePerformanceForm() {
                                 </div>
                             )}
 
-                            <div className="flex justify-end gap-4">
+                            <div className="flex items-center justify-between pt-4">
                                 <Button
                                     type="button"
-                                    variant="glassy-secondary"
-                                    onClick={() => router.back()}
+                                    variant="ghost"
+                                    onClick={() => setStep('import')}
                                     className="text-neutral-400 hover:text-white"
                                 >
-                                    {t('cancel')}
+                                    {t('backToImport', { defaultMessage: 'Wróć do importu' })}
                                 </Button>
-                                <Button
-                                    type="submit"
-                                    variant="glassy-success"
-                                    isLoading={loading}
-                                    leftIcon={<Save className="w-4 h-4" />}
-                                >
-                                    {t('saveShow')}
-                                </Button>
+                                <div className="flex gap-4">
+                                    <Button
+                                        type="button"
+                                        variant="glassy-secondary"
+                                        onClick={() => router.back()}
+                                        className="text-neutral-400 hover:text-white"
+                                    >
+                                        {t('cancel')}
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        variant="glassy-success"
+                                        isLoading={loading}
+                                        leftIcon={<Save className="w-4 h-4" />}
+                                    >
+                                        {t('saveShow')}
+                                    </Button>
+                                </div>
                             </div>
                         </form>
                     </motion.div>

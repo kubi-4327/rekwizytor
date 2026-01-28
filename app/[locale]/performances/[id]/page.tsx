@@ -207,14 +207,6 @@ export default async function ProductionDetailsPage({ params }: Props) {
                                 </div>
 
                                 <div className="flex flex-row items-center gap-3 shrink-0 pt-2 lg:pt-0 w-full sm:w-auto">
-                                    <Link
-                                        href={`/performances/${id}/live`}
-                                        className={buttonVariants({ variant: "glassy-danger", className: "gap-2 flex-1 sm:flex-none justify-center" })}
-                                    >
-                                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse mr-2 border border-red-400" />
-                                        {t('liveView')}
-                                    </Link>
-
                                     {/* Actions Menu */}
                                     <PerformanceDetailActions
                                         performanceId={id}
@@ -226,6 +218,13 @@ export default async function ProductionDetailsPage({ params }: Props) {
                                         notes={notes || []}
                                         user={user}
                                     />
+
+                                    <Link
+                                        href={`/performances/${id}/live`}
+                                        className={buttonVariants({ variant: "glassy-danger", className: "gap-2 flex-1 sm:flex-none justify-center" })}
+                                    >
+                                        {t('liveView')}
+                                    </Link>
                                 </div>
                             </div>
                         </div>

@@ -103,7 +103,7 @@
         "activeChecklists": "Aktywne Listy",
         "noActiveChecklists": "Brak aktywnych list",
         "checklistProgress": "{completed} z {total} przedmiotów",
-        "viewLiveView": "Zobacz Live View",
+        "viewLiveView": "Lista zadań",
         "weekStatus": {
             "zero": "Brak spektakli w tym tygodniu. Czas na porządki! 🧹",
             "low": "W tym tygodniu trochę luźniej. Uff! ☕",
@@ -124,7 +124,7 @@
         "home": "Start",
         "items": "Rekwizyty",
         "productions": "Spektakle",
-        "checklists": "Live View",
+        "checklists": "Listy zadań",
         "reviewDrafts": "Przegląd Szkiców",
         "aiStats": "Statystyki",
         "settings": "Ustawienia",
@@ -289,7 +289,7 @@
         "scene": "Scena",
         "props": "Zadania",
         "acts": "Akty",
-        "liveView": "Podgląd Na Żywo",
+        "liveView": "Podgląd listy zadań",
         "manageScenes": "Zarządzaj Scenami",
         "editDetails": "Edytuj Szczegóły",
         "actions": "Akcje",
@@ -438,7 +438,7 @@
         "nextScene": "Następna Scena ({number})"
     },
     "Checklists": {
-        "title": "Aktywne Live View",
+        "title": "Najbliższe listy zadań",
         "subtitle": "Monitoruj postęp trwających przedstawień w czasie rzeczywistym.",
         "live": "NA ŻYWO",
         "upcoming": "NADCHODZĄCE",

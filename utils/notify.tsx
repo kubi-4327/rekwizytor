@@ -34,11 +34,11 @@ const ToastWrapper = ({ t, message, icon, className }: { t: any, message: string
         >
             <div className="flex items-center gap-3 w-full">
                 {icon && (
-                    <div className="flex-shrink-0 flex items-center justify-center min-w-[20px]">
+                    <div className="shrink-0 flex items-center justify-center min-w-[20px]">
                         {icon}
                     </div>
                 )}
-                <div className="flex-grow text-sm">{message}</div>
+                <div className="grow text-sm">{message}</div>
             </div>
         </motion.div>
     )
@@ -126,7 +126,7 @@ export const notify = {
                 t={t}
                 message={message}
                 icon={<div className="p-1 bg-neutral-700 rounded-lg text-red-500"><FileText className="w-4 h-4" /></div>}
-                className={`${BASE_STYLE} !border-emerald-500/50`}
+                className={`${BASE_STYLE} border-emerald-500/50!`}
             />
         ), { id, duration: 4000 })
     },
@@ -137,7 +137,7 @@ export const notify = {
                 t={t}
                 message={message}
                 icon={<div className="p-1 bg-neutral-700 rounded-lg text-green-500"><FileSpreadsheet className="w-4 h-4" /></div>}
-                className={`${BASE_STYLE} !border-emerald-500/50`}
+                className={`${BASE_STYLE} border-emerald-500/50!`}
             />
         ), { id, duration: 4000 })
     },
@@ -148,7 +148,7 @@ export const notify = {
                 t={t}
                 message={message}
                 icon={<div className="p-1 bg-neutral-700 rounded-lg text-blue-400"><Download className="w-4 h-4" /></div>}
-                className={`${BASE_STYLE} !border-emerald-500/50`}
+                className={`${BASE_STYLE} border-emerald-500/50!`}
             />
         ), { id, duration: 4000 })
     },
@@ -159,7 +159,7 @@ export const notify = {
                 t={t}
                 message={message}
                 icon={<div className="p-1 bg-neutral-700 rounded-lg text-emerald-400"><Save className="w-4 h-4" /></div>}
-                className={`${BASE_STYLE} !border-emerald-500/50`}
+                className={`${BASE_STYLE} border-emerald-500/50!`}
             />
         ), { id, duration: 3000 })
     },
@@ -184,7 +184,7 @@ export const notify = {
                 t={t}
                 message={message}
                 icon={isBlue ? <BluePulseDot /> : <YellowPulseDot />}
-                className={isBlue ? `${BASE_STYLE} !border-blue-500/50` : TOAST_OPTIONS.loading.className}
+                className={isBlue ? `${BASE_STYLE} border-blue-500/50!` : TOAST_OPTIONS.loading.className}
             />
         ), { id: typeof message === 'string' ? message : undefined })
     },
@@ -212,7 +212,7 @@ export const notify = {
         messages: {
             loading: string
             success: string
-            error: string
+            error: string | ((err: any) => string)
         },
         type?: 'pdf' | 'excel' | 'download' | 'saving'
     ) => {
@@ -228,8 +228,9 @@ export const notify = {
                 else if (type === 'saving') notify.successSaving(messages.success, id)
                 else notify.success(messages.success, id)
             },
-            () => {
-                notify.error(messages.error, id)
+            (err) => {
+                const msg = typeof messages.error === 'function' ? messages.error(err) : messages.error
+                notify.error(msg, id)
             }
         )
 

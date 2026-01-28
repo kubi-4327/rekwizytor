@@ -103,7 +103,7 @@
         "activeChecklists": "Active Checklists",
         "noActiveChecklists": "No active checklists",
         "checklistProgress": "{completed} of {total} items",
-        "viewLiveView": "View Live View",
+        "viewLiveView": "Task List",
         "PendingAlert": {
             "title": "Pending Users",
             "message": "{count, plural, one {One user is waiting for approval.} other {# users are waiting for approval.}}"
@@ -113,7 +113,7 @@
         "home": "Home",
         "items": "Items",
         "productions": "Productions",
-        "checklists": "Live View",
+        "checklists": "Task Lists",
         "reviewDrafts": "Review Drafts",
         "aiStats": "AI Stats",
         "settings": "Settings",
@@ -278,7 +278,7 @@
         "scene": "Scene",
         "props": "Tasks",
         "acts": "Acts",
-        "liveView": "Live View",
+        "liveView": "Task List View",
         "manageScenes": "Manage Scenes",
         "editDetails": "Edit Details",
         "actions": "Actions",
@@ -423,7 +423,7 @@
         "nextScene": "Next Scene ({number})"
     },
     "Checklists": {
-        "title": "Active Live View",
+        "title": "Nearest Task Lists",
         "subtitle": "Monitor real-time progress of ongoing shows.",
         "live": "LIVE",
         "upcoming": "UPCOMING",

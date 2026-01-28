@@ -22,8 +22,8 @@ export function QuickNav() {
             label: t('checklists'),
             href: '/checklists',
             icon: ClipboardList,
-            color: 'text-emerald-400',
-            bg: 'bg-emerald-400/10'
+            color: 'text-red-400',
+            bg: 'bg-red-900/10'
         },
         {
             label: 'Etykiety',

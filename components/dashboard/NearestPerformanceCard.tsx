@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
-import { Calendar, ArrowRight, Clock, Play } from 'lucide-react'
+import { Calendar, ArrowRight, Clock, Play, List } from 'lucide-react'
 import { format, differenceInDays, isToday } from 'date-fns'
 import { useLocale } from 'next-intl'
 import { pl, enUS } from 'date-fns/locale'
@@ -153,15 +153,6 @@ export function NearestPerformanceCard({ performance }: NearestPerformanceCardPr
                     <div className="flex flex-wrap items-center gap-4 mt-2 md:mt-4">
                         {isPerformanceToday ? (
                             <>
-                                <Link href={`/performances/${performance.id}/live`}>
-                                    <Button
-                                        variant="glassy-danger"
-                                        className="rounded-full px-8 font-bold"
-                                        leftIcon={<Play className="h-4 w-4 fill-current" />}
-                                    >
-                                        Widok Live
-                                    </Button>
-                                </Link>
                                 <Link href={`/performances/${performance.id}`}>
                                     <Button
                                         variant="glassy"
@@ -169,6 +160,15 @@ export function NearestPerformanceCard({ performance }: NearestPerformanceCardPr
                                         rightIcon={<ArrowRight className="h-4 w-4" />}
                                     >
                                         {t('manageProduction')}
+                                    </Button>
+                                </Link>
+                                <Link href={`/performances/${performance.id}/live`}>
+                                    <Button
+                                        variant="glassy-danger"
+                                        className="rounded-full px-8 font-bold"
+                                        leftIcon={<List className="h-4 w-4 fill-current" />}
+                                    >
+                                        {t('viewLiveView')}
                                     </Button>
                                 </Link>
                             </>
