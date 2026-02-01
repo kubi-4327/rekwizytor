@@ -22,7 +22,6 @@ export async function GET(request: Request) {
     })
     
     return NextResponse.json({
-      success: true,
       timestamp: new Date().toISOString(),
       ...result
     })
