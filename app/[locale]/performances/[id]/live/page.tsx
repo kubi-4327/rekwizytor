@@ -40,7 +40,7 @@ export default async function LivePerformancePage({ params }: { params: Promise<
     // Fetch user profiles for assignment
     const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, full_name, avatar_url')
+        .select('id, full_name')
         .eq('status', 'approved')
 
     return (

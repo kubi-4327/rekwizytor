@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Trash2, GripVertical, Plus, Loader2, MoreVertical, Edit2 } from 'lucide-react'
+import { Trash2, GripVertical, Plus, Loader2, MoreVertical, Edit2, Lock } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { KanbanBoard, KanbanColumn, KanbanItem } from '@/components/ui/KanbanBoard'
@@ -13,6 +13,7 @@ export type SceneItem = {
     scene_number: number
     name: string | null
     act_number: number
+    type?: string | null
 }
 
 // Extend SceneItem to satisfy KanbanItem
@@ -69,23 +70,34 @@ export function SceneKanbanBoard({ scenes, onReorder, onUpdate, onRemove, onRemo
 
     const resequenceScenes = (items: SceneItem[]): SceneItem[] => {
         const uniqueActs = Array.from(new Set(items.map(s => s.act_number))).sort((a, b) => a - b)
-        let result = [...items]
+        let result: SceneItem[] = []
 
         uniqueActs.forEach(act => {
             // Get scenes for this act
-            const actScenes = result.filter(s => s.act_number === act)
-            // They are already in the order provided by the drag-drop in `items` array? 
-            // Yes, user reordered list implies index order.
+            const actScenes = items.filter(s => s.act_number === act)
+            
+            // Separate by type
+            const prepScenes = actScenes.filter(s => s.type === 'preparation')
+            const intermissionScenes = actScenes.filter(s => s.type === 'intermission')
+            const normalScenes = actScenes.filter(s => s.type !== 'preparation' && s.type !== 'intermission')
+
+            // Force order: Prep -> Normal -> Intermission
+            // Note: In a robust drag-drop, valid "normal" scenes maintain their relative order from 'items'
+            const sortedActScenes = [...prepScenes, ...normalScenes, ...intermissionScenes]
 
             // Re-assign scene numbers
-            actScenes.forEach((scene, index) => {
-                const globalIndex = result.findIndex(s => s.id === scene.id)
+            sortedActScenes.forEach((scene, index) => {
                 const newNum = act === 0 ? index : index + 1
-                if (result[globalIndex].scene_number !== newNum) {
-                    result[globalIndex] = { ...result[globalIndex], scene_number: newNum }
-                }
+                
+                // Construct updated scene object
+                result.push({
+                    ...scene,
+                    scene_number: newNum,
+                    act_number: act // Ensure act is correct
+                })
             })
         })
+        
         return result
     }
 
@@ -216,6 +228,11 @@ export function SceneKanbanBoard({ scenes, onReorder, onUpdate, onRemove, onRemo
             return false
         }
 
+        // Prevent moving Intermission scenes out of their act (optional, but good for consistency)
+        if (item.type === 'intermission' && sourceAct !== targetAct) {
+             return false
+        }
+
         return true
     }
 
@@ -261,11 +278,15 @@ function SortableScene({ scene, onUpdate, onRemove, isOverlay }: { scene: SceneI
         }
     }
 
+    const isSystemScene = scene.type === 'preparation' || scene.type === 'intermission'
+
     if (isOverlay) {
         return (
-            <div className="p-4 bg-neutral-800 border border-neutral-600 rounded-lg shadow-2xl opacity-90 text-white font-medium w-[300px] flex items-center gap-3">
+            <div className={`p-4 rounded-lg shadow-2xl opacity-90 text-white font-medium w-[300px] flex items-center gap-3 ${
+                isSystemScene ? 'bg-neutral-800 border-neutral-600 border' : 'bg-neutral-800 border-neutral-600 border'
+            }`}>
                 <div className="w-8 h-8 shrink-0 bg-neutral-900 border border-neutral-800 rounded flex items-center justify-center text-white font-mono font-bold text-sm">
-                    {scene.scene_number === 0 ? 'P' : scene.scene_number}
+                    {scene.scene_number === 0 ? 'P' : (scene.type === 'intermission' ? 'P' : scene.scene_number)}
                 </div>
                 <span>{scene.name}</span>
             </div>
@@ -276,15 +297,31 @@ function SortableScene({ scene, onUpdate, onRemove, isOverlay }: { scene: SceneI
         <div
             ref={setNodeRef}
             style={style}
-            className="group flex items-center gap-3 p-3 rounded-lg border border-neutral-800 bg-neutral-950/80 hover:border-neutral-700 transition-all shadow-sm"
+            className={`group flex items-center gap-3 p-3 rounded-lg border transition-all shadow-sm ${
+                isSystemScene 
+                ? 'bg-neutral-900/40 border-neutral-800 border-dashed hover:border-neutral-700' 
+                : 'bg-neutral-950/80 border-neutral-800 hover:border-neutral-700'
+            }`}
         >
-            <div {...attributes} {...listeners} className="cursor-grab text-neutral-600 hover:text-neutral-400 p-1">
-                <GripVertical className="w-4 h-4" />
+            <div 
+                {...attributes} 
+                {...listeners} 
+                className={`p-1 ${isSystemScene ? 'cursor-grab text-neutral-600 hover:text-neutral-500' : 'cursor-grab text-neutral-600 hover:text-neutral-400'}`}
+            >
+                {scene.type === 'intermission' ? (
+                     <GripVertical className="w-4 h-4 opacity-50" />
+                ) : (
+                    <GripVertical className="w-4 h-4" />
+                )}
             </div>
 
             {/* Scene Number Badge */}
-            <div className="w-8 h-8 shrink-0 bg-neutral-900 border border-neutral-800 rounded flex items-center justify-center text-white font-mono font-bold text-sm">
-                {scene.scene_number === 0 ? 'P' : scene.scene_number}
+            <div className={`w-8 h-8 shrink-0 rounded flex items-center justify-center font-mono font-bold text-sm ${
+                isSystemScene
+                ? 'bg-neutral-800/50 border border-neutral-700/50 text-neutral-500' 
+                : 'bg-neutral-900 border border-neutral-800 text-white'
+            }`}>
+                {scene.scene_number === 0 ? 'P' : (scene.type === 'intermission' ? 'P' : scene.scene_number)}
             </div>
 
             {/* Name Input/Text */}
@@ -304,46 +341,58 @@ function SortableScene({ scene, onUpdate, onRemove, isOverlay }: { scene: SceneI
                         }}
                         className="w-full bg-neutral-900 border border-neutral-700 rounded px-2 py-0.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500/50"
                         autoFocus
+                        disabled={isSystemScene}
                     />
                 ) : (
                     <span
                         onClick={() => {
-                            setTempName(scene.name || '')
-                            setIsEditing(true)
+                            if (!isSystemScene) {
+                                setTempName(scene.name || '')
+                                setIsEditing(true)
+                            }
                         }}
-                        className="block w-full text-sm text-white font-medium truncate cursor-text hover:text-amber-400 transition-colors"
+                        className={`block w-full text-sm font-medium truncate transition-colors ${
+                            isSystemScene 
+                            ? 'text-neutral-500 italic cursor-default' 
+                            : 'text-white cursor-text hover:text-amber-400'
+                        }`}
                     >
                         {scene.name || 'Bez nazwy'}
                     </span>
                 )}
             </div>
 
-            {/* Remove */}
             {/* Actions Menu */}
-            <div onClick={e => e.stopPropagation()} className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                <DropdownAction
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-neutral-500 hover:text-white data-[state=open]:opacity-100"
-                    icon={<MoreVertical className="w-4 h-4" />}
-                    align="right"
-                    showChevron={false}
-                    menuWidth="w-40"
-                    items={[
-                        {
-                            label: 'Zmień nazwę',
-                            icon: <Edit2 className="w-4 h-4" />,
-                            onClick: () => setIsEditing(true)
-                        },
-                        {
-                            label: 'Usuń',
-                            icon: <Trash2 className="w-4 h-4" />,
-                            onClick: () => onRemove(scene.id),
-                            danger: true
-                        }
-                    ]}
-                />
-            </div>
+            {!isSystemScene ? (
+                <div onClick={e => e.stopPropagation()} className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                    <DropdownAction
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-neutral-500 hover:text-white data-[state=open]:opacity-100"
+                        icon={<MoreVertical className="w-4 h-4" />}
+                        align="right"
+                        showChevron={false}
+                        menuWidth="w-40"
+                        items={[
+                            {
+                                label: 'Zmień nazwę',
+                                icon: <Edit2 className="w-4 h-4" />,
+                                onClick: () => setIsEditing(true)
+                            },
+                            {
+                                label: 'Usuń',
+                                icon: <Trash2 className="w-4 h-4" />,
+                                onClick: () => onRemove(scene.id),
+                                danger: true
+                            }
+                        ]}
+                    />
+                </div>
+            ) : (
+                <div className="w-8 h-8 flex items-center justify-center text-neutral-700" title="Element systemowy">
+                     <Lock className="w-4 h-4" />
+                </div>
+            )}
         </div>
     )
 }

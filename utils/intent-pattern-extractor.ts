@@ -26,7 +26,11 @@ export class IntentLogger {
             return
         }
 
-        try {
+        // Note: intent_classification_logs table has been removed from the database
+        // This logging functionality is disabled until the table is recreated
+        console.log('🔕 [INTENT] Logging disabled - table not available')
+        
+        /* try {
             const supabase = await createClient()
 
             await supabase.from('intent_classification_logs').insert({
@@ -41,7 +45,7 @@ export class IntentLogger {
         } catch (error) {
             console.error('Failed to log intent classification:', error)
             // Don't throw - logging failures shouldn't break classification
-        }
+        } */
     }
 
     /**
@@ -87,7 +91,12 @@ export class PatternExtractor {
         avgPhysical: number
         occurrences: number
     }>> {
-        const {
+        // Note: intent_classification_logs table has been removed from the database
+        // This functionality is disabled until the table is recreated
+        console.log('🔕 [INTENT] Pattern extraction disabled - table not available')
+        return []
+        
+        /* const {
             minOccurrences = 5,
             minConfidenceScore = 0.6,
             daysBack = 30
@@ -163,7 +172,7 @@ export class PatternExtractor {
         } catch (error) {
             console.error('Failed to extract patterns:', error)
             return []
-        }
+        } */
     }
 
     /**

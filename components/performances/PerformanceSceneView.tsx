@@ -131,7 +131,9 @@ export function PerformanceSceneView({
                                                     className="hover:bg-neutral-800/50 cursor-pointer"
                                                 >
                                                     <td className="px-6 py-4 text-sm text-neutral-300 align-top border-r border-neutral-800/50">
-                                                        <div className="font-medium">{scene.scene_number === 0 ? 'P' : scene.scene_number}</div>
+                                                        <div className="font-medium">
+                                                            {(scene.scene_number === 0 || scene.type === 'intermission') ? 'P' : scene.scene_number}
+                                                        </div>
                                                         {scene.name && (
                                                             <div className={scene.scene_number === 0 ? "text-xs text-burgundy-light font-bold" : "text-xs text-neutral-500"}>
                                                                 {scene.scene_number === 0 ? t('preparation') : scene.name}
@@ -140,12 +142,12 @@ export function PerformanceSceneView({
                                                     </td>
                                                     <td className="px-6 py-4 text-sm text-white align-top">
                                                         {allTasks.length > 0 && (
-                                                            <ul className="list-disc list-inside space-y-1 text-neutral-300 text-sm">
+                                                            <ul className="list-disc ml-4 space-y-1.5 text-neutral-300 text-sm">
                                                                 {visibleTasks.map((task) => (
-                                                                    <li key={task.id} className="text-sm truncate">{task.content}</li>
+                                                                    <li key={task.id} className="text-sm leading-relaxed">{task.content}</li>
                                                                 ))}
                                                                 {hasMoreTasks && (
-                                                                    <li className="text-xs text-neutral-500 italic pl-1 list-none pt-1">
+                                                                    <li className="text-xs text-neutral-500 italic list-none pt-1">
                                                                         +{allTasks.length - 3} {t('moreTasks')}
                                                                     </li>
                                                                 )}
@@ -196,7 +198,9 @@ export function PerformanceSceneView({
                                             className="bg-neutral-900 border border-neutral-800 p-4 space-y-3 cursor-pointer hover:bg-neutral-800/50 transition-colors first:rounded-t-lg last:rounded-b-lg md:rounded-lg"
                                         >
                                             <div className="flex items-baseline gap-2 pb-2 border-b border-neutral-800 mb-2">
-                                                <span className="text-lg font-bold text-white">{scene.scene_number}</span>
+                                                <span className="text-lg font-bold text-white">
+                                                    {(scene.scene_number === 0 || scene.type === 'intermission') ? 'P' : scene.scene_number}
+                                                </span>
                                                 {scene.name && <span className="text-sm text-neutral-400">{scene.name}</span>}
                                             </div>
 

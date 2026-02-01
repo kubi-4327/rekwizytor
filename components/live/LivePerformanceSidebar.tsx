@@ -15,7 +15,7 @@ type Checklist = {
 type ChecklistItem = {
     id: string
     scene_checklist_id: string
-    is_on_stage: boolean | null
+    is_prepared: boolean | null
 }
 
 type Props = {
@@ -40,7 +40,7 @@ export function LivePerformanceSidebar({
             </div>
             {sortedChecklists.map((c, i) => {
                 const sceneItems = items.filter(item => item.scene_checklist_id === c.id)
-                const isDone = sceneItems.length > 0 && sceneItems.every(item => item.is_on_stage)
+                const isDone = sceneItems.length > 0 && sceneItems.every(item => item.is_prepared)
                 const prevC = sortedChecklists[i - 1]
                 const isActChange = i === 0 || (prevC && prevC.act_number !== c.act_number)
 

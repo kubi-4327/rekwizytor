@@ -12,6 +12,7 @@ type Performance = Database['public']['Tables']['performances']['Row']
 type Scene = Database['public']['Tables']['scenes']['Row']
 type Note = Database['public']['Tables']['notes']['Row']
 type PropItem = Database['public']['Tables']['performance_props']['Row']
+type SceneTask = Database['public']['Tables']['scene_tasks']['Row']
 
 type Props = {
     performanceId: string
@@ -21,6 +22,7 @@ type Props = {
     assignedProps: PropItem[]
     scenes: Scene[]
     notes: Note[]
+    tasks: SceneTask[]
     user: {
         full_name: string | null
         email: string | undefined
@@ -35,6 +37,7 @@ export function PerformanceDetailActions({
     assignedProps,
     scenes,
     notes,
+    tasks,
     user
 }: Props) {
     const t = useTranslations('ProductionDetails')
@@ -83,6 +86,7 @@ export function PerformanceDetailActions({
                             items={assignedProps || []}
                             scenes={scenes || []}
                             notes={notes || []}
+                            tasks={tasks || []}
                             user={user}
                             variant="menu"
                         />

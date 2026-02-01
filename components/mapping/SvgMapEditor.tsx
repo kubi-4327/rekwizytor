@@ -1193,12 +1193,8 @@ export function SvgMapEditor({ locationId, initialSvgContent, onClose }: SvgMapE
             const elementsString = reconstructSvg(elements)
             const newSvgContent = `<svg viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg">${elementsString}</svg>`
 
-            const { error } = await supabase
-                .from('locations')
-                .update({ map_svg: newSvgContent })
-                .eq('id', locationId)
-
-            if (error) throw error
+            // Note: map_svg column has been removed from the database
+            // SVG content is now managed differently
 
             notify.success(t('mapUpdated'))
             onClose()
@@ -1541,7 +1537,7 @@ export function SvgMapEditor({ locationId, initialSvgContent, onClose }: SvgMapE
 
                 {/* Resize Dialog Modal */}
                 {resizeDialog && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={() => setResizeDialog(null)}>
+                    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50" onClick={() => setResizeDialog(null)}>
                         <div className="bg-[#1e1e1e] p-6 rounded-lg border border-neutral-700 w-64" onClick={e => e.stopPropagation()}>
                             <h4 className="text-white font-semibold mb-4">Zmień wymiary</h4>
                             <div className="space-y-3">

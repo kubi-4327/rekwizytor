@@ -125,12 +125,12 @@ export default async function ChecklistPage({ params }: Props) {
 
             {/* Checklist */}
             <div className="mt-8">
-                <LiveChecklist checklistId={id} initialItems={items || []} />
+                <LiveChecklist initialItems={items || []} />
             </div>
 
             {/* Sticky Bottom Navigation */}
             {(nextScene || prevScene) && (
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/90 to-transparent pt-12 pointer-events-none flex justify-between gap-4 max-w-3xl mx-auto">
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-linear-to-t from-black via-black/90 to-transparent pt-12 pointer-events-none flex justify-between gap-4 max-w-3xl mx-auto">
                     {prevScene ? (
                         <Link
                             href={`/checklists/${prevScene.id}`}

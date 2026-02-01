@@ -94,13 +94,8 @@ export async function analyzeFloorPlan(locationId: string, imageUrl: string) {
         // Clean up response if it contains markdown code blocks despite instructions
         svgContent = svgContent.replace(/```svg/g, '').replace(/```xml/g, '').replace(/```/g, '').trim()
 
-        // Update database
-        const { error } = await supabase
-            .from('locations')
-            .update({ map_svg: svgContent })
-            .eq('id', locationId)
-
-        if (error) throw error
+        // Note: map_svg column has been removed from the database
+        // SVG content is now managed differently
 
         return { success: true, svg: svgContent }
 

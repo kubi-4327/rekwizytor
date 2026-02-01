@@ -70,13 +70,25 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
 
     const handleQuickAdd = async (act: number, name: string) => {
         const actScenes = scenes.filter(s => s.act_number === act)
+        const isNewAct = actScenes.length === 0 && act > 0
         const nextNum = act === 0 && actScenes.length === 0 ? 0 : Math.max(0, ...actScenes.map(s => s.scene_number)) + 1
         const tempId = crypto.randomUUID()
         const newScene: Scene = { id: tempId, act_number: act, scene_number: nextNum, name: name, performance_id: performanceId }
 
-        setScenes([...scenes, newScene])
+        // If creating a new act (not Act 0), also prepare an intermission scene
+        const tempIntermissionId = isNewAct ? crypto.randomUUID() : null
+        const intermissionScene: Scene | null = isNewAct ? {
+            id: tempIntermissionId!,
+            act_number: act,
+            scene_number: nextNum + 1,
+            name: 'Przerwa',
+            performance_id: performanceId
+        } : null
+
+        setScenes(intermissionScene ? [...scenes, newScene, intermissionScene] : [...scenes, newScene])
 
         try {
+            // Insert the main scene
             const { data, error } = await supabase
                 .from('scenes')
                 .insert({ performance_id: performanceId, act_number: act, scene_number: nextNum, name: name })
@@ -84,7 +96,31 @@ export function ManageScenesForm({ performanceId, initialScenes, performanceColo
                 .single()
 
             if (error) throw error
+            
+            // Update the temp scene with real ID
             setScenes(prev => prev.map(s => s.id === tempId ? { ...s, id: data.id } : s))
+
+            // If this is a new act, also insert the intermission
+            if (isNewAct && intermissionScene) {
+                const { data: intermissionData, error: intermissionError } = await supabase
+                    .from('scenes')
+                    .insert({
+                        performance_id: performanceId,
+                        act_number: act,
+                        scene_number: nextNum + 1,
+                        name: 'Przerwa',
+                        type: 'intermission'
+                    })
+                    .select()
+                    .single()
+
+                if (intermissionError) {
+                    console.error('Error creating intermission:', intermissionError)
+                } else {
+                    setScenes(prev => prev.map(s => s.id === tempIntermissionId ? { ...s, id: intermissionData.id } : s))
+                }
+            }
+
             router.refresh()
         } catch (error) {
             console.error('Error adding scene:', error)

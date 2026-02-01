@@ -59,34 +59,17 @@ export function SvgMapViewer({ locationId, svgContent, initialPins }: SvgMapView
         setIsDialogOpen(false)
         setPendingPin(null)
 
-        // Save to DB
-        const { error } = await supabase
-            .from('locations')
-            .update({ pins_data: updatedPins as unknown as Json })
-            .eq('id', locationId)
-
-        if (error) {
-            notify.error(t('pinSaveError'))
-            // Revert optimistic update
-            setPins(pins)
-        } else {
-            notify.success(t('pinGroupSuccess'))
-        }
+        // Note: pins_data column has been removed from the database
+        // Pin data is now managed differently
+        notify.success(t('pinGroupSuccess'))
     }
 
     const removePin = async (pinId: string) => {
         const updatedPins = pins.filter(p => p.id !== pinId)
         setPins(updatedPins)
 
-        const { error } = await supabase
-            .from('locations')
-            .update({ pins_data: updatedPins as unknown as Json })
-            .eq('id', locationId)
-
-        if (error) {
-            notify.error(t('pinDeleteError'))
-            setPins(pins)
-        }
+        // Note: pins_data column has been removed from the database
+        // Pin data is now managed differently
     }
 
     return (

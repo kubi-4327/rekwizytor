@@ -10,7 +10,7 @@ import { useTranslations } from 'next-intl'
 
 type Checklist = {
     id: string
-    scene_number: string // Fixed type to match DB
+    scene_number: number // Fixed type to match DB
     scene_name: string | null
     show_date: string
     is_active: boolean

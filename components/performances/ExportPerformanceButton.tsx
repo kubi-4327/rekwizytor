@@ -12,6 +12,7 @@ type Performance = Database['public']['Tables']['performances']['Row']
 type PerformanceProp = Database['public']['Tables']['performance_props']['Row']
 type Note = Database['public']['Tables']['notes']['Row']
 type Scene = Database['public']['Tables']['scenes']['Row']
+type SceneTask = Database['public']['Tables']['scene_tasks']['Row']
 type User = {
     full_name: string | null
     email: string | undefined
@@ -22,11 +23,12 @@ interface ExportPerformanceButtonProps {
     items: PerformanceProp[]
     scenes?: Scene[]
     notes?: Note[]
+    tasks?: SceneTask[]
     user: User | null
     variant?: 'default' | 'menu'
 }
 
-export function ExportPerformanceButton({ production, items, scenes = [], notes = [], user, variant = 'default' }: ExportPerformanceButtonProps) {
+export function ExportPerformanceButton({ production, items, scenes = [], notes = [], tasks = [], user, variant = 'default' }: ExportPerformanceButtonProps) {
     const t = useTranslations('ExportButton') // Reusing existing translations or we might need new ones
     const [isExporting, setIsExporting] = useState(false)
 
@@ -37,7 +39,7 @@ export function ExportPerformanceButton({ production, items, scenes = [], notes 
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ production, items, scenes, notes, user }),
+                body: JSON.stringify({ production, items, scenes, notes, tasks, user }),
             })
 
             if (!response.ok) throw new Error('Failed to generate PDF')

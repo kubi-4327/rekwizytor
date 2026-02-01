@@ -20,7 +20,7 @@ type ChecklistItem = {
     scene_checklist_id: string
     item_id: string
     is_prepared: boolean | null
-    is_on_stage: boolean | null
+
     live_notes: string | null
     item_name_snapshot: string | null
     item_image_url_snapshot: string | null
@@ -246,12 +246,7 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         if (error) setItems(prev => prev.map(item => item.id === id ? { ...item, is_prepared: currentState } : item))
     }
 
-    const toggleOnStage = async (id: string, currentState: boolean | null) => {
-        const newState = !currentState
-        setItems(prev => prev.map(item => item.id === id ? { ...item, is_on_stage: newState } : item))
-        const { error } = await supabase.from('scene_checklist_items').update({ is_on_stage: newState }).eq('id', id)
-        if (error) setItems(prev => prev.map(item => item.id === id ? { ...item, is_on_stage: currentState } : item))
-    }
+
 
     const handleAssign = async (itemId: string, userId: string) => {
         setItems(prev => prev.map(item => item.id === itemId ? { ...item, assigned_to: userId } : item))
@@ -262,8 +257,6 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
         const unprep = currentSceneItems.filter(i => !i.is_prepared)
         if (unprep.length > 0) { setForceStageAllId(localActiveSceneId); return }
         setForceStageAllId(null)
-        setItems(prev => prev.map(item => item.scene_checklist_id === localActiveSceneId ? { ...item, is_on_stage: true } : item))
-        await supabase.from('scene_checklist_items').update({ is_on_stage: true }).eq('scene_checklist_id', localActiveSceneId)
         finishScene()
     }
 
@@ -303,11 +296,11 @@ export function LivePerformanceView({ performanceId, initialChecklists, initialI
                             </div>
                             <div className="bg-neutral-900/50 p-4 rounded-2xl border border-neutral-800/50 flex flex-col justify-center">
                                 <span className="text-[9px] uppercase tracking-widest text-neutral-500 font-bold block mb-1">{t('itemsOnStage')}</span>
-                                <span className="text-xl font-mono text-green-400 font-black">{currentSceneItems.filter(i => i.is_on_stage).length}/{currentSceneItems.length}</span>
+                                <span className="text-xl font-mono text-green-400 font-black">{currentSceneItems.filter(i => i.is_prepared).length}/{currentSceneItems.length}</span>
                             </div>
                         </div>
                         {currentSceneItems.map(item => (
-                            <LiveChecklistItem key={item.id} item={item} profiles={profiles} forceStageAll={forceStageAllId === localActiveSceneId} onTogglePrepared={togglePrepared} onToggleOnStage={toggleOnStage} onAssign={handleAssign} onSafeVibrate={safeVibrate} />
+                            <LiveChecklistItem key={item.id} item={item} profiles={profiles} forceStageAll={forceStageAllId === localActiveSceneId} onTogglePrepared={togglePrepared} onAssign={handleAssign} onSafeVibrate={safeVibrate} />
                         ))}
                     </div>
 

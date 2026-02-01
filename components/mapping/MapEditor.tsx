@@ -18,11 +18,10 @@ import { SvgMapEditor } from './SvgMapEditor'
 interface MapEditorProps {
     locationId: string
     initialMapUrl: string | null
-    initialMapSvg: string | null
     initialPins: any[]
 }
 
-export function MapEditor({ locationId, initialMapUrl, initialMapSvg, initialPins }: MapEditorProps) {
+export function MapEditor({ locationId, initialMapUrl, initialPins }: MapEditorProps) {
     const [isAnalyzing, setIsAnalyzing] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const router = useRouter()
@@ -63,48 +62,20 @@ export function MapEditor({ locationId, initialMapUrl, initialMapSvg, initialPin
         }
     }
 
-    // 0. If editing (manually or modifying existing), show Editor always
+    // 0. If editing (manually), show Editor
     if (isEditing) {
         return (
             <SvgMapEditor
                 locationId={locationId}
-                initialSvgContent={initialMapSvg || '<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg"></svg>'}
+                initialSvgContent={'<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg"></svg>'}
                 onClose={() => setIsEditing(false)}
             />
         )
     }
 
-    // 1. If SVG exists, show SVG Viewer
-    if (initialMapSvg) {
+    // 1. If no map at all, show placeholder with Uploader
+    if (!initialMapUrl) {
         return (
-            <div className="relative group">
-                <SvgMapViewer
-                    locationId={locationId}
-                    svgContent={initialMapSvg}
-                    initialPins={initialPins}
-                />
-                <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                    <Button
-                        onClick={() => setIsEditing(true)}
-                        className="bg-neutral-800/90 hover:bg-neutral-800 text-white border border-neutral-600"
-                        size="sm"
-                    >
-                        Edytuj Mapę
-                    </Button>
-                    <button
-                        onClick={handleDeleteMap}
-                        className="bg-red-600/80 hover:bg-red-600 text-white p-2 rounded-md transition-colors"
-                        title="Usuń mapę i zacznij od nowa"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </button>
-                </div>
-            </div>
-        )
-    }
-
-    // 2. If no map at all, show placeholder with Uploader
-    if (!initialMapUrl) return (
         <div className="flex flex-col items-center justify-center h-96 bg-neutral-900 rounded-lg border border-dashed border-neutral-700 p-6">
             <p className="text-neutral-500 mb-2">Brak mapy dla tej lokalizacji.</p>
             <p className="text-neutral-600 text-sm mb-6 max-w-md text-center">
@@ -130,9 +101,10 @@ export function MapEditor({ locationId, initialMapUrl, initialMapSvg, initialPin
                 </Button>
             </div>
         </div>
-    )
+        )
+    }
 
-    // 3. If Image exists but no SVG, show Image + Analyze Button
+    // 2. If Image exists but no SVG, show Image + Analyze Button
     return (
         <div className="relative w-full h-[600px] overflow-hidden bg-neutral-900 rounded-lg border border-neutral-800 flex flex-col items-center justify-center">
             <div className="absolute top-4 right-4 z-10">
@@ -160,7 +132,7 @@ export function MapEditor({ locationId, initialMapUrl, initialMapSvg, initialPin
             </div>
 
             <Image
-                src={initialMapUrl}
+                src={initialMapUrl || ''}
                 alt="Original Sketch"
                 width={800}
                 height={600}

@@ -9,6 +9,7 @@ type Performance = Database['public']['Tables']['performances']['Row']
 type Scene = Database['public']['Tables']['scenes']['Row']
 type PerformanceProp = Database['public']['Tables']['performance_props']['Row']
 type Note = Database['public']['Tables']['notes']['Row']
+type SceneTask = Database['public']['Tables']['scene_tasks']['Row']
 
 interface User {
     full_name: string | null
@@ -20,6 +21,7 @@ interface RequestBody {
     items: PerformanceProp[]
     scenes?: Scene[]
     notes?: Note[]
+    tasks?: SceneTask[]
     user: User | null
 }
 
@@ -77,8 +79,9 @@ const styles = StyleSheet.create({
     tableCell: { padding: 4, fontSize: 9 },
 
     // Scenes Table
-    colSceneNum: { width: '15%' },
-    colSceneName: { width: '85%' },
+    colSceneNum: { width: '10%' },
+    colSceneName: { width: '35%' },
+    colTasks: { width: '55%' },
 
     // Checklist Layout
     checklistGrid: { flexDirection: 'row', flexWrap: 'wrap' },
@@ -91,6 +94,12 @@ const styles = StyleSheet.create({
     noteTitle: { fontWeight: 'bold', fontSize: 10, marginBottom: 3 },
     noteContent: { fontSize: 9, color: '#333' },
     masterNoteColor: { borderLeftColor: '#f59e0b', backgroundColor: '#fffbeb' },
+
+    // Tasks in scene table
+    tasksList: { paddingLeft: 5 },
+    taskItem: { flexDirection: 'row', marginBottom: 2 },
+    taskCheckbox: { width: 8, height: 8, borderWidth: 1, borderColor: '#999', marginRight: 4, marginTop: 1 },
+    taskText: { fontSize: 8, flex: 1, color: '#444' },
 
     footer: { position: 'absolute', bottom: 30, left: 30, right: 30, textAlign: 'center', color: '#999', fontSize: 8, borderTopWidth: 1, borderTopColor: '#e5e5e5', paddingTop: 10 },
 })
@@ -110,7 +119,7 @@ const extractTextFromContent = (content: Json | null): string => {
     return ''
 }
 
-const PerformancePdfDocument = ({ production, items, scenes, notes, user, qrCodeUrl }: RequestBody & { qrCodeUrl?: string }) => {
+const PerformancePdfDocument = ({ production, items, scenes, notes, tasks, user, qrCodeUrl }: RequestBody & { qrCodeUrl?: string }) => {
     // 1. Process Master Item List (Deduplicate Items)
     const uniqueItemsMap = new Map<string, string>();
     items.forEach(pi => {
@@ -163,30 +172,49 @@ const PerformancePdfDocument = ({ production, items, scenes, notes, user, qrCode
                     </View>
                 </View>
 
-                {/* Scenes List */}
+                {/* Scenes List with Tasks */}
                 {sortedScenes.length > 0 && (
-                    <View wrap={false}>
-                        <Text style={styles.sectionTitle}>Lista Scen</Text>
+                    <View>
+                        <Text style={styles.sectionTitle}>Lista Scen i Zadania</Text>
                         <View style={styles.table}>
                             <View style={[styles.tableRow, styles.tableHeader]}>
                                 <View style={[styles.tableCell, styles.colSceneNum]}><Text>Nr</Text></View>
                                 <View style={[styles.tableCell, styles.colSceneName]}><Text>Nazwa</Text></View>
+                                <View style={[styles.tableCell, styles.colTasks]}><Text>Zadania</Text></View>
                             </View>
                             {sortedScenes.map((scene, i) => {
                                 const isNewAct = i === 0 || scene.act_number !== sortedScenes[i - 1].act_number;
+                                const sceneTasks = tasks
+                                    ?.filter(task => task.scene_id === scene.id)
+                                    .sort((a, b) => a.order_index - b.order_index) || [];
+                                
                                 return (
                                     <React.Fragment key={scene.id}>
                                         {isNewAct && (
-                                            <View style={styles.actDivider}>
+                                            <View style={styles.actDivider} wrap={false}>
                                                 <Text>Akt {scene.act_number || '?'}</Text>
                                             </View>
                                         )}
-                                        <View style={styles.tableRow}>
+                                        <View style={styles.tableRow} wrap={false}>
                                             <View style={[styles.tableCell, styles.colSceneNum]}>
-                                                <Text>{scene.scene_number}</Text>
+                                                <Text>{scene.type === 'intermission' ? '-' : scene.scene_number}</Text>
                                             </View>
                                             <View style={[styles.tableCell, styles.colSceneName]}>
                                                 <Text>{scene.name || '-'}</Text>
+                                            </View>
+                                            <View style={[styles.tableCell, styles.colTasks]}>
+                                                {sceneTasks.length > 0 ? (
+                                                    <View style={styles.tasksList}>
+                                                        {sceneTasks.map((task) => (
+                                                            <View key={task.id} style={styles.taskItem}>
+                                                                <View style={styles.taskCheckbox} />
+                                                                <Text style={styles.taskText}>{task.content}</Text>
+                                                            </View>
+                                                        ))}
+                                                    </View>
+                                                ) : (
+                                                    <Text style={{ fontSize: 8, color: '#999' }}>-</Text>
+                                                )}
                                             </View>
                                         </View>
                                     </React.Fragment>
@@ -272,6 +300,7 @@ export async function POST(request: NextRequest) {
                 items={body.items || []}
                 scenes={body.scenes || []}
                 notes={body.notes || []}
+                tasks={body.tasks || []}
                 user={body.user}
                 qrCodeUrl={qrCodeDataUrl}
             />

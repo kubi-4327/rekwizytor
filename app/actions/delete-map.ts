@@ -10,9 +10,7 @@ export async function deleteMap(locationId: string) {
         const { error } = await supabase
             .from('locations')
             .update({
-                map_image_url: null,
-                map_svg: null,
-                pins_data: [] // Optionally clear pins too if the map is gone, or keep them? User said "remove generated plan". Usually safer to remove map but maybe keep pins? But pins positions are relative to map. Let's clear pins to avoid ghost pins.
+                map_image_url: null
             })
             .eq('id', locationId)
 

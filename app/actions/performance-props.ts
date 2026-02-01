@@ -198,16 +198,26 @@ export async function addProp(performanceId: string, name: string) {
         return { success: false, error: 'Prop name cannot be empty' }
     }
 
-    // Simplified insertion without column balancing which causes schema errors if column_index is missing
+    // Use balance logic or default to column 0
+    const { data: maxOrder } = await supabase
+        .from('performance_props')
+        .select('sort_order')
+        .eq('performance_id', performanceId)
+        .order('sort_order', { ascending: false })
+        .limit(1)
+        .single()
+
+    const nextOrder = ((maxOrder as any)?.sort_order ?? -1) + 1
+
     const { data, error } = await supabase
         .from('performance_props')
         .insert({
             performance_id: performanceId,
             item_name: trimmedName,
             is_checked: false,
-            // Default to column 0, or let DB handle defaults if column exists
-            // Since we got an error about column_index not found, we should OMIT it.
-        } as any)
+            column_index: 0,
+            sort_order: nextOrder
+        })
         .select()
         .single()
 

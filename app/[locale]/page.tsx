@@ -44,13 +44,13 @@ export default async function Home() {
   if (user) {
     const result = await supabase
       .from('profiles')
-      .select('full_name, username')
+      .select('full_name')
       .eq('id', user.id)
       .single()
 
-    const profile = result.data as Pick<ProfileRow, 'full_name' | 'username'> | null
+    const profile = result.data as Pick<ProfileRow, 'full_name'> | null
 
-    displayName = profile?.full_name || profile?.username || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User'
+    displayName = profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User'
   }
 
   const t = await getTranslations('Dashboard')

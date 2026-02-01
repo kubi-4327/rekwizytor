@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Check, Plus, Trash2, Edit2, X, Camera } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { addProp, deleteProp, updatePropStatus, updatePropName, bulkInsertProps } from '@/app/actions/performance-props'
@@ -19,6 +19,8 @@ type Prop = {
     created_at: string | null
     performance_id: string
     order: number | null
+    column_index?: number | null
+    sort_order?: number | null
 }
 
 type Props = {
@@ -37,6 +39,10 @@ export function PropsChecklist({ performanceId, initialProps, variant = 'checkli
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isScannerOpen, setIsScannerOpen] = useState(false)
     const [isManualAddOpen, setIsManualAddOpen] = useState(false)
+
+    useEffect(() => {
+        setProps(initialProps)
+    }, [initialProps])
 
     const handleToggleCheck = async (propId: string, currentStatus: boolean) => {
         // Optimistic update

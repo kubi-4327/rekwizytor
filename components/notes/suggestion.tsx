@@ -9,14 +9,14 @@ export const getItemSuggestions = async (query: string) => {
     const supabase = createClient()
     const { data } = await supabase
         .from('performance_props')
-        .select('id, item_name, image_url')
+        .select('id, item_name')
         .ilike('item_name', `%${query}%`)
         .limit(5)
     return data?.map(d => ({
         id: d.id,
         label: d.item_name,
         type: 'item',
-        image_url: d.image_url,
+        image_url: null,
         notes: null,
         icon: <Box size={14} />
     })) || []
@@ -48,10 +48,10 @@ const fetchUsers = async (query: string) => {
     const supabase = createClient()
     const { data } = await supabase
         .from('profiles')
-        .select('id, full_name, username')
-        .or(`full_name.ilike.%${query}%,username.ilike.%${query}%`)
+        .select('id, full_name')
+        .ilike('full_name', `%${query}%`)
         .limit(5)
-    return data?.map(d => ({ id: d.id, label: d.full_name || d.username || 'Unknown', type: 'user', icon: <User size={14} /> })) || []
+    return data?.map(d => ({ id: d.id, label: d.full_name || 'Unknown', type: 'user', icon: <User size={14} /> })) || []
 }
 
 import { format, parse, isValid } from 'date-fns'

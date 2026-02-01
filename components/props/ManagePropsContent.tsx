@@ -30,8 +30,8 @@ export function ManagePropsContent({ performanceId, accentColor, initialItems }:
                         created_at: item.created_at,
                         performance_id: item.performance_id,
                         order: item.order,
-                        sort_order: (item as any).sort_order,
-                        column_index: (item as any).column_index
+                        sort_order: item.sort_order,
+                        column_index: item.column_index
                     }))}
                 />
             </section>

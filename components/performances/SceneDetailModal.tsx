@@ -60,11 +60,15 @@ export function SceneDetailModal({ isOpen, onClose, scene, sceneNote, allScenes 
                 {/* Left Column: Scene Info */}
                 <div className="md:w-24 shrink-0">
                     <div className="text-4xl font-bold text-white leading-none mb-2">
-                        {scene.scene_number === 0 ? 'P' : scene.scene_number}
+                        {(scene.scene_number === 0 || scene.type === 'intermission') ? 'P' : scene.scene_number}
                     </div>
-                    {scene.scene_number === 0 ? (
+                    {(scene.scene_number === 0 || scene.type === 'preparation') ? (
                         <div className="text-xs uppercase tracking-wide text-burgundy-light font-bold leading-tight">
                             {t('preparation', { defaultValue: 'Przygotowanie' })}
+                        </div>
+                    ) : (scene.type === 'intermission') ? (
+                        <div className="text-xs uppercase tracking-wide text-neutral-500 font-bold leading-tight">
+                            {scene.name || 'PRZERWA'}
                         </div>
                     ) : scene.name && (
                         <div className="text-xs uppercase tracking-wide text-neutral-500 leading-tight">

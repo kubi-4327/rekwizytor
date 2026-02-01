@@ -51,18 +51,8 @@ export function PerformanceAllItemsView({ performanceId, items }: Props) {
                             key={item.id}
                             className="group relative overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900 transition-colors hover:border-neutral-700 block"
                         >
-                            <div className="aspect-square w-full bg-neutral-800 relative flex items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900">
-                                {item.image_url ? (
-                                    <NextImage
-                                        src={item.image_url}
-                                        alt={item.item_name}
-                                        fill
-                                        className="object-cover transition-transform group-hover:scale-105"
-                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                    />
-                                ) : (
-                                    <Box className="h-16 w-16 text-neutral-600 group-hover:text-neutral-500 transition-colors" />
-                                )}
+                            <div className="aspect-square w-full bg-neutral-800 relative flex items-center justify-center bg-linear-to-br from-neutral-800 to-neutral-900">
+                                <Box className="h-16 w-16 text-neutral-600 group-hover:text-neutral-500 transition-colors" />
                             </div>
                             <div className="p-4">
                                 <h3 className="text-lg font-bold text-white truncate">
@@ -77,20 +67,10 @@ export function PerformanceAllItemsView({ performanceId, items }: Props) {
                     {uniqueItems.map((item) => (
                         <div
                             key={item.id}
-                            className="flex items-center gap-4 rounded-lg border border-neutral-800 bg-neutral-900 p-3 transition-colors hover:border-neutral-700 block"
+                            className="flex items-center gap-4 rounded-lg border border-neutral-800 bg-neutral-900 p-3 transition-colors hover:border-neutral-700"
                         >
-                            <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-md bg-neutral-800 flex items-center justify-center">
-                                {item.image_url ? (
-                                    <NextImage
-                                        src={item.image_url}
-                                        alt={item.item_name}
-                                        fill
-                                        className="object-cover"
-                                        sizes="48px"
-                                    />
-                                ) : (
-                                    <Box className="h-6 w-6 text-neutral-600" />
-                                )}
+                            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-neutral-800 flex items-center justify-center">
+                                <Box className="h-6 w-6 text-neutral-600" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <h3 className="font-bold text-white truncate">

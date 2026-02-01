@@ -28,7 +28,7 @@ type Props = {
     performanceId: string
     initialScenes: Scene[]
     initialTasks: Task[]
-    profiles?: { id: string; full_name: string | null; avatar_url: string | null }[]
+    profiles?: { id: string; full_name: string | null }[]
 }
 
 function SimpleLiveTaskItem({
@@ -92,9 +92,7 @@ function SimpleLiveTaskItem({
                             ? "border-neutral-600 bg-neutral-800"
                             : "border-transparent bg-neutral-900 text-neutral-600 group-hover:border-neutral-700"
                     )}>
-                        {profile?.avatar_url ? (
-                            <img src={profile.avatar_url} alt={profile.full_name || ''} className="h-full w-full object-cover" />
-                        ) : task.assigned_to ? (
+                        {task.assigned_to ? (
                             <span className="text-xs font-bold text-white">{profile?.full_name?.[0] || '?'}</span>
                         ) : (
                             <User className="h-4 w-4" />

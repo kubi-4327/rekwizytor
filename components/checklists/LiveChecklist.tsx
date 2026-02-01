@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { CheckCircle2, Circle, ArrowRight } from 'lucide-react'
+import { CheckCircle2, Circle } from 'lucide-react'
 import NextImage from 'next/image'
 import { Box } from 'lucide-react' // ItemIcon removed
 import { clsx } from 'clsx'
@@ -10,9 +10,7 @@ import { useTranslations } from 'next-intl'
 
 type ChecklistItem = {
     id: string
-    item_id: string | null
     is_prepared: boolean | null
-    is_on_stage: boolean | null
     live_notes: string | null
     item_name_snapshot: string | null
     item_image_url_snapshot: string | null
@@ -20,7 +18,6 @@ type ChecklistItem = {
 }
 
 type Props = {
-    checklistId: string
     initialItems: ChecklistItem[]
 }
 
@@ -53,29 +50,6 @@ export function LiveChecklist({ initialItems }: Props) {
         }
     }
 
-    const toggleOnStage = async (id: string, currentState: boolean | null) => {
-        const newState = !currentState
-
-        // Optimistic update
-        setItems(items.map(item =>
-            item.id === id ? { ...item, is_on_stage: newState } : item
-        ))
-
-        try {
-            const { error } = await supabase
-                .from('scene_checklist_items')
-                .update({ is_on_stage: newState })
-                .eq('id', id)
-
-            if (error) throw error
-        } catch (error) {
-            console.error('Error updating on stage status:', error)
-            // Revert on error
-            setItems(items.map(item =>
-                item.id === id ? { ...item, is_on_stage: currentState } : item
-            ))
-        }
-    }
 
     return (
         <div className="space-y-4">
@@ -84,7 +58,7 @@ export function LiveChecklist({ initialItems }: Props) {
                     key={item.id}
                     className={clsx(
                         "flex items-center justify-between p-4 rounded-xl border transition-all duration-200",
-                        item.is_prepared && item.is_on_stage
+                        item.is_prepared
                             ? "bg-green-900/20 border-green-900/50"
                             : "bg-neutral-900/50 border-neutral-800"
                     )}
@@ -109,7 +83,7 @@ export function LiveChecklist({ initialItems }: Props) {
                         <div className="flex-1 min-w-0 mr-4">
                             <h4 className={clsx(
                                 "text-base font-medium truncate",
-                                item.is_prepared && item.is_on_stage ? "text-green-400" : "text-white"
+                                item.is_prepared ? "text-green-400" : "text-white"
                             )}>
                                 {item.item_name_snapshot || t('unknownItem')}
                             </h4>
@@ -138,25 +112,6 @@ export function LiveChecklist({ initialItems }: Props) {
                         >
                             {item.is_prepared ? <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8" /> : <Circle className="h-6 w-6 sm:h-8 sm:w-8" />}
                             <span className="text-[9px] sm:text-[10px] font-bold mt-1 uppercase tracking-wider">{t('ready')}</span>
-                        </button>
-
-                        {/* On Stage Toggle */}
-                        <button
-                            onClick={() => {
-                                if (navigator.vibrate) navigator.vibrate(50)
-                                toggleOnStage(item.id, item.is_on_stage)
-                            }}
-                            disabled={!item.is_prepared}
-                            className={clsx(
-                                "flex flex-col items-center justify-center h-14 w-14 sm:h-16 sm:w-16 rounded-xl border-2 transition-all active:scale-95 touch-manipulation",
-                                !item.is_prepared ? "opacity-30 cursor-not-allowed border-neutral-800 bg-neutral-900" :
-                                    item.is_on_stage
-                                        ? "bg-green-500/20 border-green-500 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]"
-                                        : "bg-neutral-950 border-neutral-700 text-neutral-600 hover:border-neutral-500"
-                            )}
-                        >
-                            <ArrowRight className="h-6 w-6 sm:h-8 sm:w-8" />
-                            <span className="text-[9px] sm:text-[10px] font-bold mt-1 uppercase tracking-wider">{t('stage')}</span>
                         </button>
                     </div>
                 </div>

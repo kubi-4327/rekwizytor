@@ -220,10 +220,8 @@ export default function ScheduleShowPage({ params }: Props) {
                             scene_checklist_id: checklist.id,
                             performance_prop_id: prop.id,
                             item_name_snapshot: prop.item_name,
-                            item_image_url_snapshot: prop.image_url,
-                            item_id: '00000000-0000-0000-0000-000000000000', // Placeholder for non-null legacy column
-                            is_prepared: false,
-                            is_on_stage: false
+                            item_image_url_snapshot: null,
+                            is_prepared: false
                         }))
 
                         const { error: itemsError } = await supabase

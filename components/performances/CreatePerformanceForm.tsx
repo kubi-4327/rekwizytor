@@ -130,10 +130,11 @@ export function CreatePerformanceForm() {
         })
 
         // 3. Handle Default Scenes and Dates
-        const prepScene = { performance_id: performanceId, act_number: 0, scene_number: 0, name: 'Preparation' }
+        const prepScene = { performance_id: performanceId, act_number: 0, scene_number: 0, name: 'Preparation', type: 'preparation' as const }
         const firstScene = { performance_id: performanceId, act_number: 1, scene_number: 1, name: 'Scene 1' }
+        const intermissionScene = { performance_id: performanceId, act_number: 1, scene_number: 2, name: 'Przerwa', type: 'intermission' as const }
 
-        await supabase.from('scenes').insert([prepScene, firstScene])
+        await supabase.from('scenes').insert([prepScene, firstScene, intermissionScene])
 
         if (upcomingDates.length > 0) {
             const checklists: Database['public']['Tables']['scene_checklists']['Insert'][] = []

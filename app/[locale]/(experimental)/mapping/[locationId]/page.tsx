@@ -35,8 +35,7 @@ export default async function LocationMappingPage({ params }: { params: Promise<
                         <MapEditor
                             locationId={location.id}
                             initialMapUrl={location.map_image_url}
-                            initialMapSvg={location.map_svg}
-                            initialPins={(location.pins_data as any[]) || []}
+                            initialPins={[]}
                         />
                     </div>
                 </div>

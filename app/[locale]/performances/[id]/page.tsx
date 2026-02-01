@@ -25,6 +25,7 @@ type Props = {
 
 type Scene = Database['public']['Tables']['scenes']['Row']
 type PropItem = Database['public']['Tables']['performance_props']['Row']
+type SceneTask = Database['public']['Tables']['scene_tasks']['Row']
 
 export default async function ProductionDetailsPage({ params }: Props) {
     const { id } = await params
@@ -100,6 +101,18 @@ export default async function ProductionDetailsPage({ params }: Props) {
     const notes = notesResult.data
     const allProps = allPropsResult.data
     const linkedGroups = linkedGroupsResult.data
+
+    // Fetch tasks separately after we have scenes
+    const tasksResult = scenes && scenes.length > 0 
+        ? await supabase
+            .from('scene_tasks')
+            .select('*')
+            .in('scene_id', scenes.map(s => s.id))
+            .order('order_index', { ascending: true })
+            .returns<SceneTask[]>()
+        : { data: [] as SceneTask[] }
+
+    const tasks = tasksResult.data
 
     if (!production) {
         notFound()
@@ -216,6 +229,7 @@ export default async function ProductionDetailsPage({ params }: Props) {
                                         assignedProps={allProps || []}
                                         scenes={scenes || []}
                                         notes={notes || []}
+                                        tasks={tasks || []}
                                         user={user}
                                     />
 
