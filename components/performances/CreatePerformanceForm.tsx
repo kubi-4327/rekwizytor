@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/routing'
 import { Save, Calendar, Upload, X, Globe, ArrowRight, SkipForward } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { compressImage, createThumbnail } from '@/utils/image-processing'

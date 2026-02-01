@@ -316,7 +316,12 @@
         "fullScreen": "Full Screen",
         "moreTasks": "more tasks",
         "confirmDelete": "Are you sure you want to delete this prop?",
-        "propDeleted": "Prop deleted"
+        "propDeleted": "Prop deleted",
+        "refreshSchedule": "Sync Schedule",
+        "refreshing": "Syncing...",
+        "refreshSuccess": "Added {count} new show dates!",
+        "refreshNoNew": "Schedule is up to date",
+        "refreshError": "Sync error"
     },
     "ManageScenes": {
         "backToProduction": "Back to Production",
@@ -459,7 +464,8 @@
         "deleteConfirmation": "Are you sure you want to delete this production? This action cannot be undone and will remove all associated data.",
         "cancel": "Cancel",
         "saveChanges": "Save Changes",
-        "unknownError": "An unknown error occurred"
+        "unknownError": "An unknown error occurred",
+        "sourceUrl": "Source Website Link"
     },
     "LiveChecklist": {
         "note": "Note: {note}",

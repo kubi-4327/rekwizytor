@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/routing'
 import { Loader2, Save, Calendar, Trash2, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { compressImage, createThumbnail } from '@/utils/image-processing'
@@ -20,6 +20,7 @@ type Performance = {
     image_url: string | null
     thumbnail_url: string | null
     color: string | null
+    source_url: string | null
 }
 
 type Props = {
@@ -31,6 +32,7 @@ export function EditPerformanceForm({ performance }: Props) {
     const [title, setTitle] = useState(performance.title)
     const [premiereDate, setPremiereDate] = useState(performance.premiere_date ? new Date(performance.premiere_date).toISOString().split('T')[0] : '')
     const [notes, setNotes] = useState(performance.notes || '')
+    const [sourceUrl, setSourceUrl] = useState(performance.source_url || '')
     const [status, setStatus] = useState<Performance['status']>(performance.status)
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [imagePreview, setImagePreview] = useState<string | null>(performance.image_url)
@@ -151,7 +153,8 @@ export function EditPerformanceForm({ performance }: Props) {
                     status,
                     image_url: imageUrl,
                     thumbnail_url: thumbnailUrl,
-                    color: selectedColor
+                    color: selectedColor,
+                    source_url: sourceUrl || null
                 })
                 .eq('id', performance.id)
 
@@ -289,6 +292,20 @@ export function EditPerformanceForm({ performance }: Props) {
                         rows={3}
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
+                        className="mt-2 block w-full rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-white placeholder-neutral-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 shadow-inner transition-all sm:text-sm"
+                    />
+                </div>
+
+                <div>
+                    <label htmlFor="sourceUrl" className="block text-sm font-medium text-neutral-300">
+                        {t('sourceUrl')}
+                    </label>
+                    <input
+                        type="url"
+                        id="sourceUrl"
+                        value={sourceUrl}
+                        onChange={(e) => setSourceUrl(e.target.value)}
+                        placeholder="https://..."
                         className="mt-2 block w-full rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-white placeholder-neutral-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 shadow-inner transition-all sm:text-sm"
                     />
                 </div>

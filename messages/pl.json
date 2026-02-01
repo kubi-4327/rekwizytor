@@ -327,7 +327,12 @@
         "fullScreen": "Pełny Ekran",
         "moreTasks": "więcej zadań",
         "confirmDelete": "Czy na pewno chcesz usunąć ten rekwizyt?",
-        "propDeleted": "Rekwizyt usunięty"
+        "propDeleted": "Rekwizyt usunięty",
+        "refreshSchedule": "Synchronizuj terminy",
+        "refreshing": "Synchronizacja...",
+        "refreshSuccess": "Dodano {count} nowych terminów!",
+        "refreshNoNew": "Harmonogram jest aktualny",
+        "refreshError": "Błąd synchronizacji"
     },
     "ManageScenes": {
         "backToProduction": "Powrót do Spektakli",
@@ -474,7 +479,8 @@
         "deleteConfirmation": "Czy na pewno chcesz usunąć ten spektakl? Tej operacji nie można cofnąć i spowoduje ona usunięcie wszystkich powiązanych danych.",
         "cancel": "Anuluj",
         "saveChanges": "Zapisz Zmiany",
-        "unknownError": "Wystąpił nieznany błąd"
+        "unknownError": "Wystąpił nieznany błąd",
+        "sourceUrl": "Link do strony (źródłowy)"
     },
     "LiveChecklist": {
         "note": "Notatka: {note}",
